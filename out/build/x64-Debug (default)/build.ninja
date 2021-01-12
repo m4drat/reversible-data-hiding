@@ -43,10 +43,10 @@ include CMakeFiles\rules.ninja
 
 build cmake_object_order_depends_target_reversible_data_hiding: phony || CMakeFiles\reversible_data_hiding.dir
 
-build CMakeFiles\reversible_data_hiding.dir\main.cpp.obj: CXX_COMPILER__reversible_data_hiding_Debug ..\..\..\main.cpp || cmake_object_order_depends_target_reversible_data_hiding
+build CMakeFiles\reversible_data_hiding.dir\src\main.cpp.obj: CXX_COMPILER__reversible_data_hiding_Debug ..\..\..\src\main.cpp || cmake_object_order_depends_target_reversible_data_hiding
   FLAGS = /DWIN32 /D_WINDOWS /W3 /GR /EHsc /MDd /Zi /Ob0 /Od /RTC1
   OBJECT_DIR = CMakeFiles\reversible_data_hiding.dir
-  OBJECT_FILE_DIR = CMakeFiles\reversible_data_hiding.dir
+  OBJECT_FILE_DIR = CMakeFiles\reversible_data_hiding.dir\src
   TARGET_COMPILE_PDB = CMakeFiles\reversible_data_hiding.dir\
   TARGET_PDB = reversible_data_hiding.pdb
 
@@ -58,7 +58,7 @@ build CMakeFiles\reversible_data_hiding.dir\main.cpp.obj: CXX_COMPILER__reversib
 #############################################
 # Link the executable reversible_data_hiding.exe
 
-build reversible_data_hiding.exe: CXX_EXECUTABLE_LINKER__reversible_data_hiding_Debug CMakeFiles\reversible_data_hiding.dir\main.cpp.obj
+build reversible_data_hiding.exe: CXX_EXECUTABLE_LINKER__reversible_data_hiding_Debug CMakeFiles\reversible_data_hiding.dir\src\main.cpp.obj
   FLAGS = /DWIN32 /D_WINDOWS /W3 /GR /EHsc /MDd /Zi /Ob0 /Od /RTC1
   LINK_FLAGS = /machine:x64 /debug /INCREMENTAL /subsystem:console
   LINK_LIBRARIES = kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
