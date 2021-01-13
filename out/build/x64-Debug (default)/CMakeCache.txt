@@ -14,6 +14,24 @@
 # EXTERNAL cache entries
 ########################
 
+//The directory containing a CMake configuration file for Boost.
+Boost_DIR:PATH=Boost_DIR-NOTFOUND
+
+//Path to a file.
+Boost_INCLUDE_DIR:PATH=C:/Users/madrat/Desktop/projects/libraries/boost_1_75_0
+
+//Boost library directory DEBUG
+Boost_LIBRARY_DIR_DEBUG:PATH=C:/Users/madrat/Desktop/projects/libraries/boost_1_75_0/lib64-msvc-14.2
+
+//Boost library directory RELEASE
+Boost_LIBRARY_DIR_RELEASE:PATH=C:/Users/madrat/Desktop/projects/libraries/boost_1_75_0/lib64-msvc-14.2
+
+//Boost system library (debug)
+Boost_SYSTEM_LIBRARY_DEBUG:FILEPATH=C:/Users/madrat/Desktop/projects/libraries/boost_1_75_0/lib64-msvc-14.2/boost_system-vc142-mt-gd-x64-1_75.lib
+
+//Boost system library (release)
+Boost_SYSTEM_LIBRARY_RELEASE:FILEPATH=C:/Users/madrat/Desktop/projects/libraries/boost_1_75_0/lib64-msvc-14.2/boost_system-vc142-mt-x64-1_75.lib
+
 //Path to a program.
 CMAKE_AR:FILEPATH=C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.28.29333/bin/Hostx64/x64/lib.exe
 
@@ -203,6 +221,18 @@ reversible_data_hiding_SOURCE_DIR:STATIC=C:/Users/madrat/Desktop/hse/coursework/
 # INTERNAL cache entries
 ########################
 
+//ADVANCED property for variable: Boost_DIR
+Boost_DIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: Boost_INCLUDE_DIR
+Boost_INCLUDE_DIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: Boost_LIBRARY_DIR_DEBUG
+Boost_LIBRARY_DIR_DEBUG-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: Boost_LIBRARY_DIR_RELEASE
+Boost_LIBRARY_DIR_RELEASE-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: Boost_SYSTEM_LIBRARY_DEBUG
+Boost_SYSTEM_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: Boost_SYSTEM_LIBRARY_RELEASE
+Boost_SYSTEM_LIBRARY_RELEASE-ADVANCED:INTERNAL=1
 //This is the directory where this CMakeCache.txt was created
 CMAKE_CACHEFILE_DIR:INTERNAL=c:/Users/madrat/Desktop/hse/coursework/reversible_data_hiding/out/build/x64-Debug (default)
 //Major version of cmake used to create the current loaded cache
@@ -331,4 +361,26 @@ CMAKE_STATIC_LINKER_FLAGS_RELEASE-ADVANCED:INTERNAL=1
 CMAKE_STATIC_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_VERBOSE_MAKEFILE
 CMAKE_VERBOSE_MAKEFILE-ADVANCED:INTERNAL=1
+//Details about finding Boost
+FIND_PACKAGE_MESSAGE_DETAILS_Boost:INTERNAL=[C:/Users/madrat/Desktop/projects/libraries/boost_1_75_0][cfound components: system ][v1.75.0()]
+//Last used BOOST_LIBRARYDIR value.
+_BOOST_LIBRARYDIR_LAST:INTERNAL=C:\Users\madrat\Desktop\projects\libraries\boost_1_75_0\lib64-msvc-14.2
+//Last used BOOST_ROOT value.
+_BOOST_ROOT_LAST:INTERNAL=C:\Users\madrat\Desktop\projects\libraries\boost_1_75_0
+//Components requested for this build tree.
+_Boost_COMPONENTS_SEARCHED:INTERNAL=system
+//Last used Boost_INCLUDE_DIR value.
+_Boost_INCLUDE_DIR_LAST:INTERNAL=C:/Users/madrat/Desktop/projects/libraries/boost_1_75_0
+//Last used Boost_LIBRARY_DIR_DEBUG value.
+_Boost_LIBRARY_DIR_DEBUG_LAST:INTERNAL=C:/Users/madrat/Desktop/projects/libraries/boost_1_75_0/lib64-msvc-14.2
+//Last used Boost_LIBRARY_DIR_RELEASE value.
+_Boost_LIBRARY_DIR_RELEASE_LAST:INTERNAL=C:/Users/madrat/Desktop/projects/libraries/boost_1_75_0/lib64-msvc-14.2
+//Last used Boost_NAMESPACE value.
+_Boost_NAMESPACE_LAST:INTERNAL=boost
+//Last used Boost_USE_MULTITHREADED value.
+_Boost_USE_MULTITHREADED_LAST:INTERNAL=ON
+//Last used Boost_USE_STATIC_LIBS value.
+_Boost_USE_STATIC_LIBS_LAST:INTERNAL=OFF
+//Last used Boost_USE_STATIC_RUNTIME value.
+_Boost_USE_STATIC_RUNTIME_LAST:INTERNAL=OFF
 

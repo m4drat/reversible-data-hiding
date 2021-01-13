@@ -1,0 +1,6 @@
+[submodule "libraries/CImg"]
+	path = libraries/CImg
+	url = https://github.com/dtschump/CImg
+[submodule "libraries/eigen"]
+	path = libraries/eigen
+	url = https://gitlab.com/libeigen/eigen
