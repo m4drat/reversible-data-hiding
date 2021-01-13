@@ -13,6 +13,8 @@ find_package(Boost REQUIRED COMPONENTS system)
 # Add source to this project's executable.
 add_executable(${PROJECT_NAME} "src/main.cpp"  "include/img_matrix.h" "src/img_matrix.cpp")
 
+set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
+
 target_include_directories(${PROJECT_NAME} PUBLIC 
     ${Boost_INCLUDE_DIRS}
     "libraries"

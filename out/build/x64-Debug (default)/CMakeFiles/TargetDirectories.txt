@@ -1,3 +1,0 @@
-C:/Users/madrat/Desktop/hse/coursework/reversible_data_hiding/out/build/x64-Debug (default)/CMakeFiles/reversible_data_hiding.dir
-C:/Users/madrat/Desktop/hse/coursework/reversible_data_hiding/out/build/x64-Debug (default)/CMakeFiles/edit_cache.dir
-C:/Users/madrat/Desktop/hse/coursework/reversible_data_hiding/out/build/x64-Debug (default)/CMakeFiles/rebuild_cache.dir
