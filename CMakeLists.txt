@@ -11,9 +11,10 @@ set(Boost_USE_STATIC_RUNTIME OFF)
 find_package(Boost REQUIRED COMPONENTS system)
 
 # Add source to this project's executable.
-add_executable(${PROJECT_NAME} "src/main.cpp"  "include/img_matrix.h" "src/img_matrix.cpp")
+add_executable(${PROJECT_NAME} "src/main.cpp"  "include/bmp_image.h" "src/bmp_image.cpp" "include/image_matrix.h" "src/image_matrix.cpp" "include/types.h")
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
 target_include_directories(${PROJECT_NAME} PUBLIC 
     ${Boost_INCLUDE_DIRS}
