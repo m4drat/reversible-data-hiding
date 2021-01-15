@@ -132,4 +132,10 @@ namespace rdh {
     {
         return m_ImageMatrix.at(t_Y);
     }
+
+    template <typename T>
+    std::vector<std::vector<T>>& ImageMatrix<T>::GetMatrixRaw()
+    {
+        return m_ImageMatrix;
+    }
 }

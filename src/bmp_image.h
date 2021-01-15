@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <ostream>
 
 #include "types.h"
 #include "image_matrix.h"
@@ -54,6 +55,14 @@ namespace rdh {
          * @brief Display image
         */
         void Show();
+
+        /**
+         * @brief Dumps content of an image in a json-like format
+         * @param t_Stream file stream to write to
+         * @param t_BmpImage image to dump
+         * @return std::ostream&
+        */
+        friend std::ostream& operator<<(std::ostream& t_Stream, BmpImage& t_BmpImage);
 
     private:
         ImageMatrix<Color8> m_ImageMatrix;

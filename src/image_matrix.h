@@ -110,6 +110,12 @@ namespace rdh {
          * @return std::vector<T> that represents row
         */
         std::vector<T>& GetRow(uint32_t t_Y);
+
+        /**
+         * @brief Returns whole 2d array as a reference
+         * @return reference to a 2d array, that represents matrix
+        */
+        std::vector<std::vector<T>>& GetMatrixRaw();
     private:
         /**
          * @brief Represents pixels in a specific image

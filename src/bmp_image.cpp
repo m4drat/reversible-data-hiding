@@ -59,4 +59,29 @@ namespace rdh {
 
         image.display();
     }
+
+    std::ostream& operator<<(std::ostream& t_Stream, BmpImage& t_BmpImage)
+    {
+        t_Stream << "{\n";
+        for (auto rowIt = t_BmpImage.m_ImageMatrix.GetMatrixRaw().begin(); rowIt != t_BmpImage.m_ImageMatrix.GetMatrixRaw().end(); ++rowIt) {
+            t_Stream << "    { ";
+            for (auto elemIt = rowIt->begin(); elemIt != rowIt->end(); ++elemIt) {
+                if (std::distance(elemIt, rowIt->end()) == 1) {
+                    t_Stream << "0x" << std::hex << unsigned(*elemIt);
+                }
+                else {
+                    t_Stream << "0x" << std::hex << unsigned(*elemIt) << ", ";
+                }
+            }
+            if (std::distance(rowIt, t_BmpImage.m_ImageMatrix.GetMatrixRaw().end()) == 1) {
+                t_Stream << " }\n";
+            }
+            else {
+                t_Stream << " },\n";
+            }
+        }
+        t_Stream << "}";
+
+        return t_Stream;
+    }
 }
