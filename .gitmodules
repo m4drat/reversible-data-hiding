@@ -4,3 +4,6 @@
 [submodule "libraries/eigen"]
 	path = libraries/eigen
 	url = https://gitlab.com/libeigen/eigen
+[submodule "libraries/googletest"]
+	path = libraries/googletest
+	url = https://github.com/google/googletest
