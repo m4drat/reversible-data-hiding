@@ -1,5 +1,7 @@
 #pragma once
 
+#include <fstream>
+
 namespace rdh {
     namespace utils {
         template<typename T>
@@ -27,6 +29,33 @@ namespace rdh {
                 T byte = static_cast<T>(strtol(byteStr.c_str(), NULL, 16));
                 bytes.push_back(byte);
             }
+
+            return bytes;
+        }
+
+        template<typename T>
+        std::vector<T> LoadKeyFile(const std::string& t_Filename) {
+            // open the file:
+            std::ifstream file(t_Filename, std::ios::binary);
+
+            // Stop eating new lines in binary mode!!!
+            file.unsetf(std::ios::skipws);
+
+            // get its size:
+            std::streampos fileSize;
+
+            file.seekg(0, std::ios::end);
+            fileSize = file.tellg();
+            file.seekg(0, std::ios::beg);
+
+            // reserve capacity
+            std::vector<T> bytes;
+            bytes.reserve(fileSize);
+
+            // read the data:
+            bytes.insert(bytes.begin(),
+                std::istream_iterator<T>(file),
+                std::istream_iterator<T>());
 
             return bytes;
         }

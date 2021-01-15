@@ -4,8 +4,7 @@
 
 #include "image_matrix.h"
 #include "bmp_image.h"
-#include "utils.h"
-#include "encryptor.h"
+#include "options.h"
 
 namespace po = boost::program_options;
 
@@ -31,9 +30,13 @@ int main(int argc, char* argv[])
             "  recover: \tRecovers image specified in --image-path using both keys provided in --data-key and "
             "--encryption-key. Result will be saved in --result-path.\n")
         ("encryption-key", po::value<std::string>(), "Image encryption/decryption key.\n"
-            "Example: --encryption-key AA00BB11CC22DD33EE\n")
+            "  Example: --encryption-key AA00BB11CC22DD33EE\n")
+        ("enc-key-file", po::value<std::string>(), "Image encryption/decryption key file (key should be in binary form). (can be used instead of encryption-key)\n"
+            "  Example: --enc-key-file ./enc_key_file.bin\n")
         ("data-key", po::value<std::string>(), "Data embedding/extraction key.\n"
-            "Example: --data-key AA00BB11CC22DD33EE\n");
+            "  Example: --data-key AA00BB11CC22DD33EE\n")
+        ("data-key-file", po::value<std::string>(), "Data embedding/extraction key (key should be in binary form). (can be used instead of data-key)\n"
+            "  Example: --data-key-file ./data_key_file.bin\n");
     
     try {
         po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -70,57 +73,22 @@ int main(int argc, char* argv[])
     
     try {
         if (mode == "show") {
-            rdh::BmpImage image(imagePath);
-            image.Show();
+            return rdh::Options::HandleShow(imagePath, vm, desc);
         }
         else if (mode == "encrypt") {
-            if (vm.count("encryption-key") == 0) {
-                std::cout << "You must provide encryption key in form of a hex string: \"AABBCC001122\"" << std::endl;
-                std::cout << desc << std::endl;
-                return 1;
-            }
-
-            if (vm.count("result-path") == 0) {
-                std::cout << "You must provide result path, to write encrypted image to." << std::endl;
-                std::cout << desc << std::endl;
-                return 1;
-            }
-
-            std::vector<uint8_t> encryptionKey = rdh::utils::HexToBytes<uint8_t>(vm["encryption-key"].as<std::string>());
-            rdh::BmpImage image(imagePath);
-
-            if (encryptionKey.size() < static_cast<std::size_t>(image.GetWidth()) * static_cast<std::size_t>(image.GetHeight())) {
-                std::cout << "Waring! Encryption key length is less than image size!" << std::endl;
-            }
-
-            rdh::Encryptor::Encrypt(image, encryptionKey).Save(vm["result-path"].as<std::string>());
+            return rdh::Options::HandleEncrypt(imagePath, vm, desc);
         }
         else if (mode == "hide") {
-            assert(false && "Option is not implemented!");
+            return rdh::Options::HandleHide(imagePath, vm, desc);
         }
         else if (mode == "decrypt") {
-            if (vm.count("encryption-key") == 0) {
-                std::cout << "You must provide decryption key in form of a hex string: \"AABBCC001122\"" << std::endl;
-                std::cout << desc << std::endl;
-                return 1;
-            }
-
-            if (vm.count("result-path") == 0) {
-                std::cout << "You must provide result path, to write encrypted image to." << std::endl;
-                std::cout << desc << std::endl;
-                return 1;
-            }
-
-            std::vector<uint8_t> decryptionKey = rdh::utils::HexToBytes<uint8_t>(vm["encryption-key"].as<std::string>());
-            rdh::BmpImage image(imagePath);
-
-            rdh::Encryptor::Decrypt(image, decryptionKey).Save(vm["result-path"].as<std::string>());
+            return rdh::Options::HandleDecrypt(imagePath, vm, desc);
         }
         else if (mode == "extract") {
-            assert(false && "Option is not implemented!");
+            return rdh::Options::HandleExtract(imagePath, vm, desc);
         }
         else if (mode == "recover") {
-            assert(false && "Option is not implemented!");
+            return rdh::Options::HandleRecover(imagePath, vm, desc);
         }
         else {
             std::cout << "Incorrect operation mode selected!" << std::endl;
