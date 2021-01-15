@@ -81,10 +81,10 @@ namespace rdh {
          * @param t_X x coordinate of the pixel
          * @return pixel value
         */
-        T GetPixel(uint32_t t_Y, uint32_t t_X);
+        T GetPixel(uint32_t t_Y, uint32_t t_X) const;
 
         /**
-         * @brief Creates a slice of an ImageMatrix.
+         * @brief Creates a copy of a selected region.
          * @param t_YStart the pixel to be sliced from (y-axis) (including)
          * @param t_YEnd the pixel to be sliced to (y-axis) (including)
          * @param t_XStart the pixel to be sliced from (x-axis) (including)
@@ -97,13 +97,13 @@ namespace rdh {
          * @brief Get height of an image matrix.
          * @return height of an image
         */
-        uint32_t GetHeight();
+        uint32_t GetHeight() const;
 
         /**
          * @brief Get width of an image matrix.
          * @return width of an image
         */
-        uint32_t GetWidth();
+        uint32_t GetWidth() const;
 
         /**
          * @brief Returns reference to a specific row

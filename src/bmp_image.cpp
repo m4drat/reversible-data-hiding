@@ -30,6 +30,25 @@ namespace rdh {
         }
     }
 
+    BmpImage::BmpImage(ImageMatrix<Color8>&& t_ImageMatrix)
+    {
+        m_ImageMatrix = std::move(t_ImageMatrix);
+    }
+
+    BmpImage::BmpImage(BmpImage&& t_Other)
+    {
+        m_ImageMatrix = std::move(t_Other.GetImageMatrix());
+    }
+
+    BmpImage& BmpImage::operator=(BmpImage&& t_Other) noexcept
+    {
+        if (this != &t_Other) {
+            m_ImageMatrix = std::move(t_Other.GetImageMatrix());
+        }
+
+        return *this;
+    }
+
     void BmpImage::Save(const std::string& t_ImagePath)
     {
         if (!t_ImagePath.ends_with(".bmp")) {
@@ -44,10 +63,35 @@ namespace rdh {
         image.save(t_ImagePath.c_str());
     }
 
-    BmpImage BmpImage::Slice(uint32_t t_XStart, uint32_t t_XEnd, uint32_t t_YStart, uint32_t t_YEnd)
+    BmpImage BmpImage::Crop(uint32_t t_YStart, uint32_t t_YEnd, uint32_t t_XStart, uint32_t t_XEnd)
     {
-        assert(false && ("Function is not implemented!"));
-        return BmpImage(0, 0);
+        return std::move(BmpImage(std::move(m_ImageMatrix.Slice(t_YStart, t_YEnd, t_XStart, t_XEnd))));
+    }
+
+    BmpImage& BmpImage::SetPixel(uint32_t t_Y, uint32_t t_X, Color8 t_NewPixelValue)
+    {
+        m_ImageMatrix.SetPixel(t_Y, t_X, t_NewPixelValue);
+        return *this;
+    }
+
+    Color8 BmpImage::GetPixel(uint32_t t_Y, uint32_t t_X) const
+    {
+        return m_ImageMatrix.GetPixel(t_Y, t_X);
+    }
+
+    uint32_t BmpImage::GetHeight() const
+    {
+        return m_ImageMatrix.GetHeight();
+    }
+
+    uint32_t BmpImage::GetWidth() const
+    {
+        return m_ImageMatrix.GetWidth();
+    }
+
+    ImageMatrix<Color8>& BmpImage::GetImageMatrix()
+    {
+        return m_ImageMatrix;
     }
 
     void BmpImage::Show()

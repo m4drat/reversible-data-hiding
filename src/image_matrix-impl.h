@@ -85,7 +85,7 @@ namespace rdh {
     }
 
     template <typename T>
-    T ImageMatrix<T>::GetPixel(uint32_t t_Y, uint32_t t_X)
+    T ImageMatrix<T>::GetPixel(uint32_t t_Y, uint32_t t_X) const
     {
         return m_ImageMatrix.at(t_Y).at(t_X);
     }
@@ -116,13 +116,13 @@ namespace rdh {
     }
 
     template <typename T>
-    uint32_t ImageMatrix<T>::GetHeight()
+    uint32_t ImageMatrix<T>::GetHeight() const
     {
         return m_Height;
     }
 
     template <typename T>
-    uint32_t ImageMatrix<T>::GetWidth()
+    uint32_t ImageMatrix<T>::GetWidth() const
     {
         return m_Width;
     }

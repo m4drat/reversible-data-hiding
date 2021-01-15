@@ -30,10 +30,23 @@ namespace rdh {
         // BmpImage(const BmpImage& t_Image);
 
         /**
-         * @brief Constructs image using image matrix
+         * @brief Constructs image using ImageMatrix
          * @param t_ImageMatrix matrix, that represents an image
         */
-        // BmpImage(std::vector<std::vector<Color8>>& t_ImageMatrix);
+        BmpImage(ImageMatrix<Color8>&& t_ImageMatrix);
+
+        /**
+         * @brief Move constructor from other image
+         * @param t_Other image to move from
+        */
+        BmpImage(BmpImage&& t_Other);
+
+        /**
+         * @brief Moves image t_Other into current object
+         * @param t_Other Object to move
+         * @return new BmpImage
+        */
+        BmpImage& operator=(BmpImage&& t_Other) noexcept;
 
         /**
          * @brief Saves current image in bmp format
@@ -42,14 +55,49 @@ namespace rdh {
         void Save(const std::string& t_ImagePath);
 
         /**
-         * @brief Returns an image, constructed from a slice of original image
-         * @param t_XStart the pixel to be sliced from (x-axis) (including)
-         * @param t_XEnd the pixel to be sliced to (x-axis) (including)
+         * @brief Returns cropped image
          * @param t_YStart the pixel to be sliced from (y-axis) (including)
          * @param t_YEnd the pixel to be sliced to (y-axis) (including)
+         * @param t_XStart the pixel to be sliced from (x-axis) (including)
+         * @param t_XEnd the pixel to be sliced to (x-axis) (including)
          * @return New Image
         */
-        BmpImage Slice(uint32_t t_XStart, uint32_t t_XEnd, uint32_t t_YStart, uint32_t t_YEnd);
+        BmpImage Crop(uint32_t t_YStart, uint32_t t_YEnd, uint32_t t_XStart, uint32_t t_XEnd);
+
+        /**
+         * @brief Set pixel to a specific value at location (y, x)
+         * @param t_Y y coordinate of the pixel
+         * @param t_X x coordinate of the pixel
+         * @param t_NewPixelValue new pixel value
+         * @return reference to current object (allows chaining: im.SetPixel(0, 0, 255).SetPixel(0, 1, 255)...)
+        */
+        BmpImage& SetPixel(uint32_t t_Y, uint32_t t_X, Color8 t_NewPixelValue);
+
+        /**
+         * @brief Returns pixel value from location (y, x)
+         * @param t_Y y coordinate of the pixel
+         * @param t_X x coordinate of the pixel
+         * @return pixel value
+        */
+        Color8 GetPixel(uint32_t t_Y, uint32_t t_X) const;
+        
+        /**
+         * @brief Returns height of the image
+         * @return height of the image
+        */
+        uint32_t GetHeight() const;
+        
+        /**
+         * @brief Returns width of the image
+         * @return width of the image
+        */
+        uint32_t GetWidth() const;
+
+        /**
+         * @brief Return ImageMatrix of a current image
+         * @return ImageMatrix
+        */
+        ImageMatrix<Color8>& GetImageMatrix();
 
         /**
          * @brief Display image
