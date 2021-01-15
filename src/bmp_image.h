@@ -26,19 +26,19 @@ namespace rdh {
          * @brief Construct an image using t_Image as a source
          * @param t_Image image, which copy you want to create
         */
-        BmpImage(const BmpImage& t_Image);
+        // BmpImage(const BmpImage& t_Image);
 
         /**
          * @brief Constructs image using image matrix
          * @param t_ImageMatrix matrix, that represents an image
         */
-        BmpImage(std::vector<std::vector<Color8>>& t_ImageMatrix);
+        // BmpImage(std::vector<std::vector<Color8>>& t_ImageMatrix);
 
         /**
          * @brief Saves current image in bmp format
          * @param t_ImagePath path to save image to
         */
-        void SaveImage(const std::string& t_ImagePath);
+        void Save(const std::string& t_ImagePath);
 
         /**
          * @brief Returns an image, constructed from a slice of original image
@@ -48,7 +48,12 @@ namespace rdh {
          * @param t_YEnd the pixel to be sliced to (y-axis) (including)
          * @return New Image
         */
-        BmpImage ImageSlice(uint32_t t_XStart, uint32_t t_XEnd, uint32_t t_YStart, uint32_t t_YEnd);
+        BmpImage Slice(uint32_t t_XStart, uint32_t t_XEnd, uint32_t t_YStart, uint32_t t_YEnd);
+
+        /**
+         * @brief Display image
+        */
+        void Show();
 
     private:
         ImageMatrix<Color8> m_ImageMatrix;

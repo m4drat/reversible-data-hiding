@@ -46,6 +46,38 @@ namespace rdh {
     {}
 
     template <typename T>
+    ImageMatrix<T>::ImageMatrix(ImageMatrix&& t_Other) noexcept
+    {
+        m_ImageMatrix = std::move(t_Other.m_ImageMatrix);
+
+        m_Height = t_Other.m_Height;
+        m_Width = t_Other.m_Width;
+
+        t_Other.m_Height = 0;
+        t_Other.m_Width = 0;
+    }
+
+    template <typename T>
+    ImageMatrix<T>& ImageMatrix<T>::operator=(ImageMatrix&& t_Other) noexcept
+    {
+        if (this != &t_Other)
+        {
+            m_ImageMatrix.clear();
+            m_ImageMatrix.resize(0);
+
+            m_ImageMatrix = std::move(t_Other.m_ImageMatrix);
+
+            m_Height = t_Other.m_Height;
+            m_Width = t_Other.m_Width;
+
+            t_Other.m_Height = 0;
+            t_Other.m_Width = 0;
+        }
+
+        return *this;
+    }
+
+    template <typename T>
     ImageMatrix<T>& ImageMatrix<T>::SetPixel(uint32_t t_Y, uint32_t t_X, T t_NewPixelValue)
     {
         m_ImageMatrix.at(t_Y).at(t_X) = t_NewPixelValue;

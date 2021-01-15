@@ -53,6 +53,19 @@ namespace rdh {
         */
         // ImageMatrix(ImageMatrix<T>& t_ImageMatrix);
 
+       /**
+         * @brief Move constructor
+         * @param t_Other
+        */
+        ImageMatrix(ImageMatrix&& t_Other) noexcept;
+
+        /**
+         * @brief Moves t_Other into this
+         * @param t_Other rvalue reference to an object
+         * @return ImageMatrix
+        */
+        ImageMatrix& operator=(ImageMatrix&& t_Other) noexcept;
+
         /**
          * @brief Set pixel to a specific value at location (y, x)
          * @param t_Y y coordinate of the pixel
