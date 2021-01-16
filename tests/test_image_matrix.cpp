@@ -9,6 +9,7 @@ TEST(ImageMatrixTest, DefaultConstructor_test) {
     ASSERT_EQ(0, imMat.GetHeight());
     ASSERT_EQ(0, imMat.GetWidth());
 }
+
 TEST(ImageMatrixTest, InitializerListInitialization_test) {
     ImageMatrix<Color8> imMat({
         {0x0, 0x10, 0x20, 0x30},

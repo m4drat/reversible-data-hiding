@@ -119,6 +119,7 @@ namespace rdh {
     private:
         /**
          * @brief Represents pixels in a specific image
+         * @todo Should be replaced with T matrix[n * m], to improve locality (cache optimizations);
         */
         std::vector<std::vector<T>> m_ImageMatrix;
 

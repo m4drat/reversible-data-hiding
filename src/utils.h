@@ -57,7 +57,7 @@ namespace rdh {
                 std::istream_iterator<T>(file),
                 std::istream_iterator<T>());
 
-            return bytes;
+            return std::move(bytes);
         }
     }
 }

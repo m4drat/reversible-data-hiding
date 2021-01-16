@@ -3,6 +3,7 @@
 project("reversible_data_hiding")
 
 option(BUILD_TESTS "Build tests" ON)
+option(BUILD_BENCHMARKS "Build benchmarks" ON)
 
 # Boost - to parse command line params
 set(BOOST_ROOT "C:\\Users\\madrat\\Desktop\\projects\\libraries\\boost_1_75_0")
@@ -27,10 +28,16 @@ include_directories(
 )
 
 add_subdirectory(src)
+add_subdirectory(libraries/googletest)
 
 if (${BUILD_TESTS} MATCHES ON)
     enable_testing()
     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-    add_subdirectory(libraries/googletest)
     add_subdirectory(tests)
+endif()
+
+if (${BUILD_BENCHMARKS} MATCHES ON)
+    enable_testing()
+    add_subdirectory(libraries/benchmark)
+    add_subdirectory(benchmarks)
 endif()
