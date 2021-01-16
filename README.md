@@ -12,8 +12,17 @@
 
 
 #### Performance
-- Sailsboat (encryption): 29ms vs 298ms
-  - Use instrinsics with vectored instructions
+Current results (no microoptimizations):
+
+```
+----------------------------------------------------------------
+Benchmark                      Time             CPU   Iterations
+----------------------------------------------------------------
+EncryptAirplane_bench   27939076 ns     29871324 ns           34
+EncryptCrowd_bench      28414308 ns     27500000 ns           25
+EncryptMan_bench        28586656 ns     26875000 ns           25
+EncryptBoat_bench       28063516 ns     28750000 ns           25
+```
 
 - Possible microoptimisations:
   - parallel algorithms (on image iteration (foreach))
