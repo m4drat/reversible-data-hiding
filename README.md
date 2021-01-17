@@ -14,35 +14,44 @@ Current results (no microoptimizations):
 
 ```
 Default realisation (pixel-by-pixel encryption):
-----------------------------------------------------------------
-Benchmark                      Time             CPU   Iterations
-----------------------------------------------------------------
-EncryptAirplane_bench    3598250 ns      3576807 ns          166
-EncryptCrowd_bench       3331209 ns      3044872 ns          195
-EncryptMan_bench         3397647 ns      3605769 ns          195
-EncryptBoat_bench        3334771 ns      3404018 ns          280
-EncryptLiberty_bench    13529130 ns     13750000 ns           50
-Load512x512_bench        1750459 ns      1778739 ns          448
-Load514x514_bench        1283643 ns      1283482 ns          560
-Load1024x1024_bench      6525012 ns      6556920 ns          112
-
-Threaded realisation (Looks worse now):
 -------------------------------------------------------------------------
 Benchmark                               Time             CPU   Iterations
 -------------------------------------------------------------------------
-EncryptAirplane_512x512_bench        15.2 ms         2.56 ms          195
-EncryptCrowd_512x512_bench           14.8 ms         1.95 ms          224
-EncryptMan_512x512_bench             14.6 ms         1.51 ms          560
-EncryptBoat_512x512_bench            14.1 ms         1.69 ms          407
-EncryptLiberty_1024x1024_bench       17.3 ms         1.59 ms          373
-Load512x512_bench                    1.68 ms         1.67 ms          448
-Load514x514_bench                    1.26 ms         1.26 ms          498
-Load1024x1024_bench                  8.08 ms         8.16 ms           90
+EncryptAirplane_512x512_bench        3.32 ms         3.25 ms          154
+EncryptCrowd_512x512_bench           3.30 ms         3.29 ms          204
+EncryptMan_512x512_bench             3.25 ms         2.98 ms          236
+EncryptBoat_512x512_bench            3.26 ms         3.18 ms          187
+EncryptLiberty_1024x1024_bench       13.1 ms         13.2 ms           64
+EncryptMan_2048x2048_bench           52.1 ms         51.6 ms           10
+EncryptMan_4096x4096_bench            212 ms          214 ms            3
+
+Threaded realisation:
+-------------------------------------------------------------------------
+Benchmark                               Time             CPU   Iterations
+-------------------------------------------------------------------------
+EncryptAirplane_512x512_bench        13.6 ms         2.42 ms          265
+EncryptCrowd_512x512_bench           13.2 ms         1.72 ms          299
+EncryptMan_512x512_bench             13.2 ms         1.74 ms          448
+EncryptBoat_512x512_bench            13.3 ms         1.59 ms          747
+EncryptLiberty_1024x1024_bench       15.7 ms         1.72 ms          299
+EncryptMan_2048x2048_bench           28.7 ms         4.53 ms          100
+EncryptMan_4096x4096_bench           74.6 ms         11.8 ms           41
+
+Combined approach
+-------------------------------------------------------------------------
+Benchmark                               Time             CPU   Iterations
+-------------------------------------------------------------------------
+EncryptAirplane_512x512_bench        3.57 ms         3.20 ms          166
+EncryptCrowd_512x512_bench           3.37 ms         3.44 ms          236
+EncryptMan_512x512_bench             3.38 ms         3.53 ms          195
+EncryptBoat_512x512_bench            3.40 ms         3.49 ms          179
+EncryptLiberty_1024x1024_bench       13.8 ms         13.4 ms           50
+EncryptMan_2048x2048_bench           29.8 ms         6.00 ms          112
+EncryptMan_4096x4096_bench           74.1 ms         11.7 ms           56
 ```
 
 - Possible microoptimisations:
-  - parallel algorithms (on image iteration (foreach))
-  - Divide image into blocks, and allow each thread-worker to work with each part of the image simultaniously
+  - ~~Divide image into blocks, and allow each thread-worker to work with each part of the image simultaniously~~
   - Intrinsics and vector instructions
   - ~~replace `std::vector<std::vector<Color8>>` with just one-dim matrix (cache optimisations)~~ (already done by compiler in release build)
 

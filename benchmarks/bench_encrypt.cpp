@@ -65,3 +65,28 @@ static void EncryptLiberty_1024x1024_bench(benchmark::State& state) {
     }
 }
 BENCHMARK(EncryptLiberty_1024x1024_bench)->Unit(benchmark::kMillisecond);
+
+static void EncryptMan_2048x2048_bench(benchmark::State& state) {
+    for (auto _ : state)
+    {
+        state.PauseTiming();
+        std::vector<uint8_t> encryptionKey = utils::LoadKeyFile<uint8_t>("..\\..\\..\\..\\example_key.bin");
+        rdh::BmpImage image("..\\..\\..\\..\\images\\man2048x2048.bmp");
+        state.ResumeTiming();
+        Encryptor::Encrypt(image, encryptionKey); // .Save("..\\..\\..\\..\\images\\benchmark-test.bmp")
+    }
+}
+BENCHMARK(EncryptMan_2048x2048_bench)->Unit(benchmark::kMillisecond);
+
+static void EncryptMan_4096x4096_bench(benchmark::State& state) {
+    for (auto _ : state)
+    {
+        state.PauseTiming();
+        std::vector<uint8_t> encryptionKey = utils::LoadKeyFile<uint8_t>("..\\..\\..\\..\\example_key.bin");
+        rdh::BmpImage image("..\\..\\..\\..\\images\\man4096x4096.bmp");
+        state.ResumeTiming();
+        Encryptor::Encrypt(image, encryptionKey); // .Save("..\\..\\..\\..\\images\\benchmark-test.bmp")
+    }
+}
+BENCHMARK(EncryptMan_4096x4096_bench)->Unit(benchmark::kMillisecond);
+
