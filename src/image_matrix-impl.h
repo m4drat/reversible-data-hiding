@@ -91,7 +91,7 @@ namespace rdh {
     }
 
     template <typename T>
-    ImageMatrix<T> ImageMatrix<T>::Slice(uint32_t t_YStart, uint32_t t_YEnd, uint32_t t_XStart, uint32_t t_XEnd)
+    ImageMatrix<T> ImageMatrix<T>::Slice(uint32_t t_YStart, uint32_t t_YEnd, uint32_t t_XStart, uint32_t t_XEnd) const
     {
         if (t_XEnd - t_XStart < 0)
         {

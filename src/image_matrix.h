@@ -91,7 +91,7 @@ namespace rdh {
          * @param t_XEnd the pixel to be sliced to (x-axis) (including)
          * @return New ImageMatrix
         */
-        ImageMatrix<T> Slice(uint32_t t_YStart, uint32_t t_YEnd, uint32_t t_XStart, uint32_t t_XEnd);
+        ImageMatrix<T> Slice(uint32_t t_YStart, uint32_t t_YEnd, uint32_t t_XStart, uint32_t t_XEnd) const;
 
         /**
          * @brief Get height of an image matrix.

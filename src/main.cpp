@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
     try {
         po::store(po::parse_command_line(argc, argv, desc), vm);
     }
-    catch (po::unknown_option& e) {
+    catch (po::unknown_option) {
         std::cout << "Unknown option!" << std::endl;
         std::cout << desc << std::endl;
         return 1;
@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
         mode = vm["mode"].as<std::string>();
         imagePath = vm["image-path"].as<std::string>();
     }
-    catch (po::required_option& e) {
+    catch (po::required_option) {
         std::cout << "Missing one ore more required option!" << std::endl;
         std::cout << desc << std::endl;
         return 1;

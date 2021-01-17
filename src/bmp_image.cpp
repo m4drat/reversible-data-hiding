@@ -30,6 +30,11 @@ namespace rdh {
         }
     }
 
+    BmpImage::BmpImage(const BmpImage& t_BmpImage)
+    {
+        m_ImageMatrix = std::move(t_BmpImage.m_ImageMatrix.Slice(0, t_BmpImage.GetHeight() - 1, 0, t_BmpImage.GetWidth() - 1));
+    }
+
     BmpImage::BmpImage(ImageMatrix<Color8>&& t_ImageMatrix)
     {
         m_ImageMatrix = std::move(t_ImageMatrix);
@@ -94,7 +99,7 @@ namespace rdh {
         return m_ImageMatrix;
     }
 
-    void BmpImage::Show()
+    void BmpImage::Show() const
     {
         CImg<Color8> image(m_ImageMatrix.GetWidth(), m_ImageMatrix.GetHeight(), 1, 1, 0);
         cimg_forXY(image, imgX, imgY) {
@@ -102,6 +107,29 @@ namespace rdh {
         }
 
         image.display();
+    }
+
+    std::tuple<uint32_t, uint32_t, uint32_t> BmpImage::OptimalSubdivision(uint32_t t_DesiredSubdividedImagesCount) const
+    {
+        assert(m_ImageMatrix.GetWidth() % 2 == 0);
+        assert(m_ImageMatrix.GetHeight() % 2 == 0);
+    
+        uint32_t subimageHeight = m_ImageMatrix.GetHeight();
+        uint32_t subimageWidth  = m_ImageMatrix.GetWidth();
+        uint32_t totalSubimages = 1;
+
+        while ((totalSubimages < t_DesiredSubdividedImagesCount) && (subimageHeight % 2 == 0 || subimageWidth % 2 == 0)) {
+            if (subimageHeight % 2 == 0) {
+                subimageHeight = subimageHeight / 2;
+                totalSubimages *= 2;
+            }
+            if (subimageWidth % 2 == 0) {
+                subimageWidth = subimageWidth / 2;
+                totalSubimages *= 2;
+            }
+        }
+
+        return std::make_tuple(subimageHeight, subimageWidth, totalSubimages);
     }
 
     std::ostream& operator<<(std::ostream& t_Stream, BmpImage& t_BmpImage)

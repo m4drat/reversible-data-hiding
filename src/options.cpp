@@ -39,7 +39,7 @@ namespace rdh {
         }
 
         if (encryptionKey.size() < static_cast<std::size_t>(image.GetWidth()) * static_cast<std::size_t>(image.GetHeight())) {
-            std::cout << "Waring! Encryption key length is less than image size!" << std::endl;
+            std::cout << "Warning! Encryption key length is less than image size!" << std::endl;
         }
 
         Encryptor::Encrypt(image, encryptionKey).Save(t_Vm["result-path"].as<std::string>());

@@ -24,6 +24,12 @@ namespace rdh {
         BmpImage(const std::string& t_ImagePath);
 
         /**
+         * @brief Copies t_BmpImage
+         * @param t_BmpImage image to construct from
+        */
+        BmpImage(const BmpImage& t_BmpImage);
+
+        /**
          * @brief Construct an image using t_Image as a source
          * @param t_Image image, which copy you want to create
         */
@@ -102,7 +108,17 @@ namespace rdh {
         /**
          * @brief Display image
         */
-        void Show();
+        void Show() const;
+
+        /**
+         * @brief Tries to divides image into at least t_DesiredSubdividedImages. Can fail and divide into fewer parts.
+         * @param t_DesiredSubdividedImagesCount Desired amount of subimages to divide into
+         * @return std::tuple<uint32_t, uint32_t, uint32_t>, where
+         *     std::get<0> - height of subimage
+         *     std::get<1> - width of subimage
+         *     std::get<2> - total number os subimages
+        */
+        std::tuple<uint32_t, uint32_t, uint32_t> OptimalSubdivision(uint32_t t_DesiredSubdividedImagesCount) const;
 
         /**
          * @brief Dumps content of an image in a json-like format
@@ -113,6 +129,9 @@ namespace rdh {
         friend std::ostream& operator<<(std::ostream& t_Stream, BmpImage& t_BmpImage);
 
     private:
+        /**
+         * @brief Image matrix that represents pixels of the image
+         */
         ImageMatrix<Color8> m_ImageMatrix;
     };
 }

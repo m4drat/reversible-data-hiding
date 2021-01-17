@@ -20,6 +20,7 @@ message(STATUS "BUILD_TESTS        : ${BUILD_TESTS}")
 message(STATUS "BOOST_ROOT         : ${BOOST_ROOT}")
 message(STATUS "BOOST_LIBRARYDIR   : ${BOOST_LIBRARYDIR}")
 message(STATUS "CMAKE_CXX_STANDARD : ${CMAKE_CXX_STANDARD}")
+message(STATUS "CMAKE_BUILD_TYPE   : ${CMAKE_BUILD_TYPE}")
 
 include_directories(
     ${Boost_INCLUDE_DIRS}
