@@ -1,6 +1,7 @@
 #include "encryptor.h"
 
 #include <thread>
+#include <immintrin.h>
 
 namespace rdh {
 
@@ -66,6 +67,7 @@ namespace rdh {
 
     void Encryptor::EncryptorWorker(const BmpImage& t_PlainImage, BmpImage& t_EncryptedImage, const std::vector<uint8_t>& t_EncryptionKey, uint32_t t_YStart, uint32_t t_YEnd, uint32_t t_XStart, uint32_t t_XEnd)
     {
+        // If image width can be divided by 16, use SIMD version of algorithm
         for (uint32_t imgY = t_YStart; imgY < t_YEnd; ++imgY) {
             for (uint32_t imgX = t_XStart; imgX < t_XEnd; ++imgX) {
                 // Even if we are not blocking this with mutexes, it should be fine, because vector is already resized

@@ -36,7 +36,7 @@ namespace rdh {
          * @brief Encrypts part of an image t_PlainImage. Part of encrypted image is written into t_EncryptedImage. 
          * @param t_PlainImage image to encrypt
          * @param t_EncryptedImage resulting encrypted image
-         * @param t_EncryptionKey encryptioon key
+         * @param t_EncryptionKey encryption key
          * @param t_YStart y pixel coordinate to start encryption from (including)
          * @param t_YEnd y pixel coordinate to encrypt to (excluding)
          * @param t_XStart x pixel coordinate to start encryption from (including)
