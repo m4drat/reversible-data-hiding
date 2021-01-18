@@ -1,7 +1,7 @@
 # Reversible Data Hiding (c++ implementation)
 
-### How to build
-
+### How to build**
+**
 `cmake --build`
 
 ### How to use
