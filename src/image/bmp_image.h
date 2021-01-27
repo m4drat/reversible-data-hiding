@@ -4,7 +4,7 @@
 #include <ostream>
 
 #include "types.h"
-#include "image_matrix.h"
+#include "image/image_matrix.h"
 
 namespace rdh {
     class BmpImage {

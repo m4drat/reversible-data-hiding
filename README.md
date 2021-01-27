@@ -1,7 +1,7 @@
 # Reversible Data Hiding (c++ implementation)
 
-### How to build**
-**
+### How to build
+
 `cmake --build`
 
 ### How to use
@@ -44,7 +44,7 @@ EncryptMan_2048x2048_bench           28.7 ms         4.53 ms          100
 EncryptMan_4096x4096_bench           74.6 ms         11.8 ms           41
 ```
 
-- Combined approach
+- Hybrid approach
 
 ```none
 -------------------------------------------------------------------------
@@ -61,14 +61,16 @@ EncryptMan_4096x4096_bench           74.1 ms         11.7 ms           56
 
 - Possible micro optimizations:
   - ~~Divide image into blocks, and allow each thread-worker to work with each part of the image simultaneously~~
-  - Intrinsics and vector instructions
+  - ~~Intrinsics and vector instructions~~ (didn't work) (info links are commented)
+    <!---
     - https://software.intel.com/content/www/us/en/develop/articles/introduction-to-intel-advanced-vector-extensions.html
     - https://software.intel.com/sites/landingpage/IntrinsicsGuide/
     - https://docs.microsoft.com/en-us/cpp/intrinsics/x64-amd64-intrinsics-list?view=msvc-160
     - http://sci.tuomastonteri.fi/programming/sse
     - https://stackoverflow.com/questions/1389712/getting-started-with-intel-x86-sse-simd-instructions
     - https://users.ece.cmu.edu/~franzf/teaching/slides-18-645-simd.pdf
-  - ~~replace `std::vector<std::vector<Color8>>` with just one-dim matrix (cache optimizations)~~ (already done by compiler in release build)
+    -->  
+- ~~replace `std::vector<std::vector<Color8>>` with just one-dim matrix (cache optimizations)~~ (already done by compiler in release build)
 
 ### Program modules
 

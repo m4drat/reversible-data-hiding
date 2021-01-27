@@ -1,8 +1,8 @@
 #include "gtest/gtest.h"
 
-#include "encryptor.h"
-#include "bmp_image.h"
-#include "image_matrix.h"
+#include "encryptor/encryptor.h"
+#include "image/bmp_image.h"
+#include "image/image_matrix.h"
 
 using namespace rdh;
 

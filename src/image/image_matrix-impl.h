@@ -1,6 +1,6 @@
 #pragma once
 
-#include "image_matrix.h"
+#include "image/image_matrix.h"
 
 #include <assert.h>
 #include <stdexcept>

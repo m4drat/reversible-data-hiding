@@ -1,8 +1,8 @@
 #include "options.h"
 
 #include "utils.h"
-#include "encryptor.h"
-#include "bmp_image.h"
+#include "encryptor/encryptor.h"
+#include "image/bmp_image.h"
 
 namespace rdh {
 

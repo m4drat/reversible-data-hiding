@@ -1,4 +1,4 @@
-#include "bmp_image.h"
+#include "image/bmp_image.h"
 #include "utils.h"
 
 #include "CImg/CImg.h"

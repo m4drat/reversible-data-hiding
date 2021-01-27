@@ -1,8 +1,8 @@
 #include "benchmark/include/benchmark/benchmark.h"
 
 #include "utils.h"
-#include "bmp_image.h"
-#include "encryptor.h"
+#include "image/bmp_image.h"
+#include "encryptor/encryptor.h"
 
 using namespace rdh;
 

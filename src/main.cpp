@@ -2,8 +2,8 @@
 #include <string>
 #include <boost/program_options.hpp>
 
-#include "image_matrix.h"
-#include "bmp_image.h"
+#include "image/image_matrix.h"
+#include "image/bmp_image.h"
 #include "options.h"
 
 namespace po = boost::program_options;

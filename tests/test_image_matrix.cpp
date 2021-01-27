@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 
-#include "image_matrix.h"
+#include "image/image_matrix.h"
 
 using namespace rdh;
 
