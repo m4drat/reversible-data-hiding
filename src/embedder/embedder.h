@@ -7,6 +7,7 @@
 
 namespace rdh {
     class Embedder {
+    public:
         /**
          * @brief Embeds data into image t_PlainImage
          * @param t_EncryptedEmptyImage Encrypted image where additional data will be embedded

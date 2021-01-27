@@ -2,6 +2,7 @@
 
 #include "utils.h"
 #include "encryptor/encryptor.h"
+#include "embedder/embedder.h"
 #include "image/bmp_image.h"
 
 namespace rdh {
@@ -23,7 +24,7 @@ namespace rdh {
         }
 
         if (t_Vm.count("result-path") == 0) {
-            std::cout << "You must provide result path, to write encrypted image to." << std::endl;
+            std::cout << "You must provide result path (--result-path), to write encrypted image to." << std::endl;
             std::cout << t_Desc << std::endl;
             return 1;
         }
@@ -32,14 +33,14 @@ namespace rdh {
         rdh::BmpImage image(t_ImagePath);
         
         if (t_Vm.count("enc-key-file")) {
-            encryptionKey = utils::LoadKeyFile<uint8_t>(t_Vm["enc-key-file"].as<std::string>());
+            encryptionKey = utils::LoadFileData<uint8_t>(t_Vm["enc-key-file"].as<std::string>());
         }
         else {
             encryptionKey = rdh::utils::HexToBytes<uint8_t>(t_Vm["encryption-key"].as<std::string>());
         }
 
-        if (encryptionKey.size() < static_cast<std::size_t>(image.GetWidth()) * static_cast<std::size_t>(image.GetHeight())) {
-            std::cout << "Warning! Encryption key length is less than image size!" << std::endl;
+        if (encryptionKey.size() < static_cast<std::size_t>(image.GetWidth()) * static_cast<std::size_t>(image.GetHeight()) / 4) {
+            std::cout << "Warning! Encryption key length is less than (image.width * image.height) / 4!" << std::endl;
         }
 
         Encryptor::Encrypt(image, encryptionKey).Save(t_Vm["result-path"].as<std::string>());
@@ -49,9 +50,41 @@ namespace rdh {
         return 0;
     }
 
-    int Options::HandleHide(const std::string& t_ImagePath, po::variables_map& t_Vm, po::options_description& t_Desc)
+    int Options::HandleEmbed(const std::string& t_ImagePath, po::variables_map& t_Vm, po::options_description& t_Desc)
     {
-        assert(false && "Option is not implemented!");
+        if (t_Vm.count("embed-key") == 0 && t_Vm.count("embed-key-file") == 0) {
+            std::cout << "You must provide data embedding key via argument (--embed-key), or use embed key file (--embed-key-file)!" << std::endl;
+            std::cout << t_Desc << std::endl;
+            return 1;
+        }
+
+        if (t_Vm.count("result-path") == 0) {
+            std::cout << "You must provide result path (--result-path), to write image with embedded data to." << std::endl;
+            std::cout << t_Desc << std::endl;
+            return 1;
+        }
+
+        if (t_Vm.count("data-file") == 0) {
+            std::cout << "You must provide path to file with additional data to embed (--data-file) inside the image." << std::endl;
+            std::cout << t_Desc << std::endl;
+            return 1;
+        }
+
+        std::vector<uint8_t> embedKey;
+        std::vector<uint8_t> dataToEmbed = utils::LoadFileData<uint8_t>(t_Vm["data-file"].as<std::string>());
+        rdh::BmpImage image(t_ImagePath);
+
+        if (t_Vm.count("embed-key-file")) {
+            embedKey = utils::LoadFileData<uint8_t>(t_Vm["embed-key-file"].as<std::string>());
+        }
+        else {
+            embedKey = rdh::utils::HexToBytes<uint8_t>(t_Vm["embed-key"].as<std::string>());
+        }
+
+        Embedder::Embed(image, dataToEmbed, embedKey).Save(t_Vm["result-path"].as<std::string>());
+
+        std::cout << "Image with embedded data saved to: " << t_Vm["result-path"].as<std::string>() << std::endl;
+
         return 0;
     }
 
@@ -73,7 +106,7 @@ namespace rdh {
         rdh::BmpImage image(t_ImagePath);
 
         if (t_Vm.count("enc-key-file")) {
-            decryptionKey = utils::LoadKeyFile<uint8_t>(t_Vm["enc-key-file"].as<std::string>());
+            decryptionKey = utils::LoadFileData<uint8_t>(t_Vm["enc-key-file"].as<std::string>());
         }
         else {
             decryptionKey = rdh::utils::HexToBytes<uint8_t>(t_Vm["encryption-key"].as<std::string>());

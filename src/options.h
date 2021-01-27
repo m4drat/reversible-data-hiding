@@ -37,7 +37,7 @@ namespace rdh {
          * @param t_Desc boost options description
          * @return 0 if everything is OK, non-zero otherwise
         */
-        static int HandleHide(const std::string& t_ImagePath, po::variables_map& t_Vm, po::options_description& t_Desc);
+        static int HandleEmbed(const std::string& t_ImagePath, po::variables_map& t_Vm, po::options_description& t_Desc);
         
         /**
          * @brief Handles decrypt command

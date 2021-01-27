@@ -34,9 +34,13 @@ namespace rdh {
         }
 
         template<typename T>
-        std::vector<T> LoadKeyFile(const std::string& t_Filename) {
+        std::vector<T> LoadFileData(const std::string& t_Filename) {
             // open the file:
             std::ifstream file(t_Filename, std::ios::binary);
+
+            if (!file.is_open()) {
+                throw std::runtime_error("Specified file " + t_Filename + " doesn't exists!");
+            }
 
             // Stop eating new lines in binary mode!!!
             file.unsetf(std::ios::skipws);

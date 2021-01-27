@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
             "  show: \tDisplay image specified in --image-path.\n"
             "  encrypt: \tEncrypts image specified in --image-path using key provided in --encryption-key. "
             "Result will be saved in --result-path.\n"
-            "  hide   : \tHides data in image specified in --image-path using key provided in --data-key. "
+            "  embed  : \tEmbeds additional data specified in --data-file inside image specified in --image-path using key provided in --embed-key. "
             "Result will be saved in --result-path.\n"
             "  decrypt: \tDecrypts image specified in --image-path using key provided in --encryption-key. "
             "Result will be saved in --result-path.\n"
@@ -33,16 +33,22 @@ int main(int argc, char* argv[])
             "  Example: --encryption-key AA00BB11CC22DD33EE\n")
         ("enc-key-file", po::value<std::string>(), "Image encryption/decryption key file (key should be in binary form). (can be used instead of encryption-key)\n"
             "  Example: --enc-key-file ./enc_key_file.bin\n")
-        ("data-key", po::value<std::string>(), "Data embedding/extraction key.\n"
-            "  Example: --data-key AA00BB11CC22DD33EE\n")
-        ("data-key-file", po::value<std::string>(), "Data embedding/extraction key (key should be in binary form). (can be used instead of data-key)\n"
-            "  Example: --data-key-file ./data_key_file.bin\n");
-    
+        ("embed-key", po::value<std::string>(), "Data embedding/extraction key.\n"
+            "  Example: --embed-key AA00BB11CC22DD33EE\n")
+        ("embed-key-file", po::value<std::string>(), "Data embedding/extraction key (key should be in binary form). (can be used instead of data-key)\n"
+            "  Example: --embed-key-file ./embed_key_file.bin\n")
+        ("data-file", po::value<std::string>(), "Path to file with additional data to embed inside encrypted image\n"
+            "  Example: --data-file ./additional_data.bin\n");
+
     try {
         po::store(po::parse_command_line(argc, argv, desc), vm);
     }
     catch (po::unknown_option) {
         std::cout << "Unknown option!" << std::endl;
+        std::cout << desc << std::endl;
+        return 1;
+    }
+    catch (...) {
         std::cout << desc << std::endl;
         return 1;
     }
@@ -78,8 +84,8 @@ int main(int argc, char* argv[])
         else if (mode == "encrypt") {
             return rdh::Options::HandleEncrypt(imagePath, vm, desc);
         }
-        else if (mode == "hide") {
-            return rdh::Options::HandleHide(imagePath, vm, desc);
+        else if (mode == "embed") {
+            return rdh::Options::HandleEmbed(imagePath, vm, desc);
         }
         else if (mode == "decrypt") {
             return rdh::Options::HandleDecrypt(imagePath, vm, desc);
