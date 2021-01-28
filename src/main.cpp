@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
             "  Example: --embed-key AA00BB11CC22DD33EE\n")
         ("embed-key-file", po::value<std::string>(), "Data embedding/extraction key (key should be in binary form). (can be used instead of data-key)\n"
             "  Example: --embed-key-file ./embed_key_file.bin\n")
-        ("data-file", po::value<std::string>(), "Path to file with additional data to embed inside encrypted image\n"
+        ("data-file", po::value<std::string>(), "Path to file with additional data to embed in the encrypted image\n"
             "  Example: --data-file ./additional_data.bin\n");
 
     try {

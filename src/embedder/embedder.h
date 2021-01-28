@@ -15,6 +15,6 @@ namespace rdh {
          * @param t_DataEmbeddingKey key to use to embed data
          * @return Encrypted image with embedded data into it
         */
-        static BmpImage Embed(const BmpImage& t_EncryptedEmptyImage, std::vector<uint8_t>& t_Data, std::vector<uint8_t>& t_DataEmbeddingKey);
+        static BmpImage Embed(const BmpImage& t_EncryptedEmptyImage, const std::vector<uint8_t>& t_Data, const std::vector<uint8_t>& t_DataEmbeddingKey);
     };
 }

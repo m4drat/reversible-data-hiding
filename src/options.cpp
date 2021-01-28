@@ -65,7 +65,7 @@ namespace rdh {
         }
 
         if (t_Vm.count("data-file") == 0) {
-            std::cout << "You must provide path to file with additional data to embed (--data-file) inside the image." << std::endl;
+            std::cout << "You must provide path to file with additional data to embed (--data-file) in the image." << std::endl;
             std::cout << t_Desc << std::endl;
             return 1;
         }

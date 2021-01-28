@@ -39,7 +39,7 @@ namespace rdh {
             std::ifstream file(t_Filename, std::ios::binary);
 
             if (!file.is_open()) {
-                throw std::runtime_error("Specified file " + t_Filename + " doesn't exists!");
+                throw std::runtime_error("Specified file " + t_Filename + " doesn't exist!");
             }
 
             // Stop eating new lines in binary mode!!!
