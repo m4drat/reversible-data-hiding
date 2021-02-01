@@ -6,6 +6,9 @@
 #include "embedder/rlc.h"
 
 namespace rdh {
+    /**
+     * @brief Represents 2x2 encoded pixels block.
+    */
     class EncodedBlock {
     public:
         EncodedBlock(Color8 t_MasterPixel, Color8 t_DeltaM1, Color8 t_DeltaM2, Color8 t_DeltaM3) :
@@ -18,6 +21,7 @@ namespace rdh {
                 /**
                  * What if we have something like this: 1, 1, 0 -> (0, 1), (0, 1), (0, 0) ???
                  * What if we have something like this: 1, 0, 1 -> (0, 1), (0, 0), (0, 1) ???
+                 * Is it okay to encode this sequences, as showed on the previous lines? (Cause (0, 0) is a special symbol)
                 */
                 m_RlcEncoded = std::move(RLC::RlcEncode<uint16_t, Color8>({ t_DeltaM1 , t_DeltaM2, t_DeltaM3 }));
             }

@@ -7,7 +7,7 @@
 
 using namespace rdh;
 
-TEST(HuffmanTest, EncodeString_test) {
+TEST(HuffmanTest, EncodeDecodeString_test) {
     Huffman<char, std::hash<char>> huffmanCoder('\0');
     huffmanCoder.SetFrequencies(
         std::unordered_map<char, uint32_t, std::hash<char>>{
@@ -18,7 +18,18 @@ TEST(HuffmanTest, EncodeString_test) {
         }
     );
 
-    ASSERT_EQ(huffmanCoder.Encode(std::vector<char>{'A', 'A', 'A', 'B', 'C', 'C', 'D'}), "00011101101100");
+    std::string encoded = "00011101101100";
+    std::vector<char> original{'A', 'A', 'A', 'B', 'C', 'C', 'D'};
+
+    ASSERT_EQ(huffmanCoder.Encode(original), encoded);
+
+    std::vector<char> decoded = huffmanCoder.Decode(encoded);
+
+    ASSERT_EQ(decoded.size(), original.size());
+
+    for (uint32_t i = 0; i < decoded.size(); ++i) {
+        ASSERT_EQ(decoded.at(i), original.at(i));
+    }
 }
 
 TEST(HuffmanTest, EncodePairs_test) {
@@ -32,10 +43,20 @@ TEST(HuffmanTest, EncodePairs_test) {
         }
     );
 
-    ASSERT_EQ(huffmanCoder.Encode(
-        std::vector<std::pair<uint16_t, Color8>>{
-            std::make_pair(0, 0), std::make_pair(0, 0), std::make_pair(0, 0), 
-            std::make_pair(0, 1), std::make_pair(0, 2), std::make_pair(0, 2), 
-            std::make_pair(0, 3)
-        }), "00011101101100");
+    std::string encoded = "00011101101100";
+    std::vector<std::pair<uint16_t, Color8>> original{
+        std::make_pair(0, 0), std::make_pair(0, 0), std::make_pair(0, 0),
+        std::make_pair(0, 1), std::make_pair(0, 2), std::make_pair(0, 2),
+        std::make_pair(0, 3)
+    };
+
+    ASSERT_EQ(huffmanCoder.Encode(original), encoded);
+
+    std::vector<std::pair<uint16_t, Color8>> decoded = huffmanCoder.Decode(encoded);
+
+    ASSERT_EQ(decoded.size(), original.size());
+
+    for (uint32_t i = 0; i < decoded.size(); ++i) {
+        ASSERT_EQ(decoded.at(i), original.at(i));
+    }
 }

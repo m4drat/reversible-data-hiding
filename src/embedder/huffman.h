@@ -60,7 +60,7 @@ namespace rdh {
          * @param t_Codes[in] mapping between symbol and its Huffman-code
          * @return vector with decoded data
         */
-        std::vector<T> Decode(const std::string& t_ToDecode, const std::unordered_map<T, std::string>& t_Codes);
+        std::vector<T> Decode(const std::string& t_ToDecode);
     private:
         /**
          * @brief Represent Huffman tree node
@@ -128,6 +128,12 @@ namespace rdh {
          * @param t_CurrentCode current Huffman code value
         */
         void BuildCodesTable(std::shared_ptr<HuffmanTreeNode> t_Root, std::string t_CurrentCode);
+
+        /**
+         * @brief Restores original symbol from tree
+         * @return Symbol by its Huffman code
+        */
+        T RestoreOriginalSymbol(std::shared_ptr<HuffmanTreeNode> t_Root, int32_t& t_CurrIdx, const std::string& t_ToDecode);
 
         /**
          * @brief Mapping between symbol and it's frequency

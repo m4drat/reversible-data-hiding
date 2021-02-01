@@ -38,7 +38,7 @@ namespace rdh {
                 encodedBlocks.emplace_back(t_EncryptedImage.GetPixel(imgY, imgX), deltaM1, deltaM2, deltaM3);
 
                 /**
-                 * Calculate number of occurrences for each symbol
+                 * Calculate number of occurrences of each symbol
                 */
                 for (const auto& pair_ : encodedBlocks.back().GetRlcEncoded()) {
                     huffmanCoder.UpdateFreqForSymbol(pair_);
@@ -46,7 +46,7 @@ namespace rdh {
             }
         }
 
-        // For each block find its representation using Huffman-coding
+        // For each block find its representation using Huffman coding
         for (auto& EncodedBlock : encodedBlocks) {
             EncodedBlock.SetHuffmanEncoded(huffmanCoder.Encode(EncodedBlock.GetRlcEncoded()));
         }
