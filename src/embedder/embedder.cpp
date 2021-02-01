@@ -21,11 +21,15 @@ namespace rdh {
          * Create Huffman-coder object, which will be used to 
          * encode RLC sequences
         */
-        Huffman<std::pair<uint16_t, Color8>, pair_hash> huffmanCoder;
+        Huffman<std::pair<uint16_t, Color8>, pair_hash> huffmanCoder(std::pair<uint16_t, Color8>(-1, 0));
 
         // Calculate RLC-related things
         for (uint32_t imgY = 0; imgY < t_EncryptedImage.GetHeight(); imgY += 2) {
             for (uint32_t imgX = 0; imgX < t_EncryptedImage.GetWidth(); imgX += 2) {
+
+                /**
+                 * Even if difference is a negative number, we can represent it using unsigned value
+                 */
                 Color8 deltaM1 = t_EncryptedImage.GetPixel(imgY, imgX + 1) - t_EncryptedImage.GetPixel(imgY, imgX);
                 Color8 deltaM2 = t_EncryptedImage.GetPixel(imgY + 1, imgX) - t_EncryptedImage.GetPixel(imgY, imgX);
                 Color8 deltaM3 = t_EncryptedImage.GetPixel(imgY + 1, imgX + 1) - t_EncryptedImage.GetPixel(imgY, imgX);
