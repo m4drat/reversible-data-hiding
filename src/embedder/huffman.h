@@ -7,9 +7,18 @@
 #include <functional>
 
 namespace rdh {
+    /**
+     * @brief Implements Huffman encoder/decoder for custom data type T
+     * @tparam T data type to compress using Huffman coding
+     * @tparam Comp default comparator for unordered_map that represents codes, frequencies
+    */
     template <class T, class Hash = std::hash<T>>
     class Huffman {
     public:
+        /**
+         * @brief Default constructor
+         * @param t_DefaultNode default node object to use while merging nodes inside Huffman tree
+        */
         Huffman(T t_DefaultNode) :
             m_Frequencies{}, m_UpdateTree{ true }, m_DefaultNode{ t_DefaultNode }
         {}
@@ -46,20 +55,49 @@ namespace rdh {
         */
         class HuffmanTreeNode {
         public:
+            /**
+             * @brief symbol associated with the current node
+            */
             T symbol;
+
+            /**
+             * @brief Frequency of this exact node
+            */
             uint32_t freq;
+
+            /**
+             * @brief Left node pointer
+            */
             std::shared_ptr<HuffmanTreeNode> left;
+            
+            /**
+             * @brief Right node pointer
+            */
             std::shared_ptr<HuffmanTreeNode> right;
 
+            /**
+             * @brief Default constructor for a tree node
+             * @param t_Symbol symbol to associate with the current node (can be char from a message, byte, pair, ...)
+             * @param t_Freq frequency of a current node
+             * @param t_Left left node pointer
+             * @param t_Right right node pointer
+            */
             HuffmanTreeNode(T t_Symbol, uint32_t t_Freq, std::shared_ptr<HuffmanTreeNode> t_Left, std::shared_ptr<HuffmanTreeNode> t_Right) :
                 symbol{ t_Symbol }, freq{ t_Freq }, left{ t_Left }, right{ t_Right }
             {}
 
+            /**
+             * @brief Checks if current node is a leaf or not
+             * @return true, if current node doesn't have descendants
+            */
             bool IsLeaf() {
                 return left == nullptr && right == nullptr;
             }
         };
 
+        /**
+         * @brief Custom comparator to use with priority_queue, which is used to build Huffman tree
+        */
         struct NodeComparator {
             bool operator()(std::shared_ptr<HuffmanTreeNode> t_Left, std::shared_ptr<HuffmanTreeNode> t_Right)
             {
@@ -72,6 +110,11 @@ namespace rdh {
         */
         void RebuildTree();
 
+        /**
+         * @brief Helper method, to build map with the correspondence between the symbol and Huffman code recursively
+         * @param t_Root tree root, to start building map from
+         * @param t_CurrentCode current Huffman code value
+        */
         void BuildCodesTable(std::shared_ptr<HuffmanTreeNode> t_Root, std::string t_CurrentCode);
 
         /**
@@ -94,6 +137,9 @@ namespace rdh {
         */
         bool m_UpdateTree;
 
+        /**
+         * @brief Default node object. Used while building Huffman tree.
+        */
         T m_DefaultNode;
 
         //const static std::unordered_map<T, uint32_t, Comp> s_DefaultFrequenciesTable{ { }, { } };

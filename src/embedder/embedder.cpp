@@ -7,8 +7,7 @@
 namespace rdh {
     BmpImage Embedder::Embed(const BmpImage& t_EncryptedImage, const std::vector<uint8_t>& t_Data, const std::vector<uint8_t>& t_DataEmbeddingKey)
     {
-        // @TODO:
-        // Probably we can just edit passed image
+        // @TODO: Probably we can just edit passed image
         BmpImage encryptedEmbedded(t_EncryptedImage.GetHeight(), t_EncryptedImage.GetWidth());
 
         /**

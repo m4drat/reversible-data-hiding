@@ -1,5 +1,3 @@
 #include "embedder/huffman.h"
 
-namespace rdh {
-
-}
+namespace rdh {}
