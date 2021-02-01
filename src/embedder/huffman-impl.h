@@ -1,6 +1,7 @@
 #pragma once
 
 #include "embedder/huffman.h"
+#include "types.h"
 
 #include <stdexcept>
 
@@ -17,6 +18,27 @@ namespace rdh {
     {
         m_Frequencies = std::move(t_Frequencies);
         m_UpdateTree = true;
+    }
+
+    template <class T, class Hash>
+    const std::unordered_map<T, std::string, Hash>& Huffman<T, Hash>::GetCodesTable()
+    {
+        /**
+         * Check if frequencies map is initialized.
+         */
+        if (m_Frequencies.size() == 0) {
+            throw std::logic_error("m_Frequencies should be initialized first!");
+        }
+        
+        /**
+         * If something was changed. We need to rebuild tree, before calculating actual codes.
+         */
+        if (m_UpdateTree || m_Codes.size() == 0) {
+            RebuildTree();
+            BuildCodesTable(m_HuffmanTree.top(), "");
+        }
+
+        return m_Codes;
     }
 
     template <class T, class Hash>

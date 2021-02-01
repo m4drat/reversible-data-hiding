@@ -21,6 +21,8 @@ namespace rdh {
          * encode RLC sequences
         */
         Huffman<std::pair<uint16_t, Color8>, pair_hash> huffmanCoder(std::pair<uint16_t, Color8>(-1, 0));
+        //huffmanCoder.SetDefaultPairFrequencies();
+        //huffmanCoder.GetCodesTable();
 
         // Calculate RLC-related things
         for (uint32_t imgY = 0; imgY < t_EncryptedImage.GetHeight(); imgY += 2) {
@@ -35,6 +37,9 @@ namespace rdh {
 
                 encodedBlocks.emplace_back(t_EncryptedImage.GetPixel(imgY, imgX), deltaM1, deltaM2, deltaM3);
 
+                /**
+                 * Calculate number of occurrences for each symbol
+                */
                 for (const auto& pair_ : encodedBlocks.back().GetRlcEncoded()) {
                     huffmanCoder.UpdateFreqForSymbol(pair_);
                 }
@@ -45,16 +50,6 @@ namespace rdh {
         for (auto& EncodedBlock : encodedBlocks) {
             EncodedBlock.SetHuffmanEncoded(huffmanCoder.Encode(EncodedBlock.GetRlcEncoded()));
         }
-
-        //for (auto& vec : rlcEncoded) {
-        //    for (auto& pair_ : vec) {
-        //        frequences[pair_]++;
-        //    }
-        //}
-
-        //for (auto const& [key, val] : frequences) {
-        //    std::cout << "(" << key.first << ", " << (int32_t)key.second << ") : " << val << std::endl;
-        //}
 
         return std::move(encryptedEmbedded);
     }

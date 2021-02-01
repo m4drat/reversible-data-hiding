@@ -6,11 +6,11 @@
 
 ### How to use
 
-1. Example encryption: `reversible_data_hiding_run.exe --mode encrypt --image-path ..\..\..\..\images\boat.bmp --result-path ..\..\..\..\images\boat-enc.bmp --enc-key-file ..\..\..\..\example_key.bin`  
-![encrypted](./images/boat-enc.bmp)
+1. Example encryption: `reversible_data_hiding_run.exe --mode encrypt --image-path ..\..\..\..\images\lena_gray.bmp --result-path ..\..\..\..\images\lena_gray-enc.bmp --enc-key-file ..\..\..\..\example_encrypt_key.bin`  
+![encrypted](./images/lena_gray-enc.bmp)
 
-2. Example decryption: `reversible_data_hiding_run.exe --mode decrypt --image-path ..\..\..\..\images\boat-enc.bmp --result-path ..\..\..\..\images\boat-dec.bmp --enc-key-file ..\..\..\..\example_key.bin`  
-![decrypted](./images/boat-dec.bmp)
+2. Example decryption: `reversible_data_hiding_run.exe --mode decrypt --image-path ..\..\..\..\images\lena_gray-enc.bmp --result-path ..\..\..\..\images\lena_gray-dec.bmp --enc-key-file ..\..\..\..\example_encrypt_key.bin`  
+![decrypted](./images/lena_gray.bmp)
 
 ### Performance
 

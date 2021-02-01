@@ -15,6 +15,10 @@ namespace rdh {
                 m_RlcEncoded.emplace_back(0, 0);
             }
             else {
+                /**
+                 * What if we have something like this: 1, 1, 0 -> (0, 1), (0, 1), (0, 0) ???
+                 * What if we have something like this: 1, 0, 1 -> (0, 1), (0, 0), (0, 1) ???
+                */
                 m_RlcEncoded = std::move(RLC::RlcEncode<uint16_t, Color8>({ t_DeltaM1 , t_DeltaM2, t_DeltaM3 }));
             }
         }

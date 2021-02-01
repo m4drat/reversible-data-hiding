@@ -36,6 +36,18 @@ namespace rdh {
         void SetFrequencies(std::unordered_map<T, uint32_t, Hash>&& t_Frequencies);
 
         /**
+         * @brief Sets default frequencies for pairs of symbols, as it's defined in paper.
+        */
+        //void SetDefaultPairFrequencies();
+
+        /**
+         * @brief Returns unordered_map, where key is a user-defined symbol, and value is a corresponding
+         * Huffman code.
+         * @return unordered_map 
+        */
+        const std::unordered_map<T, std::string, Hash>& GetCodesTable();
+
+        /**
          * @brief Encodes data passed in the vector t_ToEncode using Huffman coding.
          * @param t_ToEncode[in] vector with data to encode
          * @return Encoded "bit" string
