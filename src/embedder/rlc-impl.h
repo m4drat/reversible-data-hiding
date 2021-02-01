@@ -1,27 +1,33 @@
 #pragma once
 
+#include <stdexcept>
+
 #include "embedder/rlc.h"
 
 namespace rdh {
-    template <class T>
-    static std::vector<std::pair<uint32_t, T>> RLC::RlcEncode(const std::vector<T>& vec)
+    template <class T1, class T2>
+    static std::vector<std::pair<T1, T2>> RLC::RlcEncode(const std::vector<T2>& vec)
     {
         /**
         * Represents vector of intermediate symbols.
         * pair.first  = count of zero elements, before first non-zero element
         * pair.second = value of the first non-zero element
         */
-        std::vector<std::pair<uint32_t, T>> irSymbols;
+        std::vector<std::pair<T1, T2>> irSymbols;
 
-        uint32_t lastNulCount = 0;
+        if (vec.size() == 0) {
+            throw std::invalid_argument("Vector to encode cannot have 0 size!");
+        }
+
+        T1 lastNulCount = 0;
         for (uint32_t pos = 0; pos < vec.size(); ++pos) {
-            if (vec[pos] == 0) {
-                ++lastNulCount;
+            if (vec.at(pos) == 0 && pos != vec.size() - 1) {
+                lastNulCount++;
+                continue;
             }
-            else {
-                irSymbols.emplace_back(lastNulCount, vec[pos]);
-                lastNulCount = 0;
-            }
+
+            irSymbols.emplace_back(lastNulCount, vec.at(pos));
+            lastNulCount = 0;
         }
 
         return std::move(irSymbols);

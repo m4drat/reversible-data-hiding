@@ -15,8 +15,8 @@ namespace rdh {
          * @return vector of pairs, where pair.first is count of zero elements, before first non-zero element, 
          * and pair.second is a value of the first non-zero element.
         */
-        template <class T>
-        static std::vector<std::pair<uint32_t, T>> RlcEncode(const std::vector<T>& vec);
+        template <class T1, class T2>
+        static std::vector<std::pair<T1, T2>> RlcEncode(const std::vector<T2>& vec);
     };
 }
 

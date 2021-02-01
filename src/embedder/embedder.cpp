@@ -1,6 +1,6 @@
 #include "embedder/embedder.h"
-
-#include "embedder/rlc.h"
+#include "embedder/encoded_block.h"
+#include "embedder/huffman.h"
 
 #include <iostream>
 
@@ -12,30 +12,35 @@ namespace rdh {
         BmpImage encryptedEmbedded(t_EncryptedImage.GetHeight(), t_EncryptedImage.GetWidth());
 
         /**
-        * A vector of vectors that represent rlc-encoded blocks
+        * A vector of vectors that represent rlc-encoded blocks.
         */
-        std::vector<std::vector<std::pair<uint32_t, Color8s>>> rlcEncoded;
-        rlcEncoded.reserve(static_cast<std::size_t>(t_EncryptedImage.GetHeight()) * static_cast<std::size_t>(t_EncryptedImage.GetWidth()) / 4);
+        std::vector<EncodedBlock> encodedBlocks;
+        encodedBlocks.reserve(static_cast<std::size_t>(t_EncryptedImage.GetHeight()) * static_cast<std::size_t>(t_EncryptedImage.GetWidth()) / 4);
+        
+        /**
+         * Create Huffman-coder object, which will be used to 
+         * encode RLC sequences
+        */
+        Huffman<std::pair<uint16_t, Color8>, pair_hash> huffmanCoder;
 
+        // Calculate RLC-related things
         for (uint32_t imgY = 0; imgY < t_EncryptedImage.GetHeight(); imgY += 2) {
             for (uint32_t imgX = 0; imgX < t_EncryptedImage.GetWidth(); imgX += 2) {
-                /**
-                 * Pixels layout in 2x2 block
-                 *     0   1
-                 * 0 | A | B |
-                 * 1 | C | D |
-                 */
-                Color8s deltaM1 = t_EncryptedImage.GetPixel(imgY, imgX + 1) - t_EncryptedImage.GetPixel(imgY, imgX);
-                Color8s deltaM2 = t_EncryptedImage.GetPixel(imgY + 1, imgX) - t_EncryptedImage.GetPixel(imgY, imgX);
-                Color8s deltaM3 = t_EncryptedImage.GetPixel(imgY + 1, imgX + 1) - t_EncryptedImage.GetPixel(imgY, imgX);
+                Color8 deltaM1 = t_EncryptedImage.GetPixel(imgY, imgX + 1) - t_EncryptedImage.GetPixel(imgY, imgX);
+                Color8 deltaM2 = t_EncryptedImage.GetPixel(imgY + 1, imgX) - t_EncryptedImage.GetPixel(imgY, imgX);
+                Color8 deltaM3 = t_EncryptedImage.GetPixel(imgY + 1, imgX + 1) - t_EncryptedImage.GetPixel(imgY, imgX);
 
-                if (deltaM1 == 0 && deltaM2 == 0 && deltaM3 == 0) {
-                    rlcEncoded.push_back({ std::make_pair(0, 0) });
-                }
-                else {
-                    rlcEncoded.push_back(RLC::RlcEncode<Color8s>({ deltaM1 , deltaM2, deltaM3}));
+                encodedBlocks.emplace_back(t_EncryptedImage.GetPixel(imgY, imgX), deltaM1, deltaM2, deltaM3);
+
+                for (const auto& pair_ : encodedBlocks.back().GetRlcEncoded()) {
+                    huffmanCoder.UpdateFreqForSymbol(pair_);
                 }
             }
+        }
+
+        // For each block find its representation using Huffman-coding
+        for (auto& EncodedBlock : encodedBlocks) {
+            EncodedBlock.SetHuffmanEncoded(huffmanCoder.Encode(EncodedBlock.GetRlcEncoded()));
         }
 
         //for (auto& vec : rlcEncoded) {
