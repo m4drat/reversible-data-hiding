@@ -33,6 +33,7 @@ add_subdirectory(libraries/googletest)
 
 if (${BUILD_TESTS} MATCHES ON)
     enable_testing()
+    include_directories(${gmock_SOURCE_DIR}/include)
     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
     add_subdirectory(tests)
 endif()

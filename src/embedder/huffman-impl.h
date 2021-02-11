@@ -24,16 +24,16 @@ namespace rdh {
     const std::unordered_map<T, std::string, Hash>& Huffman<T, Hash>::GetCodesTable()
     {
         /**
-         * Check if frequencies map is initialized.
+         * Check if frequencies map or m_Codes are initialized.
          */
-        if (m_Frequencies.size() == 0) {
+        if (m_Frequencies.empty()) {
             throw std::logic_error("m_Frequencies should be initialized first!");
         }
         
         /**
          * If something was changed. We need to rebuild tree, before calculating actual codes.
          */
-        if (m_UpdateTree || m_Codes.size() == 0) {
+        if (m_UpdateTree || m_Codes.empty()) {
             RebuildTree();
             BuildCodesTable(m_HuffmanTree.top(), "");
         }
@@ -47,15 +47,16 @@ namespace rdh {
         std::string encoded = "";
         encoded.reserve(t_ToEncode.size());
 
-        if (m_Frequencies.size() == 0) {
+        if (m_Frequencies.empty()) {
             throw std::logic_error("m_Frequencies should be initialized first!");
         }
 
+        // If we need to rebuild tree, we also need to update 
+        // corresponding Huffman codes.
         if (m_UpdateTree) {
             RebuildTree();
+            BuildCodesTable(m_HuffmanTree.top(), "");
         }
-
-        BuildCodesTable(m_HuffmanTree.top(), "");
 
         for (const auto& elem : t_ToEncode) {
             encoded += m_Codes.at(elem);
@@ -85,7 +86,7 @@ namespace rdh {
         std::vector<T> decoded;
         decoded.reserve(t_ToDecode.size());
 
-        if (m_Frequencies.size() == 0) {
+        if (m_Frequencies.empty()) {
             throw std::logic_error("m_Frequencies should be initialized first!");
         }
 

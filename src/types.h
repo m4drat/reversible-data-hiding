@@ -8,6 +8,7 @@
 namespace rdh {
     using Color8 = uint8_t;
     using Color8s = int8_t;
+    using Color16s = int16_t;
 
     struct pair_hash {
         template <class T1, class T2>
