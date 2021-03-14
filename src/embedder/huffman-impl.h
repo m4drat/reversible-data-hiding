@@ -14,10 +14,16 @@ namespace rdh {
     }
 
     template <class T, class Hash>
-    void Huffman<T, Hash>::SetFrequencies(std::unordered_map<T, uint32_t, Hash>&& t_Frequencies)
+    void Huffman<T, Hash>::SetFrequencies(const std::unordered_map<T, uint32_t, Hash>& t_Frequencies)
     {
-        m_Frequencies = std::move(t_Frequencies);
+        m_Frequencies = t_Frequencies;
         m_UpdateTree = true;
+    }
+
+    template <class T, class Hash>
+    const std::unordered_map<T, uint32_t, Hash>& Huffman<T, Hash>::GetFrequencies()
+    {
+        return m_Frequencies;
     }
 
     template <class T, class Hash>
@@ -51,7 +57,7 @@ namespace rdh {
             throw std::logic_error("m_Frequencies should be initialized first!");
         }
 
-        // If we need to rebuild tree, we also need to update 
+        // If we need to rebuild the tree, we also need to update 
         // corresponding Huffman codes.
         if (m_UpdateTree) {
             RebuildTree();
@@ -59,6 +65,10 @@ namespace rdh {
         }
 
         for (const auto& elem : t_ToEncode) {
+            // WARNING: ONLY FOR DEBUG!
+#ifndef NDEBUG
+            assert((elem != std::pair<uint16_t, Color16s>(0, 0)));
+#endif
             encoded += m_Codes.at(elem);
         }
 

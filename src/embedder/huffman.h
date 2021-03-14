@@ -33,12 +33,13 @@ namespace rdh {
          * @brief Implicitly set ups frequencies table
          * @param m_Frequencies 
         */
-        void SetFrequencies(std::unordered_map<T, uint32_t, Hash>&& t_Frequencies);
+        void SetFrequencies(const std::unordered_map<T, uint32_t, Hash>& t_Frequencies);
 
         /**
-         * @brief Sets default frequencies for pairs of symbols, as it's defined in paper.
+         * @brief Returns const reference to frequencies map
+         * @return std::unordered_map<T, uint32_t, Hash>&
         */
-        //void SetDefaultPairFrequencies();
+        const std::unordered_map<T, uint32_t, Hash>& GetFrequencies();
 
         /**
          * @brief Returns unordered_map, where key is a user-defined symbol, and value is a corresponding
