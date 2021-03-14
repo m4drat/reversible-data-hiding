@@ -30,29 +30,8 @@ namespace rdh {
                     t_EncryptedImage.GetPixel(imgY + 1, imgX),
                     t_EncryptedImage.GetPixel(imgY + 1, imgX + 1)
                 );
-
-                // Calculate number of occurrences of each symbol
-                //for (const auto& pair_ : encodedBlocks.back().GetRlcEncoded()) {
-                //    if (pair_ != std::pair<uint16_t, Color16s>(0, 0)) {
-                //        huffmanCoder.UpdateFreqForSymbol(pair_);
-                //    }
-                //}
             }
         }
-
-        //std::vector<std::pair<std::pair<uint16_t, Color16s>, uint32_t>> freqs(huffmanCoder.GetFrequencies().begin(), huffmanCoder.GetFrequencies().end());
-        //std::sort(freqs.begin(), freqs.end(), [](
-        //    const std::pair<std::pair<uint16_t, Color16s>, uint32_t>& a,
-        //    const std::pair<std::pair<uint16_t, Color16s>, uint32_t>& b
-        //    ) {
-        //        return a.second > b.second;
-        //    });
-        //std::cout << "Encoded blocks size: " << encodedBlocks.size() << std::endl;
-        //std::cout << "Size: " << freqs.size() << "/1533" << std::endl;
-        //for (auto& pair_ : freqs) {
-        //    // { std::pair<uint16_t, Color16s>
-        //    std::cout << "(" << (uint32_t)pair_.first.first << ", " << (int32_t)pair_.first.second << ") : " << pair_.second << ", " << std::endl;
-        //}
 
         /**
          * Second step. Encode each rlc-encoded block using Huffman coding.
@@ -69,7 +48,7 @@ namespace rdh {
                 encodedBlock.SetHuffmanEncoded("");
             }
             else {
-                // We know, that last element will always be non-zero
+                // We know, that the last element will always be non-zero
                 // @sa EncodedBlock::EncodedBlock
                 encodedBlock.SetHuffmanEncoded(huffmanCoder.Encode(encodedBlock.GetRlcEncoded()));
             }
