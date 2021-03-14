@@ -32,7 +32,14 @@ namespace rdh {
                  * we always should have 3 difference values. Thus we can find out, that we should append one more block 
                  * to the end with this content: (vlc, vli) = (0, 0).
                 */
-                m_RlcEncoded = std::move(RLC::RlcEncode<uint16_t, Color16s>({ deltaM2 , deltaM3, deltaM4 }));
+                if (deltaM4 == 0) {
+                    // Do not RLC-encode last zero element, because we don't want
+                    // to encode this element later using Huffman coding.
+                    m_RlcEncoded = std::move(RLC::RlcEncode<uint16_t, Color16s>({ deltaM2, deltaM3 }));
+                }
+                else {
+                    m_RlcEncoded = std::move(RLC::RlcEncode<uint16_t, Color16s>({ deltaM2, deltaM3, deltaM4 }));
+                }
             }
         }
 
@@ -63,6 +70,9 @@ namespace rdh {
 
         void SetHuffmanEncoded(const std::string& t_HuffmanEncodedRepresentation)
         {
+            if (t_HuffmanEncodedRepresentation.size() < consts::c_Threshold) {
+                m_IsSigmaOne = true;
+            }
             m_HuffmanCoded = t_HuffmanEncodedRepresentation;
         }
 
