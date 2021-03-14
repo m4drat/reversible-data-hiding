@@ -65,10 +65,9 @@ namespace rdh {
         }
 
         for (const auto& elem : t_ToEncode) {
-            // WARNING: ONLY FOR DEBUG!
-#ifndef NDEBUG
-            assert((elem != std::pair<uint16_t, Color16s>(0, 0)));
-#endif
+//#ifndef NDEBUG
+//            assert((elem != std::pair<uint16_t, Color16s>(0, 0)));
+//#endif
             encoded += m_Codes.at(elem);
         }
 
