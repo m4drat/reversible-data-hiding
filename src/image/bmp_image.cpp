@@ -6,24 +6,24 @@ using namespace cimg_library;
 
 namespace rdh {
 
-    BmpImage::BmpImage(uint32_t t_Height, uint32_t t_Width, Color8 t_FillColor /*= 0x00*/)
+    BmpImage::BmpImage(uint32_t t_Height, uint32_t t_Width, Color8u t_FillColor /*= 0x00*/)
     {
         if (t_Height % 2 != 0 || t_Width % 2 != 0) {
             throw std::runtime_error("Image dimensions should be divisible by 2!");
         }
 
-        m_ImageMatrix = std::move(ImageMatrix<Color8>(t_Height, t_Width, t_FillColor));
+        m_ImageMatrix = std::move(ImageMatrix<Color8u>(t_Height, t_Width, t_FillColor));
     }
 
     BmpImage::BmpImage(const std::string& t_ImagePath)
     {
-        CImg<Color8> image(t_ImagePath.c_str());
+        CImg<Color8u> image(t_ImagePath.c_str());
 
         if (image.height() % 2 != 0 || image.width() % 2 != 0) {
             throw std::runtime_error("Image dimensions should be divisible by 2!");
         }
 
-        m_ImageMatrix = std::move(ImageMatrix<Color8>(image.height(), image.width(), 0x0));
+        m_ImageMatrix = std::move(ImageMatrix<Color8u>(image.height(), image.width(), 0x0));
 
         cimg_forXY(image, imgX, imgY) {
             m_ImageMatrix.SetPixel(imgY, imgX, image(imgX, imgY));
@@ -35,7 +35,7 @@ namespace rdh {
         m_ImageMatrix = std::move(t_BmpImage.m_ImageMatrix.Slice(0, t_BmpImage.GetHeight() - 1, 0, t_BmpImage.GetWidth() - 1));
     }
 
-    BmpImage::BmpImage(ImageMatrix<Color8>&& t_ImageMatrix)
+    BmpImage::BmpImage(ImageMatrix<Color8u>&& t_ImageMatrix)
     {
         m_ImageMatrix = std::move(t_ImageMatrix);
     }
@@ -60,7 +60,7 @@ namespace rdh {
             throw std::invalid_argument("Image must be saved in BMP file format!");
         }
 
-        CImg<Color8> image(m_ImageMatrix.GetWidth(), m_ImageMatrix.GetHeight(), 1, 1, 0);
+        CImg<Color8u> image(m_ImageMatrix.GetWidth(), m_ImageMatrix.GetHeight(), 1, 1, 0);
         cimg_forXY(image, imgX, imgY) {
             image(imgX, imgY) = m_ImageMatrix.GetPixel(imgY, imgX);
         }
@@ -73,13 +73,13 @@ namespace rdh {
         return std::move(BmpImage(std::move(m_ImageMatrix.Slice(t_YStart, t_YEnd, t_XStart, t_XEnd))));
     }
 
-    BmpImage& BmpImage::SetPixel(uint32_t t_Y, uint32_t t_X, Color8 t_NewPixelValue)
+    BmpImage& BmpImage::SetPixel(uint32_t t_Y, uint32_t t_X, Color8u t_NewPixelValue)
     {
         m_ImageMatrix.SetPixel(t_Y, t_X, t_NewPixelValue);
         return *this;
     }
 
-    Color8 BmpImage::GetPixel(uint32_t t_Y, uint32_t t_X) const
+    Color8u BmpImage::GetPixel(uint32_t t_Y, uint32_t t_X) const
     {
         return m_ImageMatrix.GetPixel(t_Y, t_X);
     }
@@ -94,14 +94,14 @@ namespace rdh {
         return m_ImageMatrix.GetWidth();
     }
 
-    ImageMatrix<Color8>& BmpImage::GetImageMatrix()
+    ImageMatrix<Color8u>& BmpImage::GetImageMatrix()
     {
         return m_ImageMatrix;
     }
 
     void BmpImage::Show() const
     {
-        CImg<Color8> image(m_ImageMatrix.GetWidth(), m_ImageMatrix.GetHeight(), 1, 1, 0);
+        CImg<Color8u> image(m_ImageMatrix.GetWidth(), m_ImageMatrix.GetHeight(), 1, 1, 0);
         cimg_forXY(image, imgX, imgY) {
             image(imgX, imgY) = m_ImageMatrix.GetPixel(imgY, imgX);
         }

@@ -4,6 +4,14 @@ project("reversible_data_hiding")
 
 option(BUILD_TESTS "Build tests" ON)
 option(BUILD_BENCHMARKS "Build benchmarks" ON)
+option(ENABLE_DEBUG_STATS "Prints stats messages" ON)
+
+# CMAKE_BUILD_TYPE MATCHES ".*(D|d)ebug$" OR 
+if (ENABLE_DEBUG_STATS MATCHES "ON")
+	list(APPEND RDH_DEFINES DEBUG_STATS=1)
+else()
+	list(APPEND RDH_DEFINES DEBUG_STATS=0)
+endif()
 
 # Boost - to parse command line params
 set(BOOST_ROOT "C:\\Users\\madrat\\Desktop\\projects\\libraries\\boost_1_75_0")
@@ -30,6 +38,10 @@ include_directories(
 
 add_subdirectory(src)
 add_subdirectory(libraries/googletest)
+
+target_compile_definitions(${PROJECT_NAME}_run
+	PUBLIC ${RDH_DEFINES}
+)
 
 if (${BUILD_TESTS} MATCHES ON)
     enable_testing()

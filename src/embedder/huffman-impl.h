@@ -30,7 +30,7 @@ namespace rdh {
     const std::unordered_map<T, std::string, Hash>& Huffman<T, Hash>::GetCodesTable()
     {
         /**
-         * Check if frequencies map or m_Codes are initialized.
+         * Check if frequencies map is initialized.
          */
         if (m_Frequencies.empty()) {
             throw std::logic_error("m_Frequencies should be initialized first!");

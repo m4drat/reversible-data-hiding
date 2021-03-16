@@ -38,10 +38,10 @@ namespace rdh {
                     * 0 | A | B |
                     * 1 | C | D |
                     */
-                Color8 encPixelA = t_PlainImage.GetPixel(imgY, imgX) ^ t_EncryptionKey[keyCursor % t_EncryptionKey.size()];
-                Color8 encPixelB = t_PlainImage.GetPixel(imgY, imgX + 1) ^ t_EncryptionKey[keyCursor % t_EncryptionKey.size()];
-                Color8 encPixelC = t_PlainImage.GetPixel(imgY + 1, imgX) ^ t_EncryptionKey[keyCursor % t_EncryptionKey.size()];
-                Color8 encPixelD = t_PlainImage.GetPixel(imgY + 1, imgX + 1) ^ t_EncryptionKey[keyCursor % t_EncryptionKey.size()];
+                Color8u encPixelA = t_PlainImage.GetPixel(imgY, imgX) ^ t_EncryptionKey[keyCursor % t_EncryptionKey.size()];
+                Color8u encPixelB = t_PlainImage.GetPixel(imgY, imgX + 1) ^ t_EncryptionKey[keyCursor % t_EncryptionKey.size()];
+                Color8u encPixelC = t_PlainImage.GetPixel(imgY + 1, imgX) ^ t_EncryptionKey[keyCursor % t_EncryptionKey.size()];
+                Color8u encPixelD = t_PlainImage.GetPixel(imgY + 1, imgX + 1) ^ t_EncryptionKey[keyCursor % t_EncryptionKey.size()];
 
                 encryptedImage.SetPixel(imgY, imgX, encPixelA);
                 encryptedImage.SetPixel(imgY, imgX + 1, encPixelB);

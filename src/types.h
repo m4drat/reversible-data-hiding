@@ -6,7 +6,7 @@
 #include "boost/container_hash/hash.hpp"
 
 namespace rdh {
-    using Color8 = uint8_t;
+    using Color8u = uint8_t;
     using Color8s = int8_t;
     using Color16s = int16_t;
 

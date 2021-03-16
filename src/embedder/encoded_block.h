@@ -11,7 +11,7 @@ namespace rdh {
     */
     class EncodedBlock {
     public:
-        EncodedBlock(Color8 t_Pixel1, Color8 t_Pixel2, Color8 t_Pixel3, Color8 t_Pixel4) :
+        EncodedBlock(Color8u t_Pixel1, Color8u t_Pixel2, Color8u t_Pixel3, Color8u t_Pixel4) :
             m_Pixel1{ t_Pixel1 }, m_Pixel2{ t_Pixel2 }, m_Pixel3{ t_Pixel3 }, m_Pixel4{ t_Pixel4 }, m_IsSigmaOne{ false }
         {
             /**
@@ -32,33 +32,33 @@ namespace rdh {
                  * we always should have 3 difference values. Thus we can find out, that we should append one more block 
                  * to the end with this content: (vlc, vli) = (0, 0).
                 */
-                if (deltaM4 == 0) {
-                    // Do not RLC-encode last zero element, because we don't want
-                    // to encode this element later using Huffman coding.
-                    m_RlcEncoded = std::move(RLC::RlcEncode<uint16_t, Color16s>({ deltaM2, deltaM3 }));
+                m_RlcEncoded = std::move(RLC::RlcEncode<uint16_t, Color16s>({ deltaM2, deltaM3, deltaM4 }));
+
+                // If the last block is (0, 0), throw it away, because
+                // we don't want to encode this element later using Huffman coding.
+                if (m_RlcEncoded.back() == std::pair<uint16_t, Color16s>(0, 0)) {
+                    m_RlcEncoded.pop_back();
                 }
-                else {
-                    m_RlcEncoded = std::move(RLC::RlcEncode<uint16_t, Color16s>({ deltaM2, deltaM3, deltaM4 }));
-                }
+                assert((m_RlcEncoded.back() != std::pair<uint16_t, Color16s>(0, 0)));
             }
         }
 
-        Color8& GetPixel1() 
+        Color8u& GetPixel1() 
         {
             return m_Pixel1;
         }
 
-        Color8& GetPixel2()
+        Color8u& GetPixel2()
         {
             return m_Pixel2;
         }
 
-        Color8& GetPixel3()
+        Color8u& GetPixel3()
         {
             return m_Pixel3;
         }
 
-        Color8& GetPixel4()
+        Color8u& GetPixel4()
         {
             return m_Pixel4;
         }
@@ -68,39 +68,46 @@ namespace rdh {
             return m_RlcEncoded;
         }
 
-        void SetHuffmanEncoded(const std::string& t_HuffmanEncodedRepresentation)
+        const bool IsSigmaOne()
         {
-            if (t_HuffmanEncodedRepresentation.size() < consts::c_Threshold) {
-                m_IsSigmaOne = true;
-            }
-            m_HuffmanCoded = t_HuffmanEncodedRepresentation;
+            return m_IsSigmaOne;
         }
 
-        const std::string& GetHuffmanEncoded()
+        void SetIsSigmaOne(bool t_IsSigmaOne)
         {
-            return m_HuffmanCoded;
+            m_IsSigmaOne = t_IsSigmaOne;
+        }
+
+        void SetEncoded(const std::string& t_Encoded)
+        {
+            m_Encoded = t_Encoded;
+        }
+
+        const std::string& GetEncoded()
+        {
+            return m_Encoded;
         }
 
     private:
         /**
          * @brief Represents pixel in the upper left corner of each 2x2 pixels block
         */
-        Color8 m_Pixel1;
+        Color8u m_Pixel1;
 
         /**
          * @brief Represents pixel in the upper right corner of each 2x2 pixels block
         */
-        Color8 m_Pixel2;
+        Color8u m_Pixel2;
 
         /**
         * @brief Represents pixel in the lower left corner of each 2x2 pixels block
         */
-        Color8 m_Pixel3;
+        Color8u m_Pixel3;
 
         /**
         * @brief Represents pixel in the lower right corner of each 2x2 pixels block
         */
-        Color8 m_Pixel4;
+        Color8u m_Pixel4;
 
         /**
          * @brief RlcEncoded block. 
@@ -109,9 +116,9 @@ namespace rdh {
         std::vector <std::pair<uint16_t, Color16s>> m_RlcEncoded;
         
         /**
-         * @brief Block representation after Huffman encoding
+         * @brief Block representation after Huffman encoding / LSB encoding
         */
-        std::string m_HuffmanCoded;
+        std::string m_Encoded;
 
         /**
          * @brief Shows, that current block refers to the sigma 1 set. (l_m < T)

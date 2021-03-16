@@ -10,14 +10,20 @@ if (CMAKE_BUILD_TYPE MATCHES ".*(D|d)ebug$")
         "${BOOST_LIBRARYDIR}/libboost_program_options-vc142-mt-gd-x64-1_75.lib" 
         "${BOOST_LIBRARYDIR}/libboost_thread-vc142-mt-gd-x64-1_75.lib"
         "${BOOST_LIBRARYDIR}/libboost_date_time-vc142-mt-gd-x64-1_75.lib"
-        "${BOOST_LIBRARYDIR}/libboost_chrono-vc142-mt-gd-x64-1_75.lib")
+        "${BOOST_LIBRARYDIR}/libboost_chrono-vc142-mt-gd-x64-1_75.lib"
+        "${BOOST_LIBRARYDIR}/libboost_log-vc142-mt-gd-x64-1_75.lib"
+        "${BOOST_LIBRARYDIR}/libboost_filesystem-vc142-mt-gd-x64-1_75.lib"
+        )
 else()
     target_link_libraries(${BINARY}_run 
         ${Boost_LIBRARIES} 
         "${BOOST_LIBRARYDIR}/libboost_program_options-vc142-mt-x64-1_75.lib" 
         "${BOOST_LIBRARYDIR}/libboost_thread-vc142-mt-x64-1_75.lib"
         "${BOOST_LIBRARYDIR}/libboost_date_time-vc142-mt-x64-1_75.lib"
-        "${BOOST_LIBRARYDIR}/libboost_chrono-vc142-mt-x64-1_75.lib")
+        "${BOOST_LIBRARYDIR}/libboost_chrono-vc142-mt-x64-1_75.lib"
+        "${BOOST_LIBRARYDIR}/libboost_log-vc142-mt-x64-1_75.lib"
+        "${BOOST_LIBRARYDIR}/libboost_filesystem-vc142-mt-x64-1_75.lib"
+        )
 endif()
 
 # Static library to use with tests
@@ -31,12 +37,18 @@ if (CMAKE_BUILD_TYPE MATCHES ".*(D|d)ebug$")
         "${BOOST_LIBRARYDIR}/libboost_program_options-vc142-mt-gd-x64-1_75.lib" 
         "${BOOST_LIBRARYDIR}/libboost_thread-vc142-mt-gd-x64-1_75.lib"
         "${BOOST_LIBRARYDIR}/libboost_date_time-vc142-mt-gd-x64-1_75.lib"
-        "${BOOST_LIBRARYDIR}/libboost_chrono-vc142-mt-gd-x64-1_75.lib")
+        "${BOOST_LIBRARYDIR}/libboost_chrono-vc142-mt-gd-x64-1_75.lib"
+        "${BOOST_LIBRARYDIR}/libboost_log-vc142-mt-gd-x64-1_75.lib"
+        "${BOOST_LIBRARYDIR}/libboost_filesystem-vc142-mt-gd-x64-1_75.lib"
+        )
 else()
     target_link_libraries(${BINARY}_lib 
         ${Boost_LIBRARIES} 
         "${BOOST_LIBRARYDIR}/libboost_program_options-vc142-mt-x64-1_75.lib" 
         "${BOOST_LIBRARYDIR}/libboost_thread-vc142-mt-x64-1_75.lib"
         "${BOOST_LIBRARYDIR}/libboost_date_time-vc142-mt-x64-1_75.lib"
-        "${BOOST_LIBRARYDIR}/libboost_chrono-vc142-mt-x64-1_75.lib")
+        "${BOOST_LIBRARYDIR}/libboost_chrono-vc142-mt-x64-1_75.lib"
+        "${BOOST_LIBRARYDIR}/libboost_log-vc142-mt-x64-1_75.lib"
+        "${BOOST_LIBRARYDIR}/libboost_filesystem-vc142-mt-x64-1_75.lib"
+        )
 endif()

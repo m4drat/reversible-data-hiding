@@ -15,7 +15,7 @@ namespace rdh {
          * @param t_Width the width of an image to create
          * @param t_FillColor color to fill with
         */
-        BmpImage(uint32_t t_Height, uint32_t t_Width, Color8 t_FillColor = 0x00);
+        BmpImage(uint32_t t_Height, uint32_t t_Width, Color8u t_FillColor = 0x00);
 
         /**
          * @brief Loads and converts an image from bmp file format to form of a matrix
@@ -39,7 +39,7 @@ namespace rdh {
          * @brief Constructs image using ImageMatrix
          * @param t_ImageMatrix matrix, that represents an image
         */
-        BmpImage(ImageMatrix<Color8>&& t_ImageMatrix);
+        BmpImage(ImageMatrix<Color8u>&& t_ImageMatrix);
 
         /**
          * @brief Move constructor from other image
@@ -77,7 +77,7 @@ namespace rdh {
          * @param t_NewPixelValue new pixel value
          * @return reference to current object (allows chaining: im.SetPixel(0, 0, 255).SetPixel(0, 1, 255)...)
         */
-        BmpImage& SetPixel(uint32_t t_Y, uint32_t t_X, Color8 t_NewPixelValue);
+        BmpImage& SetPixel(uint32_t t_Y, uint32_t t_X, Color8u t_NewPixelValue);
 
         /**
          * @brief Returns pixel value from location (y, x)
@@ -85,7 +85,7 @@ namespace rdh {
          * @param t_X x coordinate of the pixel
          * @return pixel value
         */
-        Color8 GetPixel(uint32_t t_Y, uint32_t t_X) const;
+        Color8u GetPixel(uint32_t t_Y, uint32_t t_X) const;
         
         /**
          * @brief Returns height of the image
@@ -103,7 +103,7 @@ namespace rdh {
          * @brief Return ImageMatrix of a current image
          * @return ImageMatrix
         */
-        ImageMatrix<Color8>& GetImageMatrix();
+        ImageMatrix<Color8u>& GetImageMatrix();
 
         /**
          * @brief Display image
@@ -132,6 +132,6 @@ namespace rdh {
         /**
          * @brief Image matrix that represents pixels of the image
          */
-        ImageMatrix<Color8> m_ImageMatrix;
+        ImageMatrix<Color8u> m_ImageMatrix;
     };
 }
