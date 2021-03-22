@@ -3,7 +3,6 @@
 #include "embedder/huffman.h"
 #include "embedder/consts.h"
 
-#include <iostream>
 #include <boost/log/trivial.hpp>
 
 namespace rdh {
@@ -11,10 +10,11 @@ namespace rdh {
     {
         BmpImage encryptedEmbedded(t_EncryptedImage.GetHeight(), t_EncryptedImage.GetWidth());
 
-        // A vector of EncodedBlock that represents rlc-encoded blocks.
+        // A vector of EncodedBlocks. All of this blocks firstly will be encoded
+        // using RLC-encoding + Huffman encoding.
         std::vector<EncodedBlock> encodedBlocks;
         encodedBlocks.reserve(static_cast<std::size_t>(t_EncryptedImage.GetHeight()) * static_cast<std::size_t>(t_EncryptedImage.GetWidth()) / 4);
-        
+
         // Create Huffman-coder object, which will be used to encode RLC sequences
         Huffman<std::pair<uint16_t, Color16s>, pair_hash> huffmanCoder(std::pair<uint16_t, Color8u>(-1, 65535));
         // Set default frequencies (found using statistical approach)
@@ -70,7 +70,7 @@ namespace rdh {
             else {
                 /**
                  * Fourth step. Block doesn't belong to sigma_1.
-                 * So encode this block using LSB compression.
+                 * So encode it using LSB compression.
                  */
             }
         }
@@ -82,5 +82,11 @@ namespace rdh {
 #endif
 
         return std::move(encryptedEmbedded);
+    }
+
+    EncodedBlock& Embedder::EncodeBlockLsb(EncodedBlock& t_EncodedBlock)
+    {
+        
+        return t_EncodedBlock;
     }
 }

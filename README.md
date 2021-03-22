@@ -12,6 +12,9 @@
 2. Example decryption: `reversible_data_hiding_run.exe --mode decrypt --image-path ..\..\..\..\images\lena_gray-enc.bmp --result-path ..\..\..\..\images\lena_gray-dec.bmp --enc-key-file ..\..\..\..\example_encrypt_key.bin`  
 ![decrypted](./images/lena_gray.bmp)
 
+3. Example data embedding: `reversible_data_hiding_run.exe --mode embed --image-path ..\..\..\..\images\lena_gray-enc.bmp --result-path ..\..\..\..\images\lena_gray-enc-embed.bmp --embed-key-file ..\..\..\..\example_embed_key.bin --data-file ..\..\..\..\example_data_to_embed.bin`  
+![encrypted](./images/lena_gray-enc-embed.bmp)
+
 ### Performance
 
 - Default realization (pixel-by-pixel encryption):

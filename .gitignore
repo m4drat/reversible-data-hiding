@@ -6,6 +6,7 @@
 images/**
 !images/lena_gray.bmp
 !images/lena_gray-enc.bmp
+!images/lena_gray-enc-embed.bmp
 !images/airplane.bmp
 !images/boat.bmp
 !images/boat_small.bmp

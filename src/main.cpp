@@ -1,10 +1,13 @@
 ﻿#include <iostream>
 #include <string>
+#include <boost/log/trivial.hpp>
+#include <boost/log/expressions.hpp>
 #include <boost/program_options.hpp>
 
 #include "image/image_matrix.h"
 #include "image/bmp_image.h"
 #include "options.h"
+#include "logging.h"
 
 namespace po = boost::program_options;
 
@@ -38,7 +41,10 @@ int main(int argc, char* argv[])
         ("embed-key-file", po::value<std::string>(), "Data embedding/extraction key (key should be in binary form). (can be used instead of data-key)\n"
             "  Example: --embed-key-file ./embed_key_file.bin\n")
         ("data-file", po::value<std::string>(), "Path to file with additional data to embed in the encrypted image\n"
-            "  Example: --data-file ./additional_data.bin\n");
+            "  Example: --data-file ./additional_data.bin\n")
+        ("log-level", po::value<boost::log::trivial::severity_level>()->default_value(boost::log::trivial::severity_level::fatal), 
+            "Log level\n"
+            "  Example: --log-level [trace, debug, info, warning, error, fatal]\n");
 
     try {
         po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -48,7 +54,8 @@ int main(int argc, char* argv[])
         std::cout << desc << std::endl;
         return 1;
     }
-    catch (...) {
+    catch (const std::exception& ex) {
+        std::cout << ex.what() << std::endl;
         std::cout << desc << std::endl;
         return 1;
     }
@@ -58,6 +65,8 @@ int main(int argc, char* argv[])
         std::cout << desc << "\n";
         return 1;
     }
+
+    rdh::log::InitLogger(vm["log-level"].as<boost::log::trivial::severity_level>());
 
     std::string mode;
     std::string imagePath;
@@ -76,7 +85,7 @@ int main(int argc, char* argv[])
         std::cout << desc << std::endl;
         return 1;
     }
-    
+
     try {
         if (mode == "show") {
             return rdh::Options::HandleShow(imagePath, vm, desc);
