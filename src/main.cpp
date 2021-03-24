@@ -49,14 +49,14 @@ int main(int argc, char* argv[])
     try {
         po::store(po::parse_command_line(argc, argv, desc), vm);
     }
-    catch (po::unknown_option) {
-        std::cout << "Unknown option!" << std::endl;
-        std::cout << desc << std::endl;
+    catch (const po::unknown_option& ex) {
+        std::cout << ex.what() << std::endl;
+        std::cout << "Run with --help to read the docs" << std::endl;
         return 1;
     }
     catch (const std::exception& ex) {
         std::cout << ex.what() << std::endl;
-        std::cout << desc << std::endl;
+        std::cout << "Run with --help to read the docs" << std::endl;
         return 1;
     }
 
@@ -77,12 +77,12 @@ int main(int argc, char* argv[])
     }
     catch (po::required_option) {
         std::cout << "Missing one ore more required option!" << std::endl;
-        std::cout << desc << std::endl;
+        std::cout << "Run with --help to read the docs" << std::endl;
         return 1;
     }
     catch (boost::bad_any_cast&) {
         std::cout << "Missing one ore more required option!" << std::endl;
-        std::cout << desc << std::endl;
+        std::cout << "Run with --help to read the docs" << std::endl;
         return 1;
     }
 

@@ -20,58 +20,53 @@ namespace rdh {
         // Set default frequencies (found using statistical approach)
         huffmanCoder.SetFrequencies(consts::huffman::c_DefaultFrequencies);
 
-        /**
-         * First step. Encode all 2x2 blocks using RLC encoding.
-         */
+#if DEBUG_STATS == 1
+        uint32_t sigmaOneBlocks{ 0 };
+#endif
+
         for (uint32_t imgY = 0; imgY < t_EncryptedImage.GetHeight(); imgY += 2) {
             for (uint32_t imgX = 0; imgX < t_EncryptedImage.GetWidth(); imgX += 2) {
+                /**
+                 * First step. Encode all 2x2 blocks using RLC encoding.
+                 */
                 encodedBlocks.emplace_back(
                     t_EncryptedImage.GetPixel(imgY, imgX), 
                     t_EncryptedImage.GetPixel(imgY, imgX + 1), 
                     t_EncryptedImage.GetPixel(imgY + 1, imgX),
                     t_EncryptedImage.GetPixel(imgY + 1, imgX + 1)
                 );
-            }
-        }
 
-#if DEBUG_STATS == 1
-        uint32_t sigmaOneBlocks{ 0 };
-#endif
-
-        /**
-         * Encoder Loop.
-         */
-        for (auto& encodedBlock : encodedBlocks) {
-            /**
-             * Second step. Encode each rlc-encoded block using Huffman coding.
-             */
-            if (encodedBlock.GetRlcEncoded().size() == 1 && encodedBlock.GetRlcEncoded().at(0) == std::pair<uint16_t, Color16s>(0, 0)) {
                 /**
-                 * Special case. All differences are equal to zero.
-                 * In this scenario, huffman keyword length is 0.
-                */
-                encodedBlock.SetEncoded("");
-            }
-            else {
-                // We know, that the last element will always be non-zero
-                // @sa EncodedBlock::EncodedBlock
-                encodedBlock.SetEncoded(huffmanCoder.Encode(encodedBlock.GetRlcEncoded()));
-            }
-
-            /**
-             * Third step. Determine, if a block belongs to sigma one or not.
-             */
-            if (encodedBlock.GetEncoded().size() < consts::c_Threshold) {
-                encodedBlock.SetIsSigmaOne(true);
-#if DEBUG_STATS == 1
-                ++sigmaOneBlocks;
-#endif
-            }
-            else {
-                /**
-                 * Fourth step. Block doesn't belong to sigma_1.
-                 * So encode it using LSB compression.
+                 * Second step. Encode each rlc-encoded block using Huffman coding.
                  */
+                if (encodedBlocks.back().GetRlcEncoded().size() == 1 &&
+                    encodedBlocks.back().GetRlcEncoded().at(0) == std::pair<uint16_t, Color16s>(0, 0)) {
+                    // Special case. All differences are equal to zero.
+                    // In this scenario, huffman keyword length is 0.
+                    encodedBlocks.back().SetEncoded("");
+                }
+                else {
+                    // We know, that the last element will always be non-zero
+                    // @sa EncodedBlock::EncodedBlock
+                    encodedBlocks.back().SetEncoded(huffmanCoder.Encode(encodedBlocks.back().GetRlcEncoded()));
+                }
+
+                /**
+                 * Third step. Determine, if a block belongs to sigma one or not.
+                 */
+                if (encodedBlocks.back().GetEncoded().size() < consts::c_Threshold) {
+                    encodedBlocks.back().SetIsSigmaOne(true);
+#if DEBUG_STATS == 1
+                    ++sigmaOneBlocks;
+#endif
+                }
+                else {
+                    /**
+                     * Fourth step. Block doesn't belong to sigma_1.
+                     * So encode it using LSB compression.
+                     */
+
+                }
             }
         }
 

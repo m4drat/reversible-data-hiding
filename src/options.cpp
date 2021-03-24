@@ -19,13 +19,13 @@ namespace rdh {
     {
         if (t_Vm.count("encryption-key") == 0 && t_Vm.count("enc-key-file") == 0) {
             std::cout << "You must provide encryption key via argument (--encryption-key), or use encryption key file (--enc-key-file)!" << std::endl;
-            std::cout << t_Desc << std::endl;
+            std::cout << "Run with --help to read the docs" << std::endl;
             return 1;
         }
 
         if (t_Vm.count("result-path") == 0) {
             std::cout << "You must provide result path (--result-path), to write encrypted image to." << std::endl;
-            std::cout << t_Desc << std::endl;
+            std::cout << "Run with --help to read the docs" << std::endl;
             return 1;
         }
 
@@ -54,19 +54,19 @@ namespace rdh {
     {
         if (t_Vm.count("embed-key") == 0 && t_Vm.count("embed-key-file") == 0) {
             std::cout << "You must provide data embedding key via argument (--embed-key), or use embed key file (--embed-key-file)!" << std::endl;
-            std::cout << t_Desc << std::endl;
+            std::cout << "Run with --help to read the docs" << std::endl;
             return 1;
         }
 
         if (t_Vm.count("result-path") == 0) {
             std::cout << "You must provide result path (--result-path), to write image with embedded data to." << std::endl;
-            std::cout << t_Desc << std::endl;
+            std::cout << "Run with --help to read the docs" << std::endl;
             return 1;
         }
 
         if (t_Vm.count("data-file") == 0) {
             std::cout << "You must provide path to file with additional data to embed (--data-file) in the image." << std::endl;
-            std::cout << t_Desc << std::endl;
+            std::cout << "Run with --help to read the docs" << std::endl;
             return 1;
         }
 
@@ -92,13 +92,13 @@ namespace rdh {
     {
         if (t_Vm.count("encryption-key") == 0 && t_Vm.count("enc-key-file") == 0) {
             std::cout << "You must provide decryption key via argument (--encryption-key), or use decryption key file (--enc-key-file)!" << std::endl;
-            std::cout << t_Desc << std::endl;
+            std::cout << "Run with --help to read the docs" << std::endl;
             return 1;
         }
 
         if (t_Vm.count("result-path") == 0) {
             std::cout << "You must provide result path, to write encrypted image to." << std::endl;
-            std::cout << t_Desc << std::endl;
+            std::cout << "Run with --help to read the docs" << std::endl;
             return 1;
         }
 

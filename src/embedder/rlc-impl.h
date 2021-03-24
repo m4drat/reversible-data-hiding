@@ -16,7 +16,7 @@ namespace rdh {
         std::vector<std::pair<T1, T2>> irSymbols;
 
         if (vec.size() == 0) {
-            throw std::invalid_argument("Vector to encode cannot have 0 size!");
+            throw std::invalid_argument("Vector to encode cannot have 0 elements!");
         }
 
         T1 lastNulCount = 0;

@@ -7,7 +7,6 @@
 #include <boost/log/trivial.hpp>
 #include <boost/log/utility/setup.hpp>
 
-
 namespace rdh {
     namespace log {
 
@@ -27,11 +26,6 @@ namespace rdh {
             );
 
             logging::add_common_attributes();
-
-            //logging::core::get()->add_global_attribute("MyAttr", attrs::constant<int>(42));
-            //logging::core::get()->add_global_attribute("CountDown", attrs::counter<int>(100, -1));
-
-            //logging::add_common_attributes();
         }
     }
 }
