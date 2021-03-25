@@ -21,7 +21,7 @@ namespace rdh {
         huffmanCoder.SetFrequencies(consts::huffman::c_DefaultFrequencies);
 
 #if DEBUG_STATS == 1
-        uint32_t sigmaOneBlocks{ 0 };
+        uint32_t omegaOneBlocks{ 0 };
 #endif
 
         for (uint32_t imgY = 0; imgY < t_EncryptedImage.GetHeight(); imgY += 2) {
@@ -36,33 +36,36 @@ namespace rdh {
                     t_EncryptedImage.GetPixel(imgY + 1, imgX + 1)
                 );
 
+                EncodedBlock& currEncodedBlock = encodedBlocks.back();
+
                 /**
                  * Second step. Encode each rlc-encoded block using Huffman coding.
                  */
-                if (encodedBlocks.back().GetRlcEncoded().size() == 1 &&
-                    encodedBlocks.back().GetRlcEncoded().at(0) == std::pair<uint16_t, Color16s>(0, 0)) {
+                if (currEncodedBlock.GetRlcEncoded().size() == 1 &&
+                    currEncodedBlock.GetRlcEncoded().at(0) == std::pair<uint16_t, Color16s>(0, 0)) {
                     // Special case. All differences are equal to zero.
                     // In this scenario, huffman keyword length is 0.
-                    encodedBlocks.back().SetEncoded("");
+                    currEncodedBlock.SetEncoded("");
                 }
                 else {
                     // We know, that the last element will always be non-zero
                     // @sa EncodedBlock::EncodedBlock
-                    encodedBlocks.back().SetEncoded(huffmanCoder.Encode(encodedBlocks.back().GetRlcEncoded()));
+                    currEncodedBlock.SetEncoded(huffmanCoder.Encode(currEncodedBlock.GetRlcEncoded()));
+                    assert(currEncodedBlock.GetEncoded().size() > 0);
                 }
 
                 /**
-                 * Third step. Determine, if a block belongs to sigma one or not.
+                 * Third step. Determine, if a block belongs to omega one or not.
                  */
-                if (encodedBlocks.back().GetEncoded().size() < consts::c_Threshold) {
-                    encodedBlocks.back().SetIsSigmaOne(true);
+                if (currEncodedBlock.GetEncoded().size() < consts::c_Threshold) {
+                    currEncodedBlock.SetIsOmegaOne(true);
 #if DEBUG_STATS == 1
-                    ++sigmaOneBlocks;
+                    ++omegaOneBlocks;
 #endif
                 }
                 else {
                     /**
-                     * Fourth step. Block doesn't belong to sigma_1.
+                     * Fourth step. Block doesn't belong to omega_1.
                      * So encode it using LSB compression.
                      */
 
@@ -72,8 +75,8 @@ namespace rdh {
 
 #if DEBUG_STATS == 1
         BOOST_LOG_TRIVIAL(info) << "Total blocks: " << encodedBlocks.size();
-        BOOST_LOG_TRIVIAL(info) << "Sigma one blocks: " << sigmaOneBlocks;
-        BOOST_LOG_TRIVIAL(info) << "Ratio is: " << (double)sigmaOneBlocks / (double)encodedBlocks.size() << sigmaOneBlocks;
+        BOOST_LOG_TRIVIAL(info) << "Omega one blocks: " << omegaOneBlocks;
+        BOOST_LOG_TRIVIAL(info) << "Ratio is: " << (double)omegaOneBlocks / (double)encodedBlocks.size() << omegaOneBlocks;
 #endif
 
         return std::move(encryptedEmbedded);

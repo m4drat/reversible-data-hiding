@@ -12,7 +12,7 @@ namespace rdh {
     class EncodedBlock {
     public:
         EncodedBlock(Color8u t_Pixel1, Color8u t_Pixel2, Color8u t_Pixel3, Color8u t_Pixel4) :
-            m_Pixel1{ t_Pixel1 }, m_Pixel2{ t_Pixel2 }, m_Pixel3{ t_Pixel3 }, m_Pixel4{ t_Pixel4 }, m_IsSigmaOne{ false }
+            m_Pixel1{ t_Pixel1 }, m_Pixel2{ t_Pixel2 }, m_Pixel3{ t_Pixel3 }, m_Pixel4{ t_Pixel4 }, m_IsOmegaOne{ false }
         {
             /**
              * Difference can be a negative number!
@@ -68,14 +68,14 @@ namespace rdh {
             return m_RlcEncoded;
         }
 
-        const bool IsSigmaOne()
+        const bool IsOmegaOne()
         {
-            return m_IsSigmaOne;
+            return m_IsOmegaOne;
         }
 
-        void SetIsSigmaOne(bool t_IsSigmaOne)
+        void SetIsOmegaOne(bool t_IsOmegaOne)
         {
-            m_IsSigmaOne = t_IsSigmaOne;
+            m_IsOmegaOne = t_IsOmegaOne;
         }
 
         void SetEncoded(const std::string& t_Encoded)
@@ -121,8 +121,8 @@ namespace rdh {
         std::string m_Encoded;
 
         /**
-         * @brief Shows, that current block refers to the sigma 1 set. (l_m < T)
+         * @brief Shows, that current block refers to the omega 1 set. (l_m < T)
         */
-        bool m_IsSigmaOne;
+        bool m_IsOmegaOne;
     };
 }

@@ -13,7 +13,6 @@
 ![decrypted](./images/lena_gray.bmp)
 
 3. Example data embedding: `reversible_data_hiding_run.exe --mode embed --image-path ..\..\..\..\images\lena_gray-enc.bmp --result-path ..\..\..\..\images\lena_gray-enc-embed.bmp --embed-key-file ..\..\..\..\example_embed_key.bin --data-file ..\..\..\..\example_data_to_embed.bin`  
-![encrypted](./images/lena_gray-enc-embed.bmp)
 
 ### Performance
 
@@ -62,28 +61,15 @@ EncryptMan_2048x2048_bench           29.8 ms         6.00 ms          112
 EncryptMan_4096x4096_bench           74.1 ms         11.7 ms           56
 ```
 
-- Possible micro optimizations:
-  - ~~Divide image into blocks, and allow each thread-worker to work with each part of the image simultaneously~~
-  - ~~Intrinsics and vector instructions~~ (didn't work) (info links are commented)
-    <!---
-    - https://software.intel.com/content/www/us/en/develop/articles/introduction-to-intel-advanced-vector-extensions.html
-    - https://software.intel.com/sites/landingpage/IntrinsicsGuide/
-    - https://docs.microsoft.com/en-us/cpp/intrinsics/x64-amd64-intrinsics-list?view=msvc-160
-    - http://sci.tuomastonteri.fi/programming/sse
-    - https://stackoverflow.com/questions/1389712/getting-started-with-intel-x86-sse-simd-instructions
-    - https://users.ece.cmu.edu/~franzf/teaching/slides-18-645-simd.pdf
-    -->  
-- ~~replace `std::vector<std::vector<Color8>>` with just one-dim matrix (cache optimizations)~~ (already done by compiler in release build)
-
 ### Program modules
 
 - ~~Image matrix Class~~
 - ~~Image Loader - Loads bmp image and converts it to the matrix of colours~~
 - ~~Encryptor - Encrypts image using XOR encryption~~
 - Data Hider
-  - Pre-encoder
-  - Block Classificator
-  - Compressor (RLC + LSB)
+  - ~~Pre-encoder~~
+  - ~~Block Classificator~~
+  - Compressor (~~RLC~~ + LSB)
   - Embedder
 - Data Extractor
   - Data Extractor

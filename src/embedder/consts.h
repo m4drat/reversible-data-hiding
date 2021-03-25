@@ -1548,6 +1548,6 @@ namespace rdh {
         /**
          * @brief Default threshold for block classification
         */
-        const uint16_t c_Threshold{ 24 };
+        const uint16_t c_Threshold{ 20 };
     }
 }
