@@ -1546,6 +1546,11 @@ namespace rdh {
         }
 
         /**
+         * @brief Average percentage of blocks that are encoded using RLC based algorithm.
+         */
+        const float c_RlcEncodedBlocksRatioAvg = .7f;
+
+        /**
          * @brief Default threshold for block classification
          */
         const uint16_t c_Threshold{ 20 };

@@ -4,7 +4,7 @@
 
 #include "types.h"
 #include "image/bmp_image.h"
-#include "embedder/encoded_block.h"
+#include "embedder/encoder.h"
 
 namespace rdh {
     class Embedder {
@@ -16,6 +16,6 @@ namespace rdh {
          * @param t_DataEmbeddingKey key to use to embed data
          * @return Encrypted image with embedded data into it
         */
-        static BmpImage Embed(const BmpImage& t_EncryptedEmptyImage, const std::vector<uint8_t>& t_Data, const std::vector<uint8_t>& t_DataEmbeddingKey);
+        static BmpImage Embed(BmpImage& t_EncryptedEmptyImage, const std::vector<uint8_t>& t_Data, const std::vector<uint8_t>& t_DataEmbeddingKey);
     };
 }

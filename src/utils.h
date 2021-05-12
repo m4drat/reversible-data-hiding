@@ -4,6 +4,25 @@
 
 namespace rdh {
     namespace utils {
+        namespace math {
+            constexpr int32_t ceil(float t_Num)
+            {
+                return (static_cast<float>(static_cast<int32_t>(t_Num)) == t_Num)
+                    ? static_cast<int32_t>(t_Num)
+                    : static_cast<int32_t>(t_Num) + ((t_Num > 0) ? 1 : 0);
+            }
+
+            constexpr unsigned floorlog2(unsigned x)
+            {
+                return x == 1 ? 0 : 1 + floorlog2(x >> 1);
+            }
+
+            constexpr unsigned ceillog2(unsigned x)
+            {
+                return x == 1 ? 0 : floorlog2(x - 1) + 1;
+            }
+        }
+
         template<typename T>
         std::vector<T> Flatten(const std::vector<std::vector<T>>& t_Orig)
         {
