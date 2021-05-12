@@ -1547,7 +1547,17 @@ namespace rdh {
 
         /**
          * @brief Default threshold for block classification
-        */
+         */
         const uint16_t c_Threshold{ 20 };
+
+        /**
+         * 
+         */
+        const uint16_t c_LsbLayers{ 2 };
+
+        /**
+         * @brief Default node object
+         */
+        const std::pair<uint16_t, Color8u> c_DefaultNode{ -1, 65535 };
     }
 }
