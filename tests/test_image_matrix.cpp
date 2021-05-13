@@ -5,13 +5,13 @@
 using namespace rdh;
 
 TEST(ImageMatrixTest, DefaultConstructor_test) {
-    ImageMatrix<Color8> imMat;
+    ImageMatrix<Color8u> imMat;
     ASSERT_EQ(0, imMat.GetHeight());
     ASSERT_EQ(0, imMat.GetWidth());
 }
 
 TEST(ImageMatrixTest, InitializerListInitialization_test) {
-    ImageMatrix<Color8> imMat({
+    ImageMatrix<Color8u> imMat({
         {0x0, 0x10, 0x20, 0x30},
         {0x40, 0x50, 0x60, 0x70},
         {0x80, 0x90, 0xa0, 0xb0},
@@ -44,7 +44,7 @@ TEST(ImageMatrixTest, InitializerListInitialization_test) {
 }
 
 TEST(ImageMatrixTest, WidthHeightColorConstructor_test) {
-    ImageMatrix<Color8> imMat(1, 2, 0xff);
+    ImageMatrix<Color8u> imMat(1, 2, 0xff);
     ASSERT_EQ(1, imMat.GetHeight());
     ASSERT_EQ(2, imMat.GetWidth());
     ASSERT_EQ(0xff, imMat.GetPixel(0, 0));
@@ -52,26 +52,26 @@ TEST(ImageMatrixTest, WidthHeightColorConstructor_test) {
 }
 
 TEST(ImageMatrixTest, SetPixel_test) {
-    ImageMatrix<Color8> imMat(4, 4, 0x0);
+    ImageMatrix<Color8u> imMat(4, 4, 0x0);
     ASSERT_EQ(0, imMat.GetPixel(0, 0));
     imMat.SetPixel(0, 0, 0xff);
     ASSERT_EQ(0xff, imMat.GetPixel(0, 0));
 }
 
 TEST(ImageMatrixTest, GetPixel_test) {
-    ImageMatrix<Color8> imMat(4, 4, 0xff);
+    ImageMatrix<Color8u> imMat(4, 4, 0xff);
     ASSERT_EQ(0xff, imMat.GetPixel(0, 0));
 }
 
 TEST(ImageMatrixTest, Slice_test) {
-    ImageMatrix<Color8> imMat({
+    ImageMatrix<Color8u> imMat({
         {0x0, 0x10, 0x20, 0x30},
         {0x40, 0x50, 0x60, 0x70},
         {0x80, 0x90, 0xa0, 0xb0},
         {0xc0, 0xd0, 0xe0, 0xf0}
     });
 
-    ImageMatrix<Color8> sliced = imMat.Slice(0, 1, 0, 1);
+    ImageMatrix<Color8u> sliced = imMat.Slice(0, 1, 0, 1);
 
     ASSERT_EQ(0x0, imMat.GetPixel(0, 0));
     ASSERT_EQ(0x10, imMat.GetPixel(0, 1));

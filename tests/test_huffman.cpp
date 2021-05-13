@@ -34,9 +34,9 @@ TEST(HuffmanTest, EncodeDecodeString_test) {
 }
 
 TEST(HuffmanTest, EncodePairs_test) {
-    Huffman<std::pair<uint16_t, Color8>, pair_hash> huffmanCoder(std::pair<uint16_t, Color8>(-1, 0));
+    Huffman<std::pair<uint16_t, Color8u>, pair_hash> huffmanCoder(std::pair<uint16_t, Color8u>(-1, 0));
     huffmanCoder.SetFrequencies(
-        std::unordered_map<std::pair<uint16_t, Color8>, uint32_t, pair_hash>{
+        std::unordered_map<std::pair<uint16_t, Color8u>, uint32_t, pair_hash>{
             std::make_pair(std::make_pair(0, 0), 50),
             std::make_pair(std::make_pair(0, 1), 30),
             std::make_pair(std::make_pair(0, 2), 15),
@@ -45,7 +45,7 @@ TEST(HuffmanTest, EncodePairs_test) {
     );
 
     std::string encoded = "00011101101100";
-    std::vector<std::pair<uint16_t, Color8>> original{
+    std::vector<std::pair<uint16_t, Color8u>> original{
         std::make_pair(0, 0), std::make_pair(0, 0), std::make_pair(0, 0),
         std::make_pair(0, 1), std::make_pair(0, 2), std::make_pair(0, 2),
         std::make_pair(0, 3)
@@ -53,7 +53,7 @@ TEST(HuffmanTest, EncodePairs_test) {
 
     ASSERT_EQ(huffmanCoder.Encode(original), encoded);
 
-    std::vector<std::pair<uint16_t, Color8>> decoded = huffmanCoder.Decode(encoded);
+    std::vector<std::pair<uint16_t, Color8u>> decoded = huffmanCoder.Decode(encoded);
 
     ASSERT_EQ(decoded.size(), original.size());
 

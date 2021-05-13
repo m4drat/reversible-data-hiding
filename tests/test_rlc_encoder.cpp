@@ -61,8 +61,8 @@ TEST(RLCEncoderTest, LastZeroElement_test) {
 }
 
 TEST(RLCEncoderTest, AllNonZero_test) {
-    std::vector <std::pair<uint16_t, Color8>> encoded{ RLC::RlcEncode<uint16_t, Color8>({ 1, 2, 3 }) };
-    std::vector <std::pair<uint16_t, Color8>> expected{ { 0, 1 }, { 0, 2 }, { 0, 3 } };
+    std::vector <std::pair<uint16_t, Color8u>> encoded{ RLC::RlcEncode<uint16_t, Color8u>({ 1, 2, 3 }) };
+    std::vector <std::pair<uint16_t, Color8u>> expected{ { 0, 1 }, { 0, 2 }, { 0, 3 } };
 
     ASSERT_EQ(encoded.size(), expected.size());
 

@@ -72,7 +72,7 @@ namespace rdh {
                      * Set lsb of top-left pixel. This bit is used to determine
                      * which approach (lsb/rlc) was used to encode the block.
                      */
-                    t_EncryptedImage.SetPixel(t_EncryptedImage.GetPixel(imgY, imgX) | 1);
+                    t_EncryptedImage.SetPixel(imgY, imgX, t_EncryptedImage.GetPixel(imgY, imgX) | 1);
 
                     /* Append encoded block representation to the 'C' bitstream. */
                     rlcEncodedBitStream += rlcEncoded;
@@ -97,7 +97,7 @@ namespace rdh {
                     /**
                      * Clear lsb of top-left pixel.
                      */
-                    t_EncryptedImage.SetPixel(t_EncryptedImage.GetPixel(imgY, imgX) & ~1);
+                    t_EncryptedImage.SetPixel(imgY, imgX, t_EncryptedImage.GetPixel(imgY, imgX) & ~1);
                 }
             }
         }
