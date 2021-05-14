@@ -1548,21 +1548,44 @@ namespace rdh {
         /**
          * @brief Average percentage of blocks that are encoded using RLC based algorithm.
          */
-        const float c_RlcEncodedBlocksRatioAvg = .7f;
+        constexpr float c_RlcEncodedBlocksRatioAvg = .7f;
+
+        /**
+         * @brief Average percentage of blocks that are encoded using LSB based algorithm.
+         */
+        constexpr float c_LsbEncodedBlocksRatioAvg = 1.0f - c_RlcEncodedBlocksRatioAvg;
 
         /**
          * @brief Default threshold for block classification
          */
-        const uint16_t c_Threshold{ 20 };
+        constexpr uint16_t c_Threshold{ 20 };
 
         /**
-         * 
+         * @brief amount of Lsbs to use to store additional data, while using LSB-based coder.
+         * In the article it's referred as u. 
          */
-        const uint16_t c_LsbLayers{ 2 };
+        constexpr uint16_t c_LsbLayers{ 3 };
+
+        /**
+         * @brief Blocks group size, that is used with lsb-based coder.
+         */
+        constexpr uint16_t c_Lambda{ 100 };
+
+        /**
+         * @brief Small positive integer denoting the number of bits that can be embedded 
+         * into each group.
+         * In the article it's referred as \alpha.
+         */
+        constexpr uint16_t c_Alpha{ 5 };
+
+        /**
+         * @brief Number of pixels in one block.
+        */
+        constexpr uint16_t c_PixelsInOneBlock{ 4 };
 
         /**
          * @brief Default node object
          */
-        const std::pair<uint16_t, Color8u> c_DefaultNode{ -1, 65535 };
+        constexpr std::pair<uint16_t, Color8u> c_DefaultNode{ -1, 65535 };
     }
 }

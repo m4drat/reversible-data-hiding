@@ -6,23 +6,6 @@
 
 using namespace rdh;
 
-//TEST(EncryptorTest, CalculateKeyIndex_test) {
-//    ASSERT_EQ(0, Encryptor::CalculateKeyIndex(4, 0, 0));
-//    ASSERT_EQ(1, Encryptor::CalculateKeyIndex(4, 0, 1));
-//    ASSERT_EQ(2, Encryptor::CalculateKeyIndex(4, 1, 0));
-//    ASSERT_EQ(3, Encryptor::CalculateKeyIndex(4, 1, 1));
-//
-//    ASSERT_EQ(16, Encryptor::CalculateKeyIndex(14, 0, 8));
-//    ASSERT_EQ(17, Encryptor::CalculateKeyIndex(14, 0, 9));
-//    ASSERT_EQ(20, Encryptor::CalculateKeyIndex(14, 0, 10));
-//    ASSERT_EQ(21, Encryptor::CalculateKeyIndex(14, 0, 11));
-//
-//    ASSERT_EQ(34, Encryptor::CalculateKeyIndex(14, 3, 2));
-//    ASSERT_EQ(35, Encryptor::CalculateKeyIndex(14, 3, 3));
-//    ASSERT_EQ(38, Encryptor::CalculateKeyIndex(14, 3, 4));
-//    ASSERT_EQ(39, Encryptor::CalculateKeyIndex(14, 3, 5));
-//}
-
 TEST(EncryptorTest, EncryptImage_test) {
     BmpImage image(ImageMatrix<Color8u>({
         {0x0, 0x10, 0x20, 0x30},

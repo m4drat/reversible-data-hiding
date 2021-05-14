@@ -5,21 +5,32 @@
 namespace rdh {
     namespace utils {
         namespace math {
-            constexpr int32_t ceil(float t_Num)
+            constexpr uint32_t Floor(float t_Num)
+            {
+                const uint32_t i = static_cast<uint32_t>(t_Num);
+                return t_Num < t_Num ? i - 1 : i;
+            }
+
+            constexpr int32_t Ceil(float t_Num)
             {
                 return (static_cast<float>(static_cast<int32_t>(t_Num)) == t_Num)
                     ? static_cast<int32_t>(t_Num)
                     : static_cast<int32_t>(t_Num) + ((t_Num > 0) ? 1 : 0);
             }
 
-            constexpr unsigned floorlog2(unsigned x)
+            constexpr uint32_t FloorLog2(uint32_t t_Num)
             {
-                return x == 1 ? 0 : 1 + floorlog2(x >> 1);
+                return t_Num == 1 ? 0 : 1 + FloorLog2(t_Num >> 1);
             }
 
-            constexpr unsigned ceillog2(unsigned x)
+            constexpr uint32_t CeilLog2(uint32_t t_Num)
             {
-                return x == 1 ? 0 : floorlog2(x - 1) + 1;
+                return t_Num == 1 ? 0 : FloorLog2(t_Num - 1) + 1;
+            }
+
+            constexpr uint8_t GetNthBit(uint32_t t_Num, uint8_t t_NthBit)
+            {
+                return (t_Num >> t_NthBit) & 1;
             }
         }
 

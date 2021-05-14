@@ -4,7 +4,7 @@ project("reversible_data_hiding")
 
 option(BUILD_TESTS "Build tests" ON)
 option(BUILD_BENCHMARKS "Build benchmarks" ON)
-option(ENABLE_DEBUG_STATS "Prints stats messages" ON)
+option(ENABLE_DEBUG_STATS "Prints statistics info" ON)
 
 # CMAKE_BUILD_TYPE MATCHES ".*(D|d)ebug$" OR 
 if (ENABLE_DEBUG_STATS MATCHES "ON")
@@ -32,6 +32,7 @@ message(STATUS "CMAKE_BUILD_TYPE   : ${CMAKE_BUILD_TYPE}")
 
 include_directories(
     ${Boost_INCLUDE_DIRS}
+    "libraries/eigen"
     "libraries"
     "src"
 )
