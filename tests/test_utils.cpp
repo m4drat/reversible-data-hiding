@@ -20,3 +20,17 @@ TEST(UtilsTest, FisherYates_test) {
     utils::DeshuffleFisherYates(seq, deshuffl);
     ASSERT_EQ(deshuffl, original);
 }
+
+TEST(UtilsTest, ClearBits_test) {
+    uint8_t num = 0b10110101;
+    ASSERT_EQ(utils::ClearLastNBits(num, 0), 0b10110101);
+    ASSERT_EQ(utils::ClearLastNBits(num, 1), 0b10110100);
+    ASSERT_EQ(utils::ClearLastNBits(num, 2), 0b10110100);
+    ASSERT_EQ(utils::ClearLastNBits(num, 3), 0b10110000);
+    ASSERT_EQ(utils::ClearLastNBits(num, 4), 0b10110000);
+    ASSERT_EQ(utils::ClearLastNBits(num, 5), 0b10100000);
+    ASSERT_EQ(utils::ClearLastNBits(num, 6), 0b10000000);
+    ASSERT_EQ(utils::ClearLastNBits(num, 7), 0b10000000);
+    ASSERT_EQ(utils::ClearLastNBits(num, 8), 0b00000000);
+}
+

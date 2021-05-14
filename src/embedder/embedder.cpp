@@ -3,6 +3,7 @@
 #include <random>
 
 #include "embedder/embedder.h"
+#include "embedder/encoder.h"
 #include "embedder/huffman.h"
 #include "embedder/consts.h"
 #include "utils.h"
@@ -173,12 +174,6 @@ namespace rdh {
             }
         }
 
-#ifndef NDEBUG
-        uint32_t xi = utils::math::Floor((float)(totalBlocks - omegaOneBlocks) / (float)consts::c_Lambda);
-        assert(lsbEncodedBitStream.size() == xi * (consts::c_Lambda * (4 * consts::c_LsbLayers - 1) - consts::c_Alpha));
-        assert(hashsesBitStream.size() == consts::c_LsbHashSize * xi);
-#endif
-
 #if DEBUG_STATS == 1
         BOOST_LOG_TRIVIAL(info) << "Total blocks: " << totalBlocks;
         BOOST_LOG_TRIVIAL(info) << "Omega one blocks: " << omegaOneBlocks;
@@ -198,6 +193,19 @@ namespace rdh {
         BOOST_LOG_TRIVIAL(info) << "Maximum embedding rate: " << tMax;
 #endif
 
+        uint32_t xi = utils::math::Floor((float)(totalBlocks - omegaOneBlocks) / (float)consts::c_Lambda);
+        assert(lsbEncodedBitStream.size() == xi * (consts::c_Lambda * (4 * consts::c_LsbLayers - 1) - consts::c_Alpha));
+        assert(hashsesBitStream.size() == consts::c_LsbHashSize * xi);
+
+        int32_t maxUserDataSize = 24 * omegaOneBlocks + xi * consts::c_Lambda * (4 * consts::c_LsbLayers - 1)
+            - (lengthsBitStream.size() + rlcEncodedBitStream.size() + lsbEncodedBitStream.size() + hashsesBitStream.size() + topLeftPixelsLsbBitStream.size());
+
+        BOOST_LOG_TRIVIAL(info) << "Maximum bits of user-data to embed: " << maxUserDataSize;
+
+        if (t_Data.size() * 8 > maxUserDataSize) {
+            throw std::invalid_argument("User data size exceeds the maximum possible size!");
+        }
+
         /* Concatenate everything, and shuffle it */
         std::string assembledBitStream = 
             lengthsBitStream + rlcEncodedBitStream + lsbEncodedBitStream + 
@@ -210,24 +218,104 @@ namespace rdh {
         
         utils::ShuffleFisherYates(seq, assembledBitStream);
 
-        std::seed_seq seq2(hash.begin(), hash.end());
-        utils::DeshuffleFisherYates(seq2, assembledBitStream);
+        auto sliceBegin = assembledBitStream.begin();
+        auto sliceEnd = assembledBitStream.begin();
 
         /* Last step. Pack all data into the image. */
         for (uint32_t imgY = 0; imgY < t_EncryptedImage.GetHeight(); imgY += 2) {
             for (uint32_t imgX = 0; imgX < t_EncryptedImage.GetWidth(); imgX += 2) {
-                /* What type of block will be processed now? */
-                if (t_EncryptedImage.GetPixel(imgY, imgX) & 1) {
-                    /* The block is encoded using rlc-based algorithm */
+                /* We've packed everything, that we had */
+                if (sliceBegin == assembledBitStream.end()) {
+                    /* Yep, that's ugly, but it's the most elegant solution I could've found */
+                    goto finishProcessing;
+                }
 
+                /* What type of block we are currently looking at? */
+                if (t_EncryptedImage.GetPixel(imgY, imgX) & 1) {
+                    assert(sliceBegin == sliceEnd);
+
+                    /**
+                     * The block is encoded using rlc-based algorithm, so we can fully use
+                     * all of the pixels, excluding the top-left one.
+                     */
+                    t_EncryptedImage.SetPixel(imgY, imgX + 1, utils::BinaryStringToByte(
+                        std::string(sliceBegin, utils::Advance(sliceEnd, assembledBitStream.end(), 8)))
+                    );
+
+                    t_EncryptedImage.SetPixel(imgY + 1, imgX, utils::BinaryStringToByte(
+                        std::string(
+                            utils::Advance(sliceBegin, assembledBitStream.end(), 8), 
+                            utils::Advance(sliceEnd, assembledBitStream.end(), 8)
+                        )
+                    ));
+
+                    t_EncryptedImage.SetPixel(imgY + 1, imgX + 1, utils::BinaryStringToByte(
+                        std::string(
+                            utils::Advance(sliceBegin, assembledBitStream.end(), 8),
+                            utils::Advance(sliceEnd, assembledBitStream.end(), 8)
+                        )
+                    ));
+
+                    utils::Advance(sliceBegin, assembledBitStream.end(), 8);
                 }
                 else {
+                    assert(sliceBegin == sliceEnd);
+                    
                     /* The block is encoded using lsb-based algorithm */
+                    t_EncryptedImage.SetPixel(
+                        imgY, 
+                        imgX, 
+                        utils::ClearLastNBits(t_EncryptedImage.GetPixel(imgY, imgX), consts::c_LsbLayers) | 
+                        (utils::BinaryStringToByte(
+                            std::string(
+                                sliceBegin,
+                                utils::Advance(sliceEnd, assembledBitStream.end(), consts::c_LsbLayers - 1)
+                            )
+                        ) << 1)
+                    );
 
+                    t_EncryptedImage.SetPixel(
+                        imgY,
+                        imgX + 1,
+                        utils::ClearLastNBits(t_EncryptedImage.GetPixel(imgY, imgX + 1), consts::c_LsbLayers) |
+                        utils::BinaryStringToByte(
+                            std::string(
+                                utils::Advance(sliceBegin, assembledBitStream.end(), consts::c_LsbLayers - 1),
+                                utils::Advance(sliceEnd, assembledBitStream.end(), consts::c_LsbLayers)
+                            )
+                        )
+                    );
+
+                    t_EncryptedImage.SetPixel(
+                        imgY + 1,
+                        imgX,
+                        utils::ClearLastNBits(t_EncryptedImage.GetPixel(imgY + 1, imgX), consts::c_LsbLayers) |
+                        utils::BinaryStringToByte(
+                            std::string(
+                                utils::Advance(sliceBegin, assembledBitStream.end(), consts::c_LsbLayers),
+                                utils::Advance(sliceEnd, assembledBitStream.end(), consts::c_LsbLayers)
+                            )
+                        )
+                    );
+
+                    t_EncryptedImage.SetPixel(
+                        imgY + 1,
+                        imgX + 1,
+                        utils::ClearLastNBits(t_EncryptedImage.GetPixel(imgY + 1, imgX + 1), consts::c_LsbLayers) |
+                        utils::BinaryStringToByte(
+                            std::string(
+                                utils::Advance(sliceBegin, assembledBitStream.end(), consts::c_LsbLayers),
+                                utils::Advance(sliceEnd, assembledBitStream.end(), consts::c_LsbLayers)
+                            )
+                        )
+                    );
+
+                    utils::Advance(sliceBegin, assembledBitStream.end(), consts::c_LsbLayers);
                 }
             }
         }
 
+finishProcessing:
         return t_EncryptedImage;
     }
 

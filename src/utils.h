@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <random>
+#include <iterator>
 #include <bitset>
 
 #include <boost/compute/detail/sha1.hpp>
@@ -43,7 +44,7 @@ namespace rdh {
          * @tparam T any type of collection, that provides data and size functions.
          * @param t_Data data to calculate hash from.
          * @param t_Hash calculated hash.
-        */
+         */
         template<typename T>
         void CalculateSHA1(const T& t_Data, std::array<uint32_t, 5>& t_Hash)
         {
@@ -54,11 +55,10 @@ namespace rdh {
 
         /**
          * @brief Shuffles user given collection using Fisher-Yates algorithm.
-         * To revert permutation, just provide the same seed and permutated collection.
          * @tparam T type of collection. The collection should provide rbegin, rend, size functions.
          * @param t_Seq seq to seed mt19937.
-         * @param t_Collection collection to shuffle.
-        */
+         * @param t_Collection collection to shuffle in-place.
+         */
         template<typename T>
         void ShuffleFisherYates(const std::seed_seq& t_Seq, T& t_Collection)
         {
@@ -79,6 +79,13 @@ namespace rdh {
             }
         }
 
+        /**
+         * @brief Reverts permutation previously created by calling ShuffleFisherYates.
+         * To do so, provide same seed_seq, and permutated collection.
+         * @tparam T type of collection. The collection should provide rbegin, rend, size functions.
+         * @param t_Seq seq to seed mt19937.
+         * @param t_Collection collection to unshuffle.
+         */
         template<typename T>
         void DeshuffleFisherYates(const std::seed_seq& t_Seq, T& t_Collection)
         {
@@ -98,11 +105,9 @@ namespace rdh {
             for (auto iter = t_Collection.begin(); iter != t_Collection.end() && vecIter != randomIndexes.rend();
                 ++iter, ++vecIter)
             {
-                uint32_t randomIndex = *vecIter;
-
-                if (*iter != t_Collection.at(randomIndex))
+                if (*iter != t_Collection.at(*vecIter))
                 {
-                    std::swap(t_Collection.at(randomIndex), *iter);
+                    std::swap(t_Collection.at(*vecIter), *iter);
                 }
             }
         }
@@ -117,7 +122,8 @@ namespace rdh {
         }
 
         template<typename T>
-        std::vector<T> HexToBytes(const std::string& t_Hex) {
+        std::vector<T> HexToBytes(const std::string& t_Hex)
+        {
             if (t_Hex.length() % 2 != 0) {
                 throw std::invalid_argument("Hex string length should be multiple of 2!");
             }
@@ -137,7 +143,8 @@ namespace rdh {
         }
 
         template<typename T>
-        std::string BytesToBinaryString(const std::vector<T>& t_Bytes) {
+        std::string BytesToBinaryString(const std::vector<T>& t_Bytes)
+        {
             std::string binaryRepr{ "" };
             binaryRepr.reserve(t_Bytes.size() * 8);
 
@@ -148,8 +155,45 @@ namespace rdh {
             return std::move(binaryRepr);
         }
 
+        /**
+         * @brief Converts given string to a byte. If string size is less than 8,
+         * prepends it with zeroes.
+         * @param t_BinStr string in "binary" form (consists of '0' and '1').
+         * @return uint8_t decoded byte
+        */
+        template <class T>
+        uint8_t BinaryStringToByte(const T& t_BinStr)
+        {
+            if (t_BinStr.length() > 8) {
+                throw std::invalid_argument("Binary string length can't be bigger than 8!");
+            }
+
+            return static_cast<uint8_t>(std::bitset<8>(t_BinStr).to_ulong());
+        }
+
+        template <class Iter, class Incr>
+        Iter& Advance(Iter& t_Curr, const Iter& t_End, Incr t_N)
+        {
+            std::size_t remaining(std::distance(t_Curr, t_End));
+
+            if (remaining < t_N)
+            {
+                t_N = remaining;
+            }
+
+            std::advance(t_Curr, t_N);
+
+            return t_Curr;
+        }
+
+        constexpr uint8_t ClearLastNBits(uint8_t t_Num, uint8_t t_Nbits)
+        {
+            return ~((1 << t_Nbits) - 1) & t_Num;
+        }
+
         template<typename T>
-        std::vector<T> LoadFileData(const std::string& t_Filename) {
+        std::vector<T> LoadFileData(const std::string& t_Filename)
+        {
             // open the file:
             std::ifstream file(t_Filename, std::ios::binary);
 

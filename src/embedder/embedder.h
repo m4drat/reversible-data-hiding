@@ -5,7 +5,6 @@
 
 #include "types.h"
 #include "image/bmp_image.h"
-#include "embedder/encoder.h"
 #include "embedder/consts.h"
 
 #include "Eigen/Dense"
