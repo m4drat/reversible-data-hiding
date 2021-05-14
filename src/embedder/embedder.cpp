@@ -9,7 +9,6 @@
 
 #include <boost/log/trivial.hpp>
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
-#include <boost/compute/detail/sha1.hpp>
 
 namespace rdh {
     BmpImage& Embedder::Embed(BmpImage& t_EncryptedImage, const std::vector<uint8_t>& t_Data, const std::vector<uint8_t>& t_DataEmbeddingKey)
@@ -54,8 +53,8 @@ namespace rdh {
         );
 
         /* Bitstring with all lsbs of the top-left pixels. In the article it's referred as F. */
-        std::string topLeftPixelsLsb{ "" };
-        topLeftPixelsLsb.reserve(totalBlocks);
+        std::string topLeftPixelsLsbBitStream{ "" };
+        topLeftPixelsLsbBitStream.reserve(totalBlocks);
 
         /* Bitstream, that represents compressed blocks from \omega_2 */
         std::string lsbEncodedBitStream{ "" };
@@ -99,7 +98,7 @@ namespace rdh {
                 );
 
                 /* Save lsb of the top-left pixel in a block */
-                topLeftPixelsLsb += (t_EncryptedImage.GetPixel(imgY, imgX) & 1) ? "1" : "0";
+                topLeftPixelsLsbBitStream += (t_EncryptedImage.GetPixel(imgY, imgX) & 1) ? "1" : "0";
 
                 /**
                  * Determine, if a block belongs to omega one or not.
@@ -180,12 +179,6 @@ namespace rdh {
         assert(hashsesBitStream.size() == consts::c_LsbHashSize * xi);
 #endif
 
-        /* Last step. Pack all data into the image. */
-        for (uint32_t imgY = 0; imgY < t_EncryptedImage.GetHeight(); imgY += 2) {
-            for (uint32_t imgX = 0; imgX < t_EncryptedImage.GetWidth(); imgX += 2) {
-            }
-        }
-
 #if DEBUG_STATS == 1
         BOOST_LOG_TRIVIAL(info) << "Total blocks: " << totalBlocks;
         BOOST_LOG_TRIVIAL(info) << "Omega one blocks: " << omegaOneBlocks;
@@ -193,9 +186,9 @@ namespace rdh {
 
         double tMax = (
                 24 * (double)omegaOneBlocks +
-                (double)utils::math::Floor((totalBlocks - omegaOneBlocks) / consts::c_Lambda) *
+                std::floorf((totalBlocks - omegaOneBlocks) / consts::c_Lambda) *
                 (consts::c_Alpha - consts::c_LsbHashSize) - 
-                omegaOneBlocks * (double)utils::math::CeilLog2(consts::c_Threshold) -
+                omegaOneBlocks * std::ceilf(std::log2f(consts::c_Threshold)) -
                 rlcEncodedBitStream.size() -
                 totalBlocks
             ) / (
@@ -205,21 +198,48 @@ namespace rdh {
         BOOST_LOG_TRIVIAL(info) << "Maximum embedding rate: " << tMax;
 #endif
 
+        /* Concatenate everything, and shuffle it */
+        std::string assembledBitStream = 
+            lengthsBitStream + rlcEncodedBitStream + lsbEncodedBitStream + 
+            hashsesBitStream + topLeftPixelsLsbBitStream + utils::BytesToBinaryString(t_Data);
+        std::array<uint32_t, 5> hash;
+
+        /* Use sha1 of a data-hiding key as a seed for PRNG */
+        utils::CalculateSHA1(t_DataEmbeddingKey, hash);
+        std::seed_seq seq(hash.begin(), hash.end());
+        
+        utils::ShuffleFisherYates(seq, assembledBitStream);
+
+        std::seed_seq seq2(hash.begin(), hash.end());
+        utils::DeshuffleFisherYates(seq2, assembledBitStream);
+
+        /* Last step. Pack all data into the image. */
+        for (uint32_t imgY = 0; imgY < t_EncryptedImage.GetHeight(); imgY += 2) {
+            for (uint32_t imgX = 0; imgX < t_EncryptedImage.GetWidth(); imgX += 2) {
+                /* What type of block will be processed now? */
+                if (t_EncryptedImage.GetPixel(imgY, imgX) & 1) {
+                    /* The block is encoded using rlc-based algorithm */
+
+                }
+                else {
+                    /* The block is encoded using lsb-based algorithm */
+
+                }
+            }
+        }
+
         return t_EncryptedImage;
     }
 
     void Embedder::PreparePseudoRandomMatrix(Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic>& t_Mat, const std::vector<uint8_t>& t_DataEmbeddingKey)
     {
-        boost::uuids::detail::sha1 sha1;
+        std::array<uint32_t, 5> hash;
+
         /* Calculate sha1 hash of t_DataEmbeddingKey, to use this hash as a seed for Mersenne twister PRNG. */
-        sha1.process_bytes(t_DataEmbeddingKey.data(), t_DataEmbeddingKey.size());
+        utils::CalculateSHA1(t_DataEmbeddingKey, hash);
 
-        uint32_t hash[5] = { 0 };
-
-        sha1.get_digest(hash);
-
-        /* Build seed from hash. */
-        std::seed_seq seq{ hash[0], hash[1], hash[2], hash[3], hash[4] };
+        /* Build seed from the hash. */
+        std::seed_seq seq(hash.begin(), hash.end());
 
         std::mt19937 generator(seq);
         std::uniform_int_distribution<short> dis(0, 1);

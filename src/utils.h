@@ -1,6 +1,10 @@
 #pragma once
 
 #include <fstream>
+#include <random>
+#include <bitset>
+
+#include <boost/compute/detail/sha1.hpp>
 
 namespace rdh {
     namespace utils {
@@ -34,6 +38,75 @@ namespace rdh {
             }
         }
 
+        /**
+         * @brief Calculates SHA1 hash for provided t_Data.
+         * @tparam T any type of collection, that provides data and size functions.
+         * @param t_Data data to calculate hash from.
+         * @param t_Hash calculated hash.
+        */
+        template<typename T>
+        void CalculateSHA1(const T& t_Data, std::array<uint32_t, 5>& t_Hash)
+        {
+            boost::uuids::detail::sha1 sha1;
+            sha1.process_bytes(t_Data.data(), t_Data.size());
+            sha1.get_digest(reinterpret_cast<uint32_t(&)[5]>(t_Hash[0]));
+        }
+
+        /**
+         * @brief Shuffles user given collection using Fisher-Yates algorithm.
+         * To revert permutation, just provide the same seed and permutated collection.
+         * @tparam T type of collection. The collection should provide rbegin, rend, size functions.
+         * @param t_Seq seq to seed mt19937.
+         * @param t_Collection collection to shuffle.
+        */
+        template<typename T>
+        void ShuffleFisherYates(const std::seed_seq& t_Seq, T& t_Collection)
+        {
+            std::mt19937 mt(t_Seq);
+
+            auto currentIndexCounter = t_Collection.size();
+
+            for (auto iter = t_Collection.rbegin(); iter != t_Collection.rend();
+                ++iter, --currentIndexCounter)
+            {
+                std::uniform_int_distribution<> dis(0, currentIndexCounter);
+                const uint32_t randomIndex = dis(mt);
+
+                if (*iter != t_Collection.at(randomIndex))
+                {
+                    std::swap(t_Collection.at(randomIndex), *iter);
+                }
+            }
+        }
+
+        template<typename T>
+        void DeshuffleFisherYates(const std::seed_seq& t_Seq, T& t_Collection)
+        {
+            std::mt19937 mt(t_Seq);
+
+            auto currentIndexCounter = t_Collection.size();
+            std::vector<uint32_t> randomIndexes;
+
+            for (auto iter = t_Collection.rbegin(); iter != t_Collection.rend();
+                ++iter, --currentIndexCounter)
+            {
+                std::uniform_int_distribution<> dis(0, currentIndexCounter);
+                randomIndexes.emplace_back(dis(mt));
+            }
+
+            auto vecIter = randomIndexes.rbegin();
+            for (auto iter = t_Collection.begin(); iter != t_Collection.end() && vecIter != randomIndexes.rend();
+                ++iter, ++vecIter)
+            {
+                uint32_t randomIndex = *vecIter;
+
+                if (*iter != t_Collection.at(randomIndex))
+                {
+                    std::swap(t_Collection.at(randomIndex), *iter);
+                }
+            }
+        }
+
         template<typename T>
         std::vector<T> Flatten(const std::vector<std::vector<T>>& t_Orig)
         {
@@ -61,6 +134,18 @@ namespace rdh {
             }
 
             return bytes;
+        }
+
+        template<typename T>
+        std::string BytesToBinaryString(const std::vector<T>& t_Bytes) {
+            std::string binaryRepr{ "" };
+            binaryRepr.reserve(t_Bytes.size() * 8);
+
+            for (auto& byte : t_Bytes) {
+                binaryRepr.append(std::bitset<8>(static_cast<uint8_t>(byte)).to_string());
+            }
+
+            return std::move(binaryRepr);
         }
 
         template<typename T>
