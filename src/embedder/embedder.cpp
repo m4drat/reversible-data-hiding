@@ -1,6 +1,5 @@
 #include <bitset>
 #include <cmath>
-#include <iostream>
 #include <random>
 
 #include "embedder/embedder.h"
@@ -39,24 +38,31 @@ namespace rdh {
         lengthsBitStream.reserve(rlcEncodedMaxSize * static_cast<std::size_t>(totalBlocks * consts::c_RlcEncodedBlocksRatioAvg));
 
         /**
-         * "Bitstring", that represents a ll concatenated and compressed with RLC-based algorithm blocks.
+         * "Bitstring", that represents all concatenated and compressed with RLC-based algorithm blocks.
          * In the article it's referred as C. It's length referred as \eta_{1}.
          */
         std::string rlcEncodedBitStream{ "" };
 
         /* Bitstring with all lsbs of the top-left pixels. In the article it's referred as F. */
-        std::string topLeftPixelsLsb(totalBlocks, '0');
+        std::string topLeftPixelsLsb{ "" };
+        topLeftPixelsLsb.reserve(totalBlocks);
 
         /* Bitstream, that represents compressed blocks from \omega_2 */
         std::string lsbEncodedBitStream{ "" };
+        lsbEncodedBitStream.reserve(
+            static_cast<std::size_t>((consts::c_Lambda * (4 * consts::c_LsbLayers - 1) - consts::c_Alpha) * utils::math::Floor((float)totalBlocks * (float)consts::c_LsbEncodedBlocksRatioAvg / (float)consts::c_Lambda))
+        );
 
         /* Number of rows in each group vector */
         constexpr uint32_t groupRowsCnt{ consts::c_Lambda * (4 * consts::c_LsbLayers - 1) };
 
         /* Vector of groups. In the article Group is referred as G_i. */
         using Group = Eigen::Matrix<uint8_t, consts::c_Lambda* (4 * consts::c_LsbLayers - 1), 1>;
-        std::vector<Group, Eigen::aligned_allocator<Group>> lsbEncodedGroups{ Group::Zero(groupRowsCnt, 1) };
-        lsbEncodedGroups.reserve(static_cast<std::size_t>(totalBlocks * consts::c_LsbEncodedBlocksRatioAvg) / consts::c_Lambda);
+        Group lsbEncodedGroup = Group::Zero(groupRowsCnt, 1);
+        
+        assert(lsbEncodedGroup.rows() == groupRowsCnt);
+        assert(lsbEncodedGroup.cols() == 1);
+        assert(lsbEncodedGroup.isZero(0));
 
         /* Used to keep track of current group size. */
         uint32_t currGroupSize{ 0 };
@@ -130,30 +136,41 @@ namespace rdh {
                             uint8_t curPixel{ t_EncryptedImage.GetPixel(imgY + yAdd, imgX + xAdd) };
                             /* For the top-left pixel, we ignore it's first LSB */
                             for (uint32_t bitPos = (yAdd == 0 && xAdd == 0) ? 1 : 0; bitPos < consts::c_LsbLayers; bitPos++) {
-                                lsbEncodedGroups.back()(currGroupSize++, 0) = utils::math::GetNthBit(curPixel, bitPos);
+                                lsbEncodedGroup(currGroupSize++, 0) = utils::math::GetNthBit(curPixel, bitPos);
 
                                 /* If we've already exceed group size, so create new one. Also don't forget to reset currGroupSize. */
-                                if (currGroupSize >= consts::c_Lambda) {
-                                    assert(currGroupSize == 100);
-                                    lsbEncodedGroups.emplace_back(Group::Zero(groupRowsCnt, 1));
+                                if (currGroupSize >= groupRowsCnt) {
+                                    /**
+                                     * Multiply matrices mod 2.
+                                     * @TODO: Check if multiplication is done correctly!
+                                     */
+                                    Eigen::Matrix<uint8_t, matrixRows, 1> binaryColumnVec = (psi * lsbEncodedGroup).unaryExpr([](const uint8_t x) { return x % 2; });
+                                    assert(binaryColumnVec.rows() == psi.rows());
+                                    assert(binaryColumnVec.cols() == 1);
+
+                                    for (uint32_t rowIdx = 0; rowIdx < binaryColumnVec.rows(); ++rowIdx) {
+                                        lsbEncodedBitStream += (binaryColumnVec(rowIdx, 0) & 1) ? "1" : "0";
+                                    }
+
+                                    assert(currGroupSize == groupRowsCnt);
+                                    lsbEncodedGroup.setZero();
+
+                                    assert(lsbEncodedGroup.rows() == groupRowsCnt);
+                                    assert(lsbEncodedGroup.cols() == 1);
+                                    assert(lsbEncodedGroup.isZero(0));
+
                                     currGroupSize = 0;
                                 }
                             }
                         }
                     }
-
-                    /**
-                     * Multiply matrices mod 2. 
-                     * @TODO: Check if multiplication is done correctly!
-                     */
-                    auto binaryColumnVec = (psi * lsbEncodedGroups.back()).unaryExpr([&](const uint8_t x) { return x % 2; });
                 }
             }
         }
 
 #ifndef NDEBUG
-        uint32_t xi = Floor((totalBlocks - omegaOneBlocks) / consts::c_Lambda);
-        assert();
+        uint32_t xi = utils::math::Floor((float)(totalBlocks - omegaOneBlocks) / (float)consts::c_Lambda);
+        assert(lsbEncodedBitStream.size() == xi * (consts::c_Lambda * (4 * consts::c_LsbLayers - 1) - consts::c_Alpha));
 #endif
 
         /* Last step. Pack all data into the image. */
