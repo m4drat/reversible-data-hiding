@@ -190,6 +190,19 @@ namespace rdh {
         BOOST_LOG_TRIVIAL(info) << "Total blocks: " << totalBlocks;
         BOOST_LOG_TRIVIAL(info) << "Omega one blocks: " << omegaOneBlocks;
         BOOST_LOG_TRIVIAL(info) << "Ratio is (omegaOne/totalBlocks): " << (double)omegaOneBlocks / (double)totalBlocks;
+
+        double tMax = (
+                24 * (double)omegaOneBlocks +
+                (double)utils::math::Floor((totalBlocks - omegaOneBlocks) / consts::c_Lambda) *
+                (consts::c_Alpha - consts::c_LsbHashSize) - 
+                omegaOneBlocks * (double)utils::math::CeilLog2(consts::c_Threshold) -
+                rlcEncodedBitStream.size() -
+                totalBlocks
+            ) / (
+                (double)t_EncryptedImage.GetHeight() * t_EncryptedImage.GetWidth()
+            );
+
+        BOOST_LOG_TRIVIAL(info) << "Maximum embedding rate: " << tMax;
 #endif
 
         return t_EncryptedImage;
