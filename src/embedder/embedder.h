@@ -13,6 +13,8 @@
 namespace rdh {
     class Embedder {
     public:
+        using Group = Eigen::Matrix<uint8_t, consts::c_Lambda* (4 * consts::c_LsbLayers - 1), 1>;
+
         /**
          * @brief Embeds data into image t_PlainImage
          * @param t_EncryptedEmptyImage Encrypted image where additional data will be embedded
@@ -30,20 +32,11 @@ namespace rdh {
         static void PreparePseudoRandomMatrix(Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic>& t_Mat, const std::vector<uint8_t>& t_DataEmbeddingKey);
 
         /**
-         * @brief Represents all lsbs from one block, that is going to be encoded using 
-         * LSB-based compression algorithm.
-         * In the article it's referred as V_{i_q}.
+         * @brief Generates hash for group G_i.
+         * @param t_CurGroup group to calculate hash for
+         * @param t_DataEmbeddingKey data embedding key, which is used to generate PR matrix
+         * @return "BitString" that represents hash for the block
         */
-        struct BlockLsbs {
-            BlockLsbs(uint16_t t_Px1bits, uint16_t t_Px2bits, uint16_t t_Px3bits, uint16_t t_Px4bits)
-                : px1Lsbs{ t_Px1bits }, px2Lsbs{ t_Px2bits }, px3Lsbs{ t_Px3bits }, px4Lsbs{ t_Px4bits }
-            {}
-            
-            /* LSB for px1 is always zero, because it's used as a location map */
-            std::bitset<consts::c_LsbLayers> px1Lsbs;
-            std::bitset<consts::c_LsbLayers> px2Lsbs;
-            std::bitset<consts::c_LsbLayers> px3Lsbs;
-            std::bitset<consts::c_LsbLayers> px4Lsbs;
-        };
+        static std::string HashLsbBlock(Group& t_CurGroup, const std::vector<uint8_t>& t_DataEmbeddingKey);
     };
 }

@@ -24,10 +24,9 @@ namespace rdh {
         uint32_t omegaOneBlocks{ 0 };
 
         /* In the article it's referred as L */
-        uint32_t totalBlocks{ static_cast<std::size_t>(t_EncryptedImage.GetHeight()) * static_cast<std::size_t>(t_EncryptedImage.GetWidth()) / 4 };
-
-        /* The article says that the length of each encoded block must be less than this number. */
-        constexpr uint32_t rlcEncodedMaxSize = utils::math::CeilLog2(consts::c_Threshold);
+        uint32_t totalBlocks{ 
+            static_cast<std::size_t>(t_EncryptedImage.GetHeight()) * static_cast<std::size_t>(t_EncryptedImage.GetWidth()) / 4 
+        };
 
         /**
          * For each block we should save its encoded content length. In the article it's referred as \Re.
@@ -35,13 +34,24 @@ namespace rdh {
          * class (or using boost::dynamic_bitset<>), consider creating a pull request.
          */
         std::string lengthsBitStream{ "" };
-        lengthsBitStream.reserve(rlcEncodedMaxSize * static_cast<std::size_t>(totalBlocks * consts::c_RlcEncodedBlocksRatioAvg));
+        lengthsBitStream.reserve(
+            consts::c_RlcEncodedMaxSize * static_cast<std::size_t>(totalBlocks * consts::c_RlcEncodedBlocksRatioAvg)
+        );
 
         /**
          * "Bitstring", that represents all concatenated and compressed with RLC-based algorithm blocks.
          * In the article it's referred as C. It's length referred as \eta_{1}.
          */
         std::string rlcEncodedBitStream{ "" };
+        rlcEncodedBitStream.reserve(
+            static_cast<std::size_t>(totalBlocks * consts::c_RlcEncodedBlocksRatioAvg) * consts::c_AvgRlcEncodedLength
+        );
+
+        std::string hashsesBitStream{ "" };
+        hashsesBitStream.reserve(
+            utils::math::Floor((float)totalBlocks * (float)consts::c_LsbEncodedBlocksRatioAvg / (float)consts::c_Lambda) * 
+            consts::c_LsbHashSize
+        );
 
         /* Bitstring with all lsbs of the top-left pixels. In the article it's referred as F. */
         std::string topLeftPixelsLsb{ "" };
@@ -53,35 +63,25 @@ namespace rdh {
             static_cast<std::size_t>((consts::c_Lambda * (4 * consts::c_LsbLayers - 1) - consts::c_Alpha) * utils::math::Floor((float)totalBlocks * (float)consts::c_LsbEncodedBlocksRatioAvg / (float)consts::c_Lambda))
         );
 
-        /* Number of rows in each group vector */
-        constexpr uint32_t groupRowsCnt{ consts::c_Lambda * (4 * consts::c_LsbLayers - 1) };
-
         /* Vector of groups. In the article Group is referred as G_i. */
-        using Group = Eigen::Matrix<uint8_t, consts::c_Lambda* (4 * consts::c_LsbLayers - 1), 1>;
-        Group lsbEncodedGroup = Group::Zero(groupRowsCnt, 1);
+        Group lsbEncodedGroup = Group::Zero(consts::c_GroupRowsCnt, 1);
         
-        assert(lsbEncodedGroup.rows() == groupRowsCnt);
+        assert(lsbEncodedGroup.rows() == consts::c_GroupRowsCnt);
         assert(lsbEncodedGroup.cols() == 1);
         assert(lsbEncodedGroup.isZero(0));
 
         /* Used to keep track of current group size. */
         uint32_t currGroupSize{ 0 };
 
-        /* In the article it's referred as P. Number of rows. */
-        constexpr uint32_t matrixRows{ (uint32_t)consts::c_Lambda * ((uint32_t)consts::c_PixelsInOneBlock * (uint32_t)consts::c_LsbLayers - 1) - consts::c_Alpha };
-
-        /* In the article it's referred as Q. Number of columns. */
-        constexpr uint32_t matrixColumns{ (uint32_t)consts::c_Lambda * ((uint32_t)consts::c_PixelsInOneBlock * (uint32_t)consts::c_LsbLayers - 1) };
-
         /* In the article it's referred as \psi. */
-        Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic> psi(matrixRows, matrixColumns);
+        Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic> psi(consts::c_MatrixRows, consts::c_MatrixColumns);
 
         /* In the article it's referred as Z. Size of this matrix is P \times \alpha. */
-        Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic> pseudoRandomMat(matrixRows, consts::c_Alpha);
+        Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic> pseudoRandomMat(consts::c_MatrixRows, consts::c_Alpha);
         PreparePseudoRandomMatrix(pseudoRandomMat, t_DataEmbeddingKey);
 
         /* Create binary matrix as described in the article */
-        psi << Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic>::Identity(matrixRows, matrixRows), pseudoRandomMat;
+        psi << Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic>::Identity(consts::c_MatrixRows, consts::c_MatrixRows), pseudoRandomMat;
 
         /* Iterate over 2x2 blocks to compress them. */
         for (uint32_t imgY = 0; imgY < t_EncryptedImage.GetHeight(); imgY += 2) {
@@ -118,7 +118,7 @@ namespace rdh {
                     rlcEncodedBitStream += rlcEncoded;
 
                     /* Append encoded block length to the '\Re' bitstream */
-                    lengthsBitStream += std::bitset<rlcEncodedMaxSize>(rlcEncoded.size()).to_string();
+                    lengthsBitStream += std::bitset<consts::c_RlcEncodedMaxSize>(rlcEncoded.size()).to_string();
 
                     omegaOneBlocks++;
                 }
@@ -139,26 +139,32 @@ namespace rdh {
                                 lsbEncodedGroup(currGroupSize++, 0) = utils::math::GetNthBit(curPixel, bitPos);
 
                                 /* If we've already exceed group size, so create new one. Also don't forget to reset currGroupSize. */
-                                if (currGroupSize >= groupRowsCnt) {
+                                if (currGroupSize >= consts::c_GroupRowsCnt) {
                                     /**
                                      * Multiply matrices mod 2.
                                      * @TODO: Check if multiplication is done correctly!
                                      */
-                                    Eigen::Matrix<uint8_t, matrixRows, 1> binaryColumnVec = (psi * lsbEncodedGroup).unaryExpr([](const uint8_t x) { return x % 2; });
+                                    Eigen::Matrix<uint8_t, consts::c_MatrixRows, 1> binaryColumnVec = (psi * lsbEncodedGroup).unaryExpr([](const uint8_t x) { return x % 2; });
                                     assert(binaryColumnVec.rows() == psi.rows());
                                     assert(binaryColumnVec.cols() == 1);
 
+                                    /* Extract bits from binary column vector */
                                     for (uint32_t rowIdx = 0; rowIdx < binaryColumnVec.rows(); ++rowIdx) {
                                         lsbEncodedBitStream += (binaryColumnVec(rowIdx, 0) & 1) ? "1" : "0";
                                     }
 
-                                    assert(currGroupSize == groupRowsCnt);
+                                    hashsesBitStream += HashLsbBlock(lsbEncodedGroup, t_DataEmbeddingKey);
+
+                                    assert(currGroupSize == consts::c_GroupRowsCnt);
+
+                                    /* Reset group. */
                                     lsbEncodedGroup.setZero();
 
-                                    assert(lsbEncodedGroup.rows() == groupRowsCnt);
+                                    assert(lsbEncodedGroup.rows() == consts::c_GroupRowsCnt);
                                     assert(lsbEncodedGroup.cols() == 1);
                                     assert(lsbEncodedGroup.isZero(0));
 
+                                    /* Reset group size. */
                                     currGroupSize = 0;
                                 }
                             }
@@ -171,6 +177,7 @@ namespace rdh {
 #ifndef NDEBUG
         uint32_t xi = utils::math::Floor((float)(totalBlocks - omegaOneBlocks) / (float)consts::c_Lambda);
         assert(lsbEncodedBitStream.size() == xi * (consts::c_Lambda * (4 * consts::c_LsbLayers - 1) - consts::c_Alpha));
+        assert(hashsesBitStream.size() == consts::c_LsbHashSize * xi);
 #endif
 
         /* Last step. Pack all data into the image. */
@@ -206,5 +213,25 @@ namespace rdh {
 
         /* Generate pseudo-random matrix of 1's and 0's */
         t_Mat = Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic>::Zero(t_Mat.rows(), t_Mat.cols()).unaryExpr([&](uint8_t) { return dis(generator); });
+    }
+
+    std::string Embedder::HashLsbBlock(Group& t_CurGroup, const std::vector<uint8_t>& t_DataEmbeddingKey)
+    {
+        std::string hash{ "" };
+        static Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic> randomMatrix(consts::c_LsbHashSize, consts::c_GroupRowsCnt);
+        static bool matrixInitialized{ false };
+
+        if (!matrixInitialized) {
+            PreparePseudoRandomMatrix(randomMatrix, t_DataEmbeddingKey);
+            matrixInitialized = true;
+        }
+
+        Eigen::Matrix<uint8_t, consts::c_LsbHashSize, 1> hashMatrix = (randomMatrix * t_CurGroup).unaryExpr([](const uint8_t x) { return x % 2; });
+
+        for (uint32_t rowIdx = 0; rowIdx < hashMatrix.rows(); ++rowIdx) {
+            hash += (hashMatrix(rowIdx, 0) & 1) ? "1" : "0";
+        }
+
+        return hash;
     }
 }

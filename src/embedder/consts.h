@@ -1,6 +1,7 @@
 #pragma once
 
 #include "types.h"
+#include "utils.h"
 
 namespace rdh {
     namespace consts {
@@ -1580,8 +1581,44 @@ namespace rdh {
 
         /**
          * @brief Number of pixels in one block.
-        */
+         */
         constexpr uint16_t c_PixelsInOneBlock{ 4 };
+
+        /**
+         * @brief Hash size for LSB-encoded blocks.
+         * In the article it's referred as \beta.
+         */
+        constexpr uint16_t c_LsbHashSize{ 4 };
+
+        /**
+         * @brief Average size of rlc-encoded block
+         * @TODO: Right now, it's purely random number!
+         */
+        constexpr uint16_t c_AvgRlcEncodedLength{ 11 };
+
+        /**
+         * @brief Number of rows in each group vector.
+         */
+        constexpr uint32_t c_GroupRowsCnt{ c_Lambda * (4 * c_LsbLayers - 1) };
+
+        /** 
+         * @brief The article says that the length of each encoded block must be less than this number. 
+         */
+        constexpr uint32_t c_RlcEncodedMaxSize = utils::math::CeilLog2(c_Threshold);
+
+        /** 
+         * @brief In the article it's referred as P. Number of rows. 
+         */
+        constexpr uint32_t c_MatrixRows{
+            (uint32_t)c_Lambda * ((uint32_t)c_PixelsInOneBlock * (uint32_t)c_LsbLayers - 1) - c_Alpha
+        };
+
+        /**
+         * @brief In the article it's referred as Q. Number of columns. 
+         */
+        constexpr uint32_t c_MatrixColumns{
+            (uint32_t)c_Lambda * ((uint32_t)c_PixelsInOneBlock * (uint32_t)c_LsbLayers - 1)
+        };
 
         /**
          * @brief Default node object
