@@ -4,6 +4,7 @@
 #include <boost/log/expressions.hpp>
 #include <boost/program_options.hpp>
 
+#include "embedder/consts.h"
 #include "image/image_matrix.h"
 #include "image/bmp_image.h"
 #include "options.h"
@@ -42,12 +43,21 @@ int main(int argc, char* argv[])
             "  Example: --embed-key-file ./embed_key_file.bin\n")
         ("data-file", po::value<std::string>(), "Path to file with additional data to embed in the encrypted image\n"
             "  Example: --data-file ./additional_data.bin\n")
+        ("threshold", po::value<uint16_t>(&rdh::consts::g_Threshold)->default_value(rdh::consts::g_Threshold), "Threshold parameter for blocks classification.\n"
+            "  Example: --threshold 20")
+        ("lsb-layers", po::value<uint16_t>(&rdh::consts::g_LsbLayers)->default_value(rdh::consts::g_LsbLayers), "Lsb layers to use for data embedding.\n"
+            "  Example: --lsb-layers 3")
+        ("lambda", po::value<uint16_t>(&rdh::consts::g_Lambda)->default_value(rdh::consts::g_Lambda), "Blocks group size.\n"
+            "  Example: --lambda 100")
+        ("alpha", po::value<uint16_t>(&rdh::consts::g_Alpha)->default_value(rdh::consts::g_Alpha), "Number of bits to embed in each group.\n"
+            "  Example: --alpha 5")
         ("log-level", po::value<boost::log::trivial::severity_level>()->default_value(boost::log::trivial::severity_level::fatal), 
             "Log level\n"
             "  Example: --log-level [trace, debug, info, warning, error, fatal]\n");
 
     try {
         po::store(po::parse_command_line(argc, argv, desc), vm);
+        boost::program_options::notify(vm);
     }
     catch (const po::unknown_option& ex) {
         std::cout << ex.what() << std::endl;
@@ -75,7 +85,7 @@ int main(int argc, char* argv[])
         mode = vm["mode"].as<std::string>();
         imagePath = vm["image-path"].as<std::string>();
     }
-    catch (po::required_option) {
+    catch (po::required_option&) {
         std::cout << "Missing one ore more required option!" << std::endl;
         std::cout << "Run with --help to read the docs" << std::endl;
         return 1;

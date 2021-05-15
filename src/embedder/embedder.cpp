@@ -35,7 +35,7 @@ namespace rdh {
          */
         std::string lengthsBitStream{ "" };
         lengthsBitStream.reserve(
-            consts::c_RlcEncodedMaxSize * static_cast<std::size_t>(totalBlocks * consts::c_RlcEncodedBlocksRatioAvg)
+            consts::g_RlcEncodedMaxSize * static_cast<std::size_t>(totalBlocks * consts::c_RlcEncodedBlocksRatioAvg)
         );
 
         /**
@@ -49,7 +49,7 @@ namespace rdh {
 
         std::string hashsesBitStream{ "" };
         hashsesBitStream.reserve(
-            utils::math::Floor((float)totalBlocks * (float)consts::c_LsbEncodedBlocksRatioAvg / (float)consts::c_Lambda) * 
+            utils::math::Floor((float)totalBlocks * (float)consts::c_LsbEncodedBlocksRatioAvg / (float)consts::g_Lambda) * 
             consts::c_LsbHashSize
         );
 
@@ -60,13 +60,13 @@ namespace rdh {
         /* Bitstream, that represents compressed blocks from \omega_2 */
         std::string lsbEncodedBitStream{ "" };
         lsbEncodedBitStream.reserve(
-            static_cast<std::size_t>((consts::c_Lambda * (4 * consts::c_LsbLayers - 1) - consts::c_Alpha) * utils::math::Floor((float)totalBlocks * (float)consts::c_LsbEncodedBlocksRatioAvg / (float)consts::c_Lambda))
+            static_cast<std::size_t>((consts::g_GroupRowsCnt - consts::g_Alpha) * utils::math::Floor((float)totalBlocks * (float)consts::c_LsbEncodedBlocksRatioAvg / (float)consts::g_Lambda))
         );
 
         /* Vector of groups. In the article Group is referred as G_i. */
-        Group lsbEncodedGroup = Group::Zero(consts::c_GroupRowsCnt, 1);
+        Group lsbEncodedGroup = Group::Zero(consts::g_GroupRowsCnt, 1);
         
-        assert(lsbEncodedGroup.rows() == consts::c_GroupRowsCnt);
+        assert(lsbEncodedGroup.rows() == consts::g_GroupRowsCnt);
         assert(lsbEncodedGroup.cols() == 1);
         assert(lsbEncodedGroup.isZero(0));
 
@@ -74,14 +74,14 @@ namespace rdh {
         uint32_t currGroupSize{ 0 };
 
         /* In the article it's referred as \psi. */
-        Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic> psi(consts::c_MatrixRows, consts::c_MatrixColumns);
+        Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic> psi(consts::g_MatrixRows, consts::g_MatrixColumns);
 
         /* In the article it's referred as Z. Size of this matrix is P \times \alpha. */
-        Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic> pseudoRandomMat(consts::c_MatrixRows, consts::c_Alpha);
+        Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic> pseudoRandomMat(consts::g_MatrixRows, consts::g_Alpha);
         PreparePseudoRandomMatrix(pseudoRandomMat, t_DataEmbeddingKey);
 
         /* Create binary matrix as described in the article */
-        psi << Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic>::Identity(consts::c_MatrixRows, consts::c_MatrixRows), pseudoRandomMat;
+        psi << Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic>::Identity(consts::g_MatrixRows, consts::g_MatrixRows), pseudoRandomMat;
 
         /* Iterate over 2x2 blocks to compress them. */
         for (uint32_t imgY = 0; imgY < t_EncryptedImage.GetHeight(); imgY += 2) {
@@ -107,7 +107,7 @@ namespace rdh {
                  * Also don't forget to append new value to the lengthsBitStream, and to update byte in the 
                  * locationMap.
                  */
-                if (rlcEncoded.size() < consts::c_Threshold) {
+                if (rlcEncoded.size() < consts::g_Threshold) {
                     /**
                      * Set lsb of top-left pixel. This bit is used to determine
                      * which approach (lsb/rlc) was used to encode the block.
@@ -118,7 +118,10 @@ namespace rdh {
                     rlcEncodedBitStream += rlcEncoded;
 
                     /* Append encoded block length to the '\Re' bitstream */
-                    lengthsBitStream += std::bitset<consts::c_RlcEncodedMaxSize>(rlcEncoded.size()).to_string();
+                    std::string encodedBlockStr;
+                    boost::to_string(boost::dynamic_bitset<>(consts::g_RlcEncodedMaxSize, rlcEncoded.size()), encodedBlockStr);
+                    assert(encodedBlockStr.size() == consts::g_RlcEncodedMaxSize);
+                    lengthsBitStream += encodedBlockStr;
 
                     omegaOneBlocks++;
                 }
@@ -135,16 +138,17 @@ namespace rdh {
                         for (uint32_t xAdd = 0; xAdd < 2; ++xAdd) {
                             uint8_t curPixel{ t_EncryptedImage.GetPixel(imgY + yAdd, imgX + xAdd) };
                             /* For the top-left pixel, we ignore it's first LSB */
-                            for (uint32_t bitPos = (yAdd == 0 && xAdd == 0) ? 1 : 0; bitPos < consts::c_LsbLayers; bitPos++) {
+                            for (uint32_t bitPos = (yAdd == 0 && xAdd == 0) ? 1 : 0; bitPos < consts::g_LsbLayers; bitPos++) {
                                 lsbEncodedGroup(currGroupSize++, 0) = utils::math::GetNthBit(curPixel, bitPos);
 
                                 /* If we've already exceed group size, so create new one. Also don't forget to reset currGroupSize. */
-                                if (currGroupSize >= consts::c_GroupRowsCnt) {
+                                if (currGroupSize >= consts::g_GroupRowsCnt) {
                                     /**
                                      * Multiply matrices mod 2.
                                      * @TODO: Check if multiplication is done correctly!
                                      */
-                                    Eigen::Matrix<uint8_t, consts::c_MatrixRows, 1> binaryColumnVec = (psi * lsbEncodedGroup).unaryExpr([](const uint8_t x) { return x % 2; });
+                                    // consts::g_MatrixRows
+                                    Eigen::Matrix<uint8_t, Eigen::Dynamic, 1> binaryColumnVec = (psi * lsbEncodedGroup).unaryExpr([](const uint8_t x) { return x % 2; });
                                     assert(binaryColumnVec.rows() == psi.rows());
                                     assert(binaryColumnVec.cols() == 1);
 
@@ -155,12 +159,12 @@ namespace rdh {
 
                                     hashsesBitStream += HashLsbBlock(lsbEncodedGroup, t_DataEmbeddingKey);
 
-                                    assert(currGroupSize == consts::c_GroupRowsCnt);
+                                    assert(currGroupSize == consts::g_GroupRowsCnt);
 
                                     /* Reset group. */
                                     lsbEncodedGroup.setZero();
 
-                                    assert(lsbEncodedGroup.rows() == consts::c_GroupRowsCnt);
+                                    assert(lsbEncodedGroup.rows() == consts::g_GroupRowsCnt);
                                     assert(lsbEncodedGroup.cols() == 1);
                                     assert(lsbEncodedGroup.isZero(0));
 
@@ -181,9 +185,9 @@ namespace rdh {
 
         double tMax = (
                 24 * (double)omegaOneBlocks +
-                std::floorf((totalBlocks - omegaOneBlocks) / consts::c_Lambda) *
-                (consts::c_Alpha - consts::c_LsbHashSize) - 
-                omegaOneBlocks * std::ceilf(std::log2f(consts::c_Threshold)) -
+                std::floorf((totalBlocks - omegaOneBlocks) / consts::g_Lambda) *
+                (consts::g_Alpha - consts::c_LsbHashSize) -
+                omegaOneBlocks * std::ceilf(std::log2f(consts::g_Threshold)) -
                 rlcEncodedBitStream.size() -
                 totalBlocks
             ) / (
@@ -193,11 +197,11 @@ namespace rdh {
         BOOST_LOG_TRIVIAL(info) << "Maximum embedding rate: " << tMax;
 #endif
 
-        uint32_t xi = utils::math::Floor((float)(totalBlocks - omegaOneBlocks) / (float)consts::c_Lambda);
-        assert(lsbEncodedBitStream.size() == xi * (consts::c_Lambda * (4 * consts::c_LsbLayers - 1) - consts::c_Alpha));
+        uint32_t xi = utils::math::Floor((float)(totalBlocks - omegaOneBlocks) / (float)consts::g_Lambda);
+        assert(lsbEncodedBitStream.size() == xi * (consts::g_Lambda * (4 * consts::g_LsbLayers - 1) - consts::g_Alpha));
         assert(hashsesBitStream.size() == consts::c_LsbHashSize * xi);
 
-        int32_t maxUserDataSize = 24 * omegaOneBlocks + xi * consts::c_Lambda * (4 * consts::c_LsbLayers - 1)
+        int32_t maxUserDataSize = 24 * omegaOneBlocks + xi * consts::g_Lambda * (4 * consts::g_LsbLayers - 1)
             - (lengthsBitStream.size() + rlcEncodedBitStream.size() + lsbEncodedBitStream.size() + hashsesBitStream.size() + topLeftPixelsLsbBitStream.size());
 
         BOOST_LOG_TRIVIAL(info) << "Maximum bits of user-data to embed: " << maxUserDataSize;
@@ -206,7 +210,7 @@ namespace rdh {
             throw std::invalid_argument("User data size exceeds the maximum possible size!");
         }
 
-        /* Concatenate everything, and shuffle it */
+        /* Concatenate everything into a single BitStream */
         std::string assembledBitStream = 
             lengthsBitStream + rlcEncodedBitStream + lsbEncodedBitStream + 
             hashsesBitStream + topLeftPixelsLsbBitStream + utils::BytesToBinaryString(t_Data);
@@ -216,6 +220,7 @@ namespace rdh {
         utils::CalculateSHA1(t_DataEmbeddingKey, hash);
         std::seed_seq seq(hash.begin(), hash.end());
         
+        /* Shuffle BitStream, before embedding */
         utils::ShuffleFisherYates(seq, assembledBitStream);
 
         auto sliceBegin = assembledBitStream.begin();
@@ -265,11 +270,11 @@ namespace rdh {
                     t_EncryptedImage.SetPixel(
                         imgY, 
                         imgX, 
-                        utils::ClearLastNBits(t_EncryptedImage.GetPixel(imgY, imgX), consts::c_LsbLayers) | 
+                        utils::ClearLastNBits(t_EncryptedImage.GetPixel(imgY, imgX), consts::g_LsbLayers) |
                         (utils::BinaryStringToByte(
                             std::string(
                                 sliceBegin,
-                                utils::Advance(sliceEnd, assembledBitStream.end(), consts::c_LsbLayers - 1)
+                                utils::Advance(sliceEnd, assembledBitStream.end(), consts::g_LsbLayers - 1)
                             )
                         ) << 1)
                     );
@@ -277,11 +282,11 @@ namespace rdh {
                     t_EncryptedImage.SetPixel(
                         imgY,
                         imgX + 1,
-                        utils::ClearLastNBits(t_EncryptedImage.GetPixel(imgY, imgX + 1), consts::c_LsbLayers) |
+                        utils::ClearLastNBits(t_EncryptedImage.GetPixel(imgY, imgX + 1), consts::g_LsbLayers) |
                         utils::BinaryStringToByte(
                             std::string(
-                                utils::Advance(sliceBegin, assembledBitStream.end(), consts::c_LsbLayers - 1),
-                                utils::Advance(sliceEnd, assembledBitStream.end(), consts::c_LsbLayers)
+                                utils::Advance(sliceBegin, assembledBitStream.end(), consts::g_LsbLayers - 1),
+                                utils::Advance(sliceEnd, assembledBitStream.end(), consts::g_LsbLayers)
                             )
                         )
                     );
@@ -289,11 +294,11 @@ namespace rdh {
                     t_EncryptedImage.SetPixel(
                         imgY + 1,
                         imgX,
-                        utils::ClearLastNBits(t_EncryptedImage.GetPixel(imgY + 1, imgX), consts::c_LsbLayers) |
+                        utils::ClearLastNBits(t_EncryptedImage.GetPixel(imgY + 1, imgX), consts::g_LsbLayers) |
                         utils::BinaryStringToByte(
                             std::string(
-                                utils::Advance(sliceBegin, assembledBitStream.end(), consts::c_LsbLayers),
-                                utils::Advance(sliceEnd, assembledBitStream.end(), consts::c_LsbLayers)
+                                utils::Advance(sliceBegin, assembledBitStream.end(), consts::g_LsbLayers),
+                                utils::Advance(sliceEnd, assembledBitStream.end(), consts::g_LsbLayers)
                             )
                         )
                     );
@@ -301,16 +306,16 @@ namespace rdh {
                     t_EncryptedImage.SetPixel(
                         imgY + 1,
                         imgX + 1,
-                        utils::ClearLastNBits(t_EncryptedImage.GetPixel(imgY + 1, imgX + 1), consts::c_LsbLayers) |
+                        utils::ClearLastNBits(t_EncryptedImage.GetPixel(imgY + 1, imgX + 1), consts::g_LsbLayers) |
                         utils::BinaryStringToByte(
                             std::string(
-                                utils::Advance(sliceBegin, assembledBitStream.end(), consts::c_LsbLayers),
-                                utils::Advance(sliceEnd, assembledBitStream.end(), consts::c_LsbLayers)
+                                utils::Advance(sliceBegin, assembledBitStream.end(), consts::g_LsbLayers),
+                                utils::Advance(sliceEnd, assembledBitStream.end(), consts::g_LsbLayers)
                             )
                         )
                     );
 
-                    utils::Advance(sliceBegin, assembledBitStream.end(), consts::c_LsbLayers);
+                    utils::Advance(sliceBegin, assembledBitStream.end(), consts::g_LsbLayers);
                 }
             }
         }
@@ -339,7 +344,7 @@ finishProcessing:
     std::string Embedder::HashLsbBlock(Group& t_CurGroup, const std::vector<uint8_t>& t_DataEmbeddingKey)
     {
         std::string hash{ "" };
-        static Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic> randomMatrix(consts::c_LsbHashSize, consts::c_GroupRowsCnt);
+        static Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic> randomMatrix(consts::c_LsbHashSize, consts::g_GroupRowsCnt);
         static bool matrixInitialized{ false };
 
         if (!matrixInitialized) {

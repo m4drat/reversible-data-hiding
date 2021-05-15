@@ -142,6 +142,12 @@ namespace rdh {
             return bytes;
         }
 
+        /**
+         * @brief Converts given vector of data (that can be casted to uint8_t) to a "binary" string.
+         * @tparam T data that can be casted to uint8_t
+         * @param t_Bytes vector of data to convert
+         * @return "binary" representation of a given data
+        */
         template<typename T>
         std::string BytesToBinaryString(const std::vector<T>& t_Bytes)
         {

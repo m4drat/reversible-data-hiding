@@ -1559,25 +1559,25 @@ namespace rdh {
         /**
          * @brief Default threshold for block classification
          */
-        constexpr uint16_t c_Threshold{ 20 };
+        inline uint16_t g_Threshold{ 20 };
 
         /**
          * @brief amount of Lsbs to use to store additional data, while using LSB-based coder.
          * In the article it's referred as u. 
          */
-        constexpr uint16_t c_LsbLayers{ 3 };
+        inline uint16_t g_LsbLayers{ 3 };
 
         /**
          * @brief Blocks group size, that is used with lsb-based coder.
          */
-        constexpr uint16_t c_Lambda{ 100 };
+        inline uint16_t g_Lambda{ 100 };
 
         /**
          * @brief Small positive integer denoting the number of bits that can be embedded 
          * into each group.
          * In the article it's referred as \alpha.
          */
-        constexpr uint16_t c_Alpha{ 5 };
+        inline uint16_t g_Alpha{ 5 };
 
         /**
          * @brief Number of pixels in one block.
@@ -1599,25 +1599,25 @@ namespace rdh {
         /**
          * @brief Number of rows in each group vector.
          */
-        constexpr uint32_t c_GroupRowsCnt{ c_Lambda * (4 * c_LsbLayers - 1) };
+        inline uint32_t g_GroupRowsCnt{ (uint32_t)g_Lambda * (4 * g_LsbLayers - 1) };
 
         /** 
          * @brief The article says that the length of each encoded block must be less than this number. 
          */
-        constexpr uint32_t c_RlcEncodedMaxSize = utils::math::CeilLog2(c_Threshold);
+        inline uint32_t g_RlcEncodedMaxSize = utils::math::CeilLog2(g_Threshold);
 
         /** 
          * @brief In the article it's referred as P. Number of rows. 
          */
-        constexpr uint32_t c_MatrixRows{
-            (uint32_t)c_Lambda * ((uint32_t)c_PixelsInOneBlock * (uint32_t)c_LsbLayers - 1) - c_Alpha
+        inline uint32_t g_MatrixRows{
+            (uint32_t)g_Lambda * ((uint32_t)c_PixelsInOneBlock * (uint32_t)g_LsbLayers - 1) - g_Alpha
         };
 
         /**
          * @brief In the article it's referred as Q. Number of columns. 
          */
-        constexpr uint32_t c_MatrixColumns{
-            (uint32_t)c_Lambda * ((uint32_t)c_PixelsInOneBlock * (uint32_t)c_LsbLayers - 1)
+        inline uint32_t g_MatrixColumns{
+            (uint32_t)g_Lambda* ((uint32_t)c_PixelsInOneBlock * (uint32_t)g_LsbLayers - 1)
         };
 
         /**

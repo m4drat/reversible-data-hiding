@@ -34,3 +34,22 @@ TEST(UtilsTest, ClearBits_test) {
     ASSERT_EQ(utils::ClearLastNBits(num, 8), 0b00000000);
 }
 
+TEST(UtilsTest, Floor_test) {
+    ASSERT_EQ(utils::math::Floor(0.0), 0);
+    ASSERT_EQ(utils::math::Floor(0.499999), 0);
+    ASSERT_EQ(utils::math::Floor(0.5), 0);
+    ASSERT_EQ(utils::math::Floor(0.999999), 0);
+    ASSERT_EQ(utils::math::Floor(1.0), 1);
+    ASSERT_EQ(utils::math::Floor(123.0), 123);
+    ASSERT_EQ(utils::math::Floor(123.4), 123);
+}
+
+TEST(UtilsTest, Ceil_test) {
+    ASSERT_EQ(utils::math::Ceil(0.0), 0);
+    ASSERT_EQ(utils::math::Ceil(0.499999), 1);
+    ASSERT_EQ(utils::math::Ceil(0.5), 1);
+    ASSERT_EQ(utils::math::Ceil(0.999999), 1);
+    ASSERT_EQ(utils::math::Ceil(1.0), 1);
+    ASSERT_EQ(utils::math::Ceil(123.0), 123);
+    ASSERT_EQ(utils::math::Ceil(123.4), 124);
+}

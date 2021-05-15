@@ -12,7 +12,7 @@
 namespace rdh {
     class Embedder {
     public:
-        using Group = Eigen::Matrix<uint8_t, consts::c_Lambda* (4 * consts::c_LsbLayers - 1), 1>;
+        using Group = Eigen::Matrix<uint8_t, Eigen::Dynamic, 1>;
 
         /**
          * @brief Embeds data into image t_PlainImage
