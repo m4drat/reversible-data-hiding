@@ -125,6 +125,7 @@ namespace rdh {
                     assert(encodedBlockStr.size() == constsRef.GetRlcEncodedMaxSize());
                     lengthsBitStream += encodedBlockStr;
 
+                    /* Increase number of rlc-encoded blocks */
                     omegaOneBlocks++;
                 }
                 else {
@@ -132,9 +133,8 @@ namespace rdh {
                     t_EncryptedImage.SetPixel(imgY, imgX, t_EncryptedImage.GetPixel(imgY, imgX) & ~1);
 
                     /**
-                     * For each pixel extract required LSBs.
+                     * For each pixel in a group of 4 pixels extract required LSBs.
                      * Total iterations: 4 * c_LsbLayers - 1.
-                     * In proposed schema, the last group may not be full! Is it okay?
                      */
                     for (uint32_t yAdd = 0; yAdd < 2; ++yAdd) {
                         for (uint32_t xAdd = 0; xAdd < 2; ++xAdd) {
@@ -145,26 +145,14 @@ namespace rdh {
 
                                 /* If we've already exceed group size, so create new one. Also don't forget to reset currGroupSize. */
                                 if (currGroupSize >= constsRef.GetGroupRowsCount()) {
-                                    /**
-                                     * Multiply matrices mod 2.
-                                     * @TODO: Check if multiplication is done correctly!
-                                     */
-                                    Eigen::Matrix<uint8_t, Eigen::Dynamic, 1> binaryColumnVec = (psi * lsbEncodedGroup).unaryExpr([](const uint8_t x) { return x % 2; });
-                                    assert(binaryColumnVec.rows() == psi.rows());
-                                    assert(binaryColumnVec.cols() == 1);
-
-                                    /* Extract bits from binary column vector */
-                                    for (uint32_t rowIdx = 0; rowIdx < binaryColumnVec.rows(); ++rowIdx) {
-                                        lsbEncodedBitStream += (binaryColumnVec(rowIdx, 0) & 1) ? "1" : "0";
-                                    }
-
-                                    hashsesBitStream += HashLsbBlock(lsbEncodedGroup, t_DataEmbeddingKey);
+                                    CompressCurrentGroup(psi, lsbEncodedGroup, lsbEncodedBitStream, hashsesBitStream, t_DataEmbeddingKey);
 
                                     assert(currGroupSize == constsRef.GetGroupRowsCount());
 
                                     /* Reset group. */
                                     lsbEncodedGroup.setZero();
 
+                                    /* Because Eigen is weird, lets just double check, if everything is done correctly. */
                                     assert(lsbEncodedGroup.rows() == constsRef.GetGroupRowsCount());
                                     assert(lsbEncodedGroup.cols() == 1);
                                     assert(lsbEncodedGroup.isZero(0));
@@ -178,6 +166,25 @@ namespace rdh {
                 }
             }
         }
+
+        /** 
+         * If after encoding everything, current group size is not zero, process this group too.
+         * In proposed schema, the last group may not be full! Is it okay?
+         */
+        //if (currGroupSize != 0) {
+        //    CompressCurrentGroup(psi, lsbEncodedGroup, lsbEncodedBitStream, hashsesBitStream, t_DataEmbeddingKey);
+
+        //    /* Reset group. */
+        //    lsbEncodedGroup.setZero();
+
+        //    /* Because Eigen is weird, lets just double check, if everything is done correctly. */
+        //    assert(lsbEncodedGroup.rows() == constsRef.GetGroupRowsCount());
+        //    assert(lsbEncodedGroup.cols() == 1);
+        //    assert(lsbEncodedGroup.isZero(0));
+
+        //    /* Reset group size. */
+        //    currGroupSize = 0;
+        //}
 
 #if DEBUG_STATS == 1
         BOOST_LOG_TRIVIAL(info) << "Total blocks: " << totalBlocks;
@@ -342,7 +349,7 @@ finishProcessing:
         t_Mat = Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic>::Zero(t_Mat.rows(), t_Mat.cols()).unaryExpr([&](uint8_t) { return dis(generator); });
     }
 
-    std::string Embedder::HashLsbBlock(Group& t_CurGroup, const std::vector<uint8_t>& t_DataEmbeddingKey)
+    std::string Embedder::HashLsbBlock(const Group& t_CurGroup, const std::vector<uint8_t>& t_DataEmbeddingKey)
     {
         std::string hash{ "" };
         static Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic> randomMatrix(Consts::Instance().GetLsbHashSize(), Consts::Instance().GetGroupRowsCount());
@@ -362,5 +369,20 @@ finishProcessing:
         }
 
         return hash;
+    }
+
+    void Embedder::CompressCurrentGroup(const Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic>& t_Psi, const Group& t_LsbEncodedGroup, std::string& t_LsbEncodedBitStream, std::string& t_HashsesBitStream, const std::vector<uint8_t>& t_DataEmbeddingKey)
+    {
+        /* Multiply matrices mod 2. */
+        Eigen::Matrix<uint8_t, Eigen::Dynamic, 1> binaryColumnVec = (t_Psi * t_LsbEncodedGroup).unaryExpr([](const uint8_t x) { return x % 2; });
+        assert(binaryColumnVec.rows() == t_Psi.rows());
+        assert(binaryColumnVec.cols() == 1);
+
+        /* Extract bits from binary column vector */
+        for (uint32_t rowIdx = 0; rowIdx < binaryColumnVec.rows(); ++rowIdx) {
+            t_LsbEncodedBitStream += (binaryColumnVec(rowIdx, 0) & 1) ? "1" : "0";
+        }
+
+        t_HashsesBitStream += HashLsbBlock(t_LsbEncodedGroup, t_DataEmbeddingKey);
     }
 }

@@ -1559,12 +1559,13 @@ namespace rdh {
     {
     public:
         Consts()
-            : m_Threshold{ 20 }, m_LsbLayers{ 3 }, m_Lambda{ 100 }, m_Alpha{ 5 /* 6 */ }, m_LsbHashSize{ 4 /* 3 */ }
+            : m_Threshold{ 20 }, m_LsbLayers{ 3 }, m_Lambda{ 100 }, m_Alpha{ 5 }, m_LsbHashSize{ 4 }
         {
             m_GroupRowsCnt = (uint32_t)m_Lambda * (4 * m_LsbLayers - 1);
             m_RlcEncodedMaxSize = utils::math::CeilLog2(m_Threshold);
             m_MatrixRows = (uint32_t)m_Lambda * ((uint32_t)s_PixelsInOneBlock * (uint32_t)m_LsbLayers - 1) - m_Alpha;
             m_MatrixColumns = (uint32_t)m_Lambda * ((uint32_t)s_PixelsInOneBlock * (uint32_t)m_LsbLayers - 1);
+            m_RlcEncodedMaxSize = utils::math::CeilLog2(m_Threshold);
         }
 
         void UpdateThreshold(uint16_t t_Threshold)
@@ -1573,7 +1574,7 @@ namespace rdh {
             m_Threshold = t_Threshold;
 
             /* Update required variables */
-            m_RlcEncodedMaxSize = utils::math::CeilLog2(GetThreshold());
+            m_RlcEncodedMaxSize = utils::math::CeilLog2(m_Threshold);
         }
 
         void UpdateLsbLayers(uint16_t t_LsbLayers)

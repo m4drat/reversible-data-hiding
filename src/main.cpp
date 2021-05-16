@@ -108,8 +108,16 @@ int main(int argc, char* argv[])
             rdh::Consts::Instance().UpdateLsbLayers(vm["lsb-layers"].as<uint16_t>());
         }
 
+        if (vm["alpha"].as<uint16_t>() <= vm["lsb-hash-size"].as<uint16_t>()) {
+            std::cout << "Alpha should be bigger than lsb-hash-size!" << std::endl;
+            std::cout << "Run with --help to read the docs" << std::endl;
+            return 1;
+        }
+        else {
+            rdh::Consts::Instance().UpdateAlpha(vm["alpha"].as<uint16_t>());
+        }
+
         rdh::Consts::Instance().UpdateLambda(vm["lambda"].as<uint16_t>());
-        rdh::Consts::Instance().UpdateAlpha(vm["alpha"].as<uint16_t>());
         rdh::Consts::Instance().UpdateLsbHashSize(vm["lsb-hash-size"].as<uint16_t>());
     }
     catch (po::required_option&) {
