@@ -42,11 +42,23 @@ namespace rdh {
         );
 
         /* Used to keep track of current lsb encoded group size (in bits) */
-        uint32_t currGroupSize{ 0 };
-
-        std::string currentGroup(constsRef.GetGroupRowsCount(), '0');
+        uint32_t numberOfBitsFromLsbEncodeGroups{ 0 };
 
         /* Divide image into blocks, and calculate number of omega one blocks */
+        for (uint32_t imgY = 0; imgY < t_MarkedEncryptedImage.GetHeight(); imgY += 2) {
+            for (uint32_t imgX = 0; imgX < t_MarkedEncryptedImage.GetWidth(); imgX += 2) {
+                /* What type of block we are currently looking at? */
+                if (t_MarkedEncryptedImage.GetPixel(imgY, imgX) & 1) {
+                    /* RLC-encoded block */
+                    omegaOneBlocks++;
+                }
+            }
+        }
+
+        /* Find value of xi, to calculate total number of bits used for data embedding. */
+        uint32_t xi = utils::math::Floor((float)(totalBlocks - omegaOneBlocks) / (float)constsRef.GetLambda());
+        uint32_t totalBitsFromLsbEncodedGroups = (xi * constsRef.GetLambda() * (4 * constsRef.GetLsbLayers() - 1));
+
         for (uint32_t imgY = 0; imgY < t_MarkedEncryptedImage.GetHeight(); imgY += 2) {
             for (uint32_t imgX = 0; imgX < t_MarkedEncryptedImage.GetWidth(); imgX += 2) {
                 /* What type of block we are currently looking at? */
@@ -57,10 +69,10 @@ namespace rdh {
                     std::string decodedBlockStr;
                     boost::to_string(boost::dynamic_bitset<>(8, t_MarkedEncryptedImage.GetPixel(imgY, imgX + 1)), decodedBlockStr);
                     extractedBitStream += decodedBlockStr;
-                    
+
                     boost::to_string(boost::dynamic_bitset<>(8, t_MarkedEncryptedImage.GetPixel(imgY + 1, imgX)), decodedBlockStr);
                     extractedBitStream += decodedBlockStr;
-                    
+
                     boost::to_string(boost::dynamic_bitset<>(8, t_MarkedEncryptedImage.GetPixel(imgY + 1, imgX + 1)), decodedBlockStr);
                     extractedBitStream += decodedBlockStr;
                 }
@@ -73,17 +85,13 @@ namespace rdh {
                         for (uint32_t xAdd = 0; xAdd < 2; ++xAdd) {
                             uint8_t curPixel{ t_MarkedEncryptedImage.GetPixel(imgY + yAdd, imgX + xAdd) };
                             /* For the top-left pixel, we ignore it's first LSB */
-                            for (uint32_t bitPos = (yAdd == 0 && xAdd == 0) ? 1 : 0; bitPos < constsRef.GetLsbLayers(); bitPos++) {
-                                currentGroup.at(currGroupSize++) = utils::math::GetNthBit(curPixel, bitPos) ? '1' : '0';
-
-                                /* If we've already exceed group size, so create new one. Also don't forget to reset currGroupSize. */
-                                if (currGroupSize >= constsRef.GetGroupRowsCount()) {
-                                    extractedBitStream += currentGroup;
-
-                                    currentGroup = std::move(std::string(constsRef.GetGroupRowsCount(), '0'));
-
-                                    /* Reset group size. */
-                                    currGroupSize = 0;
+                            for (int32_t bitPos = constsRef.GetLsbLayers() - 1; bitPos >= (yAdd == 0 && xAdd == 0) ? 1 : 0; bitPos--) {
+                                if (numberOfBitsFromLsbEncodeGroups >= totalBitsFromLsbEncodedGroups) {
+                                    break;
+                                }
+                                else {
+                                    extractedBitStream += utils::math::GetNthBit(curPixel, bitPos) ? '1' : '0';
+                                    numberOfBitsFromLsbEncodeGroups++;
                                 }
                             }
                         }
@@ -100,10 +108,6 @@ namespace rdh {
 
         /* Shuffle BitStream, before embedding */
         utils::DeshuffleFisherYates(seq, extractedBitStream);
-
-        /* Find value of xi, to calculate total number of bits used for data embedding. */
-        //uint32_t xi = utils::math::Floor((float)(totalBlocks - omegaOneBlocks) / (float)constsRef.GetLambda());
-        //uint32_t totalNumberOfBitsUsedForDataEmbedding = 24 * omegaOneBlocks + (xi * constsRef.GetLambda() * (4 * constsRef.GetLsbLayers() - 1));
     }
 
     void Extractor::RecoverImageAndExract(

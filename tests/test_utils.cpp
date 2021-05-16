@@ -11,16 +11,43 @@ using namespace rdh;
 TEST(UtilsTest, FisherYates_test) {
     std::string original = "ABCDEFGHIJKLMNOPQRST9165078234";
     std::string shuffled = original;
-    std::seed_seq seq{ 1337, 1338, 1447, 1588, 1922 };
+    std::seed_seq seq1{ 1337, 1338, 1447, 1588, 1922 };
 
-    utils::ShuffleFisherYates(seq, shuffled);
+    utils::ShuffleFisherYates(seq1, shuffled);
     ASSERT_NE(shuffled, original);
     std::string deshuffl = shuffled;
 
-    utils::DeshuffleFisherYates(seq, deshuffl);
+    std::seed_seq seq2{ 1337, 1338, 1447, 1588, 1922 };
+    utils::DeshuffleFisherYates(seq2, deshuffl);
     ASSERT_EQ(deshuffl, original);
 }
 
+TEST(UtilsTest, FisherYatesLongSeq_test) {
+    const uint32_t length = 1'003'520;
+    std::string original;
+    static const char alphanum[] =
+        "0123456789"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz";
+
+    srand(0);
+
+    original.reserve(length);
+
+    for (int i = 0; i < length; ++i)
+        original += alphanum[rand() % (sizeof(alphanum) - 1)];
+    
+    std::string shuffled = original;
+    std::seed_seq seq1{ 1337, 1338, 1447, 1588, 1922 };
+
+    utils::ShuffleFisherYates(seq1, shuffled);
+    ASSERT_NE(shuffled, original);
+    std::string deshuffl = shuffled;
+
+    std::seed_seq seq2{ 1337, 1338, 1447, 1588, 1922 };
+    utils::DeshuffleFisherYates(seq2, deshuffl);
+    ASSERT_EQ(deshuffl, original);
+}
 TEST(UtilsTest, ClearBits_test) {
     uint8_t num = 0b10110101;
     ASSERT_EQ(utils::ClearLastNBits(num, 0), 0b10110101);

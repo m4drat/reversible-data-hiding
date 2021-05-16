@@ -194,7 +194,7 @@ namespace rdh {
         double tMax = (
                 24 * (double)omegaOneBlocks +
                 std::floorf((totalBlocks - omegaOneBlocks) / constsRef.GetLambda()) *
-                (constsRef.GetAlpha()- constsRef.GetLsbHashSize()) -
+                (constsRef.GetAlpha() - constsRef.GetLsbHashSize()) -
                 omegaOneBlocks * std::ceilf(std::log2f(constsRef.GetThreshold())) -
                 rlcEncodedBitStream.size() -
                 totalBlocks
@@ -219,9 +219,11 @@ namespace rdh {
         }
 
         /* Concatenate everything into a single BitStream */
+        std::string userDataBitStream = utils::BytesToBinaryString(t_Data);
+        
         std::string assembledBitStream = 
             lengthsBitStream + rlcEncodedBitStream + lsbEncodedBitStream + 
-            hashsesBitStream + topLeftPixelsLsbBitStream + utils::BytesToBinaryString(t_Data);
+            hashsesBitStream + topLeftPixelsLsbBitStream + userDataBitStream + std::string(maxUserDataSize - userDataBitStream.size(), '0');
         std::array<uint32_t, 5> hash;
 
         /* Use sha1 of a data-hiding key as a seed for PRNG */
@@ -248,7 +250,7 @@ namespace rdh {
                     assert(sliceBegin == sliceEnd);
 
                     /**
-                     * The block is encoded using rlc-based algorithm, so we can fully use
+                     * The block is compressed using rlc-based algorithm, so we can fully use
                      * all of the pixels, excluding the top-left one.
                      */
                     t_EncryptedImage.SetPixel(imgY, imgX + 1, utils::BinaryStringToByte(
