@@ -159,6 +159,9 @@ namespace rdh {
             }
 
             Extractor::RecoverImageAndExract(image, t_Vm["result-path"].as<std::string>(), t_Vm["result-path-data"].as<std::string>(), embedKey, decryptionKey);
+
+            std::cout << "Recovered image saved to: " << t_Vm["result-path"].as<std::string>() << std::endl;
+            std::cout << "Extracted data saved to: " << t_Vm["result-path-data"].as<std::string>() << std::endl;
         } else if (t_Vm.count("embed-key") == 1 || t_Vm.count("embed-key-file") == 1) {
             mode = Mode::DATA_EXTRACT;
             std::cout << "Running in data extraction mode.";
@@ -179,6 +182,7 @@ namespace rdh {
 
             Extractor::ExtractData(image, t_Vm["result-path-data"].as<std::string>(), embedKey);
 
+            std::cout << "Extracted data saved to: " << t_Vm["result-path-data"].as<std::string>() << std::endl;
         } else if (t_Vm.count("encryption-key") == 1 || t_Vm.count("enc-key-file") == 1) {
             mode = Mode::IMAGE_RECOVERY;
             std::cout << "Running in Image recovery mode.";
@@ -198,29 +202,14 @@ namespace rdh {
             }
 
             Extractor::RecoverImage(image, t_Vm["result-path"].as<std::string>(), decryptionKey);;
+
+            std::cout << "Recovered image saved to: " << t_Vm["result-path"].as<std::string>() << std::endl;
         }
         else {
             std::cout << "You must provide one of these keys: embed-key, encryption-key. Or both." << std::endl;
             std::cout << "Run with --help to read the docs" << std::endl;
             return 1;
         }
-
-        std::vector<uint8_t> embedKey;
-        std::vector<uint8_t> dataToEmbed = utils::LoadFileData<uint8_t>(t_Vm["data-file"].as<std::string>());
-        rdh::BmpImage image(t_ImagePath);
-
-        if (t_Vm.count("embed-key-file")) {
-            embedKey = utils::LoadFileData<uint8_t>(t_Vm["embed-key-file"].as<std::string>());
-        }
-        else {
-            embedKey = rdh::utils::HexToBytes<uint8_t>(t_Vm["embed-key"].as<std::string>());
-        }
-
-        Embedder::Embed(image, dataToEmbed, embedKey).Save(t_Vm["result-path"].as<std::string>());
-
-        std::cout << "Image with embedded data saved to: " << t_Vm["result-path"].as<std::string>() << std::endl;
-
-        return 0;
 
         return 0;
     }
