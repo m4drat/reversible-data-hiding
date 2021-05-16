@@ -22,7 +22,8 @@ int main(int argc, char* argv[])
     desc.add_options()
         ("help,h", "Prints help message.")
         ("image-path", po::value<std::string>()->required(), "Path to an image to work with.")
-        ("result-path", po::value<std::string>(), "Path to save decrypted/encrypted image or recovered message to or image with embedded data.")
+        ("result-path", po::value<std::string>(), "Path to save decrypted/encrypted image or image with embedded data.")
+        ("result-path-data", po::value<std::string>(), "Path to save extracted data from image to.")
         ("mode", po::value<std::string>()->required(), "Specifies execution mode.\n"
             "Can be one of the follows:\n"
             "  show: \tDisplay image specified in --image-path.\n"
@@ -32,10 +33,11 @@ int main(int argc, char* argv[])
             "Result will be saved in --result-path.\n"
             "  decrypt: \tDecrypts image specified in --image-path using key provided in --encryption-key. "
             "Result will be saved in --result-path.\n"
-            "  extract: \tExtracts data from image specified in --image-path using key provided in --data-key. "
-            "Result will be saved in --result-path.\n"
-            "  recover: \tRecovers image specified in --image-path using both keys provided in --data-key and "
-            "--encryption-key. Result will be saved in --result-path.\n")
+            "  extract: \tExtracts data or recovers image or both, from image specified in --image-path using keys provided in --embed-key and --encryption-key. "
+            "Result will be saved in --result-path/--result-path-data.\n"
+            "    Example-1 \t(image recovery mode): ./rdh.exe --mode extract --image-path ./marked-encrypted.bmp --result-path ./extracted.bmp --encryption-key AABBCC\n"
+            "    Example-2 \t(image recovery and data extraction mode): ./rdh.exe --mode extract --image-path ./marked-encrypted.bmp --result-path ./extracted.bmp --result-path-data ./extracted.bin --encryption-key AABBCC --embed-key FFDDEE\n"
+            "    Example-3 \t(data extraction mode): ./rdh.exe --mode extract --image-path ./marked-encrypted.bmp --result-path-data ./extracted.bin --embed-key FFDDEE\n")
         ("encryption-key", po::value<std::string>(), "Image encryption/decryption key.\n"
             "  Example: --encryption-key AA00BB11CC22DD33EE\n")
         ("enc-key-file", po::value<std::string>(), "Image encryption/decryption key file (key should be in binary form). (can be used instead of encryption-key)\n"
@@ -62,7 +64,6 @@ int main(int argc, char* argv[])
 
     try {
         po::store(po::parse_command_line(argc, argv, desc), vm);
-        boost::program_options::notify(vm);
     }
     catch (const po::unknown_option& ex) {
         std::cout << ex.what() << std::endl;
@@ -145,10 +146,7 @@ int main(int argc, char* argv[])
             return rdh::Options::HandleDecrypt(imagePath, vm, desc);
         }
         else if (mode == "extract") {
-            return rdh::Options::HandleExtract(imagePath, vm, desc);
-        }
-        else if (mode == "recover") {
-            return rdh::Options::HandleRecover(imagePath, vm, desc);
+            return rdh::Options::HandleExtractAndRecover(imagePath, vm, desc);
         }
         else {
             std::cout << "Incorrect operation mode selected!" << std::endl;

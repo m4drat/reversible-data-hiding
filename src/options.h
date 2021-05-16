@@ -55,15 +55,16 @@ namespace rdh {
          * @param t_Desc boost options description
          * @return 0 if everything is OK, non-zero otherwise
         */
-        static int HandleExtract(const std::string& t_ImagePath, po::variables_map& t_Vm, po::options_description& t_Desc);
-        
+        static int HandleExtractAndRecover(const std::string& t_ImagePath, po::variables_map& t_Vm, po::options_description& t_Desc);
+    private:
         /**
-         * @brief Handles recover command
-         * @param t_ImagePath path to an image
-         * @param t_Vm boost variables map
-         * @param t_Desc boost options description
-         * @return 0 if everything is OK, non-zero otherwise
+         * @brief Extraction modes for extractor module.
         */
-        static int HandleRecover(const std::string& t_ImagePath, po::variables_map& t_Vm, po::options_description& t_Desc);
+        enum class Mode {
+            DATA_EXTRACT_IMAGE_RECOVERY,
+            DATA_EXTRACT,
+            IMAGE_RECOVERY,
+            NONE
+        };
     };
 }

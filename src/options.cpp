@@ -3,6 +3,7 @@
 #include "utils.h"
 #include "encryptor/encryptor.h"
 #include "embedder/embedder.h"
+#include "extractor/extractor.h"
 #include "image/bmp_image.h"
 
 namespace rdh {
@@ -119,15 +120,108 @@ namespace rdh {
         return 0;
     }
 
-    int Options::HandleExtract(const std::string& t_ImagePath, po::variables_map& t_Vm, po::options_description& t_Desc)
+    int Options::HandleExtractAndRecover(const std::string& t_ImagePath, po::variables_map& t_Vm, po::options_description& t_Desc)
     {
-        assert(false && "Option is not implemented!");
-        return 0;
-    }
+        Mode mode = Mode::NONE;
+        rdh::BmpImage image(t_ImagePath);
 
-    int Options::HandleRecover(const std::string& t_ImagePath, po::variables_map& t_Vm, po::options_description& t_Desc)
-    {
-        assert(false && "Option is not implemented!");
+        if ((t_Vm.count("embed-key") == 1 || t_Vm.count("embed-key-file") == 1) &&
+            (t_Vm.count("encryption-key") == 1 || t_Vm.count("enc-key-file") == 1)) {
+            mode = Mode::DATA_EXTRACT_IMAGE_RECOVERY;
+            std::cout << "Running in Image recovery + data extraction mode.";
+
+            if (t_Vm.count("result-path") == 0) {
+                std::cout << "You must provide result path (--result-path), to write recovered image to." << std::endl;
+                std::cout << "Run with --help to read the docs" << std::endl;
+                return 1;
+            }
+
+            if (t_Vm.count("result-path-data") == 0) {
+                std::cout << "You must provide result path data (--result-path-data), to write extracted data to." << std::endl;
+                std::cout << "Run with --help to read the docs" << std::endl;
+                return 1;
+            }
+
+            std::vector<uint8_t> decryptionKey;
+            if (t_Vm.count("enc-key-file")) {
+                decryptionKey = utils::LoadFileData<uint8_t>(t_Vm["enc-key-file"].as<std::string>());
+            }
+            else {
+                decryptionKey = rdh::utils::HexToBytes<uint8_t>(t_Vm["encryption-key"].as<std::string>());
+            }
+
+            std::vector<uint8_t> embedKey;
+            if (t_Vm.count("embed-key-file")) {
+                embedKey = utils::LoadFileData<uint8_t>(t_Vm["embed-key-file"].as<std::string>());
+            }
+            else {
+                embedKey = rdh::utils::HexToBytes<uint8_t>(t_Vm["embed-key"].as<std::string>());
+            }
+
+            Extractor::RecoverImageAndExract(image, t_Vm["result-path"].as<std::string>(), t_Vm["result-path-data"].as<std::string>(), embedKey, decryptionKey);
+        } else if (t_Vm.count("embed-key") == 1 || t_Vm.count("embed-key-file") == 1) {
+            mode = Mode::DATA_EXTRACT;
+            std::cout << "Running in data extraction mode.";
+
+            if (t_Vm.count("result-path-data") == 0) {
+                std::cout << "You must provide result path data (--result-path-data), to write extracted data to." << std::endl;
+                std::cout << "Run with --help to read the docs" << std::endl;
+                return 1;
+            }
+
+            std::vector<uint8_t> embedKey;
+            if (t_Vm.count("embed-key-file")) {
+                embedKey = utils::LoadFileData<uint8_t>(t_Vm["embed-key-file"].as<std::string>());
+            }
+            else {
+                embedKey = rdh::utils::HexToBytes<uint8_t>(t_Vm["embed-key"].as<std::string>());
+            }
+
+            Extractor::ExtractData(image, t_Vm["result-path-data"].as<std::string>(), embedKey);
+
+        } else if (t_Vm.count("encryption-key") == 1 || t_Vm.count("enc-key-file") == 1) {
+            mode = Mode::IMAGE_RECOVERY;
+            std::cout << "Running in Image recovery mode.";
+
+            if (t_Vm.count("result-path") == 0) {
+                std::cout << "You must provide result path (--result-path), to write recovered image to." << std::endl;
+                std::cout << "Run with --help to read the docs" << std::endl;
+                return 1;
+            }
+
+            std::vector<uint8_t> decryptionKey;
+            if (t_Vm.count("enc-key-file")) {
+                decryptionKey = utils::LoadFileData<uint8_t>(t_Vm["enc-key-file"].as<std::string>());
+            }
+            else {
+                decryptionKey = rdh::utils::HexToBytes<uint8_t>(t_Vm["encryption-key"].as<std::string>());
+            }
+
+            Extractor::RecoverImage(image, t_Vm["result-path"].as<std::string>(), decryptionKey);;
+        }
+        else {
+            std::cout << "You must provide one of these keys: embed-key, encryption-key. Or both." << std::endl;
+            std::cout << "Run with --help to read the docs" << std::endl;
+            return 1;
+        }
+
+        std::vector<uint8_t> embedKey;
+        std::vector<uint8_t> dataToEmbed = utils::LoadFileData<uint8_t>(t_Vm["data-file"].as<std::string>());
+        rdh::BmpImage image(t_ImagePath);
+
+        if (t_Vm.count("embed-key-file")) {
+            embedKey = utils::LoadFileData<uint8_t>(t_Vm["embed-key-file"].as<std::string>());
+        }
+        else {
+            embedKey = rdh::utils::HexToBytes<uint8_t>(t_Vm["embed-key"].as<std::string>());
+        }
+
+        Embedder::Embed(image, dataToEmbed, embedKey).Save(t_Vm["result-path"].as<std::string>());
+
+        std::cout << "Image with embedded data saved to: " << t_Vm["result-path"].as<std::string>() << std::endl;
+
+        return 0;
+
         return 0;
     }
 }
