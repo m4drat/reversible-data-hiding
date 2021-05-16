@@ -14,6 +14,9 @@ namespace po = boost::program_options;
 
 int main(int argc, char* argv[])
 {
+    /* Initialize constants */
+    rdh::Consts::Instance();
+
     po::variables_map vm;
     po::options_description desc{ "Options" };
     desc.add_options()
@@ -43,14 +46,16 @@ int main(int argc, char* argv[])
             "  Example: --embed-key-file ./embed_key_file.bin\n")
         ("data-file", po::value<std::string>(), "Path to file with additional data to embed in the encrypted image\n"
             "  Example: --data-file ./additional_data.bin\n")
-        ("threshold", po::value<uint16_t>(&rdh::consts::g_Threshold)->default_value(rdh::consts::g_Threshold), "Threshold parameter for blocks classification.\n"
+        ("threshold", po::value<uint16_t>()->default_value(rdh::Consts::Instance().GetThreshold()), "Threshold parameter for blocks classification. Allowed values are: 0, ..., 24.\n"
             "  Example: --threshold 20")
-        ("lsb-layers", po::value<uint16_t>(&rdh::consts::g_LsbLayers)->default_value(rdh::consts::g_LsbLayers), "Lsb layers to use for data embedding.\n"
+        ("lsb-layers", po::value<uint16_t>()->default_value(rdh::Consts::Instance().GetLsbLayers()), "Lsb layers to use for data embedding. Allowed values are: 0, ..., 7.\n"
             "  Example: --lsb-layers 3")
-        ("lambda", po::value<uint16_t>(&rdh::consts::g_Lambda)->default_value(rdh::consts::g_Lambda), "Blocks group size.\n"
+        ("lambda", po::value<uint16_t>()->default_value(rdh::Consts::Instance().GetLambda()), "Blocks group size.\n"
             "  Example: --lambda 100")
-        ("alpha", po::value<uint16_t>(&rdh::consts::g_Alpha)->default_value(rdh::consts::g_Alpha), "Number of bits to embed in each group.\n"
+        ("alpha", po::value<uint16_t>()->default_value(rdh::Consts::Instance().GetAlpha()), "Number of bits to embed in each group.\n"
             "  Example: --alpha 5")
+        ("lsb-hash-size", po::value<uint16_t>()->default_value(rdh::Consts::Instance().GetLsbHashSize()), "Length of hash for each group.\n"
+            "  Example: --lsb-hash-size 3")
         ("log-level", po::value<boost::log::trivial::severity_level>()->default_value(boost::log::trivial::severity_level::fatal), 
             "Log level\n"
             "  Example: --log-level [trace, debug, info, warning, error, fatal]\n");
@@ -70,8 +75,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    if (vm.size() == 0 || vm.count("help"))
-    {
+    if (vm.size() == 0 || vm.count("help")) {
         std::cout << desc << "\n";
         return 1;
     }
@@ -84,6 +88,29 @@ int main(int argc, char* argv[])
     try {
         mode = vm["mode"].as<std::string>();
         imagePath = vm["image-path"].as<std::string>();
+
+        /* Check for allowed parameters intervals. */
+        if (vm["threshold"].as<uint16_t>() > 24) {
+            std::cout << "Threshold value can not be bigger than 24!" << std::endl;
+            std::cout << "Run with --help to read the docs" << std::endl;
+            return 1;
+        }
+        else {
+            rdh::Consts::Instance().UpdateThreshold(vm["threshold"].as<uint16_t>());
+        }
+        
+        if (vm["lsb-layers"].as<uint16_t>() > 7) {
+            std::cout << "You can't use more than 7 Least Significant Bits for data embedding!" << std::endl;
+            std::cout << "Run with --help to read the docs" << std::endl;
+            return 1;
+        }
+        else {
+            rdh::Consts::Instance().UpdateLsbLayers(vm["lsb-layers"].as<uint16_t>());
+        }
+
+        rdh::Consts::Instance().UpdateLambda(vm["lambda"].as<uint16_t>());
+        rdh::Consts::Instance().UpdateAlpha(vm["alpha"].as<uint16_t>());
+        rdh::Consts::Instance().UpdateLsbHashSize(vm["lsb-hash-size"].as<uint16_t>());
     }
     catch (po::required_option&) {
         std::cout << "Missing one ore more required option!" << std::endl;

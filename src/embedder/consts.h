@@ -1547,82 +1547,162 @@ namespace rdh {
         }
 
         /**
-         * @brief Average percentage of blocks that are encoded using RLC based algorithm.
+         * @brief Default node object
          */
-        constexpr float c_RlcEncodedBlocksRatioAvg = .7f;
+        constexpr std::pair<uint16_t, Color8u> c_DefaultNode{ -1, 65535 };
+    }
 
-        /**
-         * @brief Average percentage of blocks that are encoded using LSB based algorithm.
-         */
-        constexpr float c_LsbEncodedBlocksRatioAvg = 1.0f - c_RlcEncodedBlocksRatioAvg;
+    /**
+     * @brief Class, that wraps access to dependent on each other constants.
+     */
+    class Consts
+    {
+    public:
+        Consts()
+            : m_Threshold{ 20 }, m_LsbLayers{ 3 }, m_Lambda{ 100 }, m_Alpha{ 5 /* 6 */ }, m_LsbHashSize{ 4 /* 3 */ }
+        {
+            m_GroupRowsCnt = (uint32_t)m_Lambda * (4 * m_LsbLayers - 1);
+            m_RlcEncodedMaxSize = utils::math::CeilLog2(m_Threshold);
+            m_MatrixRows = (uint32_t)m_Lambda * ((uint32_t)s_PixelsInOneBlock * (uint32_t)m_LsbLayers - 1) - m_Alpha;
+            m_MatrixColumns = (uint32_t)m_Lambda * ((uint32_t)s_PixelsInOneBlock * (uint32_t)m_LsbLayers - 1);
+        }
 
+        void UpdateThreshold(uint16_t t_Threshold)
+        {
+            /* Set a new value for a variable */
+            m_Threshold = t_Threshold;
+
+            /* Update required variables */
+            m_RlcEncodedMaxSize = utils::math::CeilLog2(GetThreshold());
+        }
+
+        void UpdateLsbLayers(uint16_t t_LsbLayers)
+        {
+            /* Set a new value for a variable */
+            m_LsbLayers = t_LsbLayers;
+
+            /* Update required variables */
+            m_GroupRowsCnt = (uint32_t)m_Lambda * (4 * m_LsbLayers - 1);
+            m_MatrixRows = (uint32_t)m_Lambda * ((uint32_t)s_PixelsInOneBlock * (uint32_t)m_LsbLayers - 1) - m_Alpha;
+            m_MatrixColumns = (uint32_t)m_Lambda * ((uint32_t)s_PixelsInOneBlock * (uint32_t)m_LsbLayers - 1);
+        }
+
+        void UpdateLambda(uint16_t t_Lambda)
+        {
+            /* Set a new value for a variable */
+            m_Lambda = t_Lambda;
+
+            /* Update required variables */
+            m_GroupRowsCnt = (uint32_t)m_Lambda * (4 * m_LsbLayers - 1);
+            m_MatrixRows = (uint32_t)m_Lambda * ((uint32_t)s_PixelsInOneBlock * (uint32_t)m_LsbLayers - 1) - m_Alpha;
+            m_MatrixColumns = (uint32_t)m_Lambda * ((uint32_t)s_PixelsInOneBlock * (uint32_t)m_LsbLayers - 1);
+        }
+
+        void UpdateAlpha(uint16_t t_Alpha)
+        {
+            /* Set a new value for a variable */
+            m_Alpha = t_Alpha;
+
+            /* Update required variables */
+            m_MatrixRows = (uint32_t)m_Lambda * ((uint32_t)s_PixelsInOneBlock * (uint32_t)m_LsbLayers - 1) - m_Alpha;
+        }
+
+        void UpdateLsbHashSize(uint16_t t_LsbHashSize)
+        {
+            /* Set a new value for a variable */
+            m_LsbHashSize = t_LsbHashSize;
+        }
+
+        static Consts& Instance()
+        {
+            static Consts INSTANCE;
+            return INSTANCE;
+        }
+
+        /* All needed getters. */
+        uint16_t GetThreshold() const { return m_Threshold; }
+        uint16_t GetLsbLayers() const { return m_LsbLayers; }
+        uint16_t GetLambda() const { return m_Lambda; }
+        uint16_t GetAlpha() const { return m_Alpha; }
+        uint16_t GetLsbHashSize() const { return m_LsbHashSize; }
+        uint32_t GetGroupRowsCount() const { return m_GroupRowsCnt; }
+        uint32_t GetRlcEncodedMaxSize() const { return m_RlcEncodedMaxSize; }
+        uint32_t GetMatrixRows() const { return m_MatrixRows; }
+        uint32_t GetMatrixColumns() const { return m_MatrixColumns; }
+        uint16_t GetPixelsInOneBlock() const { return s_PixelsInOneBlock; }
+        uint16_t GetAvgRlcEncodedLength() const { return s_AvgRlcEncodedLength; }
+        float GetRlcEncodedBlocksRatioAvg() const { return s_RlcEncodedBlocksRatioAvg; }
+        float GetLsbEncodedBlocksRatioAvg() const { return s_LsbEncodedBlocksRatioAvg; }
+
+    private:
         /**
          * @brief Default threshold for block classification
          */
-        inline uint16_t g_Threshold{ 20 };
+        uint16_t m_Threshold;
 
         /**
          * @brief amount of Lsbs to use to store additional data, while using LSB-based coder.
-         * In the article it's referred as u. 
+         * In the article it's referred as u.
          */
-        inline uint16_t g_LsbLayers{ 3 };
+        uint16_t m_LsbLayers;
 
         /**
          * @brief Blocks group size, that is used with lsb-based coder.
          */
-        inline uint16_t g_Lambda{ 100 };
+        uint16_t m_Lambda;
 
         /**
-         * @brief Small positive integer denoting the number of bits that can be embedded 
+         * @brief Small positive integer denoting the number of bits that can be embedded
          * into each group.
          * In the article it's referred as \alpha.
          */
-        inline uint16_t g_Alpha{ 5 };
-
-        /**
-         * @brief Number of pixels in one block.
-         */
-        constexpr uint16_t c_PixelsInOneBlock{ 4 };
+        uint16_t m_Alpha;
 
         /**
          * @brief Hash size for LSB-encoded blocks.
          * In the article it's referred as \beta.
          */
-        constexpr uint16_t c_LsbHashSize{ 4 };
+        uint16_t m_LsbHashSize;
+
+        /**
+         * @brief Number of rows in each group vector.
+         */
+        uint32_t m_GroupRowsCnt;
+
+        /**
+         * @brief The article says that the length of each encoded block must be less than this number.
+         */
+        uint32_t m_RlcEncodedMaxSize;
+
+        /**
+         * @brief In the article it's referred as P. Number of rows.
+         */
+        uint32_t m_MatrixRows;
+
+        /**
+         * @brief In the article it's referred as Q. Number of columns.
+         */
+        uint32_t m_MatrixColumns;
+
+        /**
+         * @brief Number of pixels in one block.
+         */
+        static const uint16_t s_PixelsInOneBlock{ 4 };
 
         /**
          * @brief Average size of rlc-encoded block
          * @TODO: Right now, it's purely random number!
          */
-        constexpr uint16_t c_AvgRlcEncodedLength{ 11 };
+        static const uint16_t s_AvgRlcEncodedLength{ 11 };
 
         /**
-         * @brief Number of rows in each group vector.
-         */
-        inline uint32_t g_GroupRowsCnt{ (uint32_t)g_Lambda * (4 * g_LsbLayers - 1) };
-
-        /** 
-         * @brief The article says that the length of each encoded block must be less than this number. 
-         */
-        inline uint32_t g_RlcEncodedMaxSize = utils::math::CeilLog2(g_Threshold);
-
-        /** 
-         * @brief In the article it's referred as P. Number of rows. 
-         */
-        inline uint32_t g_MatrixRows{
-            (uint32_t)g_Lambda * ((uint32_t)c_PixelsInOneBlock * (uint32_t)g_LsbLayers - 1) - g_Alpha
-        };
+        * @brief Average percentage of blocks that are encoded using RLC based algorithm.
+        */
+        static constexpr float s_RlcEncodedBlocksRatioAvg{ .7f };
 
         /**
-         * @brief In the article it's referred as Q. Number of columns. 
+         * @brief Average percentage of blocks that are encoded using LSB based algorithm.
          */
-        inline uint32_t g_MatrixColumns{
-            (uint32_t)g_Lambda* ((uint32_t)c_PixelsInOneBlock * (uint32_t)g_LsbLayers - 1)
-        };
-
-        /**
-         * @brief Default node object
-         */
-        constexpr std::pair<uint16_t, Color8u> c_DefaultNode{ -1, 65535 };
-    }
+        static constexpr float s_LsbEncodedBlocksRatioAvg{ 1.0f - s_RlcEncodedBlocksRatioAvg };
+    };
 }
