@@ -128,7 +128,7 @@ namespace rdh {
         if ((t_Vm.count("embed-key") == 1 || t_Vm.count("embed-key-file") == 1) &&
             (t_Vm.count("encryption-key") == 1 || t_Vm.count("enc-key-file") == 1)) {
             mode = Mode::DATA_EXTRACT_IMAGE_RECOVERY;
-            std::cout << "Running in Image recovery + data extraction mode.";
+            std::cout << "Running in Image recovery + data extraction mode." << std::endl;
 
             if (t_Vm.count("result-path") == 0) {
                 std::cout << "You must provide result path (--result-path), to write recovered image to." << std::endl;
@@ -164,7 +164,7 @@ namespace rdh {
             std::cout << "Extracted data saved to: " << t_Vm["result-path-data"].as<std::string>() << std::endl;
         } else if (t_Vm.count("embed-key") == 1 || t_Vm.count("embed-key-file") == 1) {
             mode = Mode::DATA_EXTRACT;
-            std::cout << "Running in data extraction mode.";
+            std::cout << "Running in data extraction mode." << std::endl;
 
             if (t_Vm.count("result-path-data") == 0) {
                 std::cout << "You must provide result path data (--result-path-data), to write extracted data to." << std::endl;
@@ -185,7 +185,7 @@ namespace rdh {
             std::cout << "Extracted data saved to: " << t_Vm["result-path-data"].as<std::string>() << std::endl;
         } else if (t_Vm.count("encryption-key") == 1 || t_Vm.count("enc-key-file") == 1) {
             mode = Mode::IMAGE_RECOVERY;
-            std::cout << "Running in Image recovery mode.";
+            std::cout << "Running in Image recovery mode." << std::endl;
 
             if (t_Vm.count("result-path") == 0) {
                 std::cout << "You must provide result path (--result-path), to write recovered image to." << std::endl;

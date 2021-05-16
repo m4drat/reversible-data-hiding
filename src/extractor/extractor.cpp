@@ -63,9 +63,6 @@ namespace rdh {
             for (uint32_t imgX = 0; imgX < t_MarkedEncryptedImage.GetWidth(); imgX += 2) {
                 /* What type of block we are currently looking at? */
                 if (t_MarkedEncryptedImage.GetPixel(imgY, imgX) & 1) {
-                    /* RLC-encoded block */
-                    omegaOneBlocks++;
-
                     std::string decodedBlockStr;
                     boost::to_string(boost::dynamic_bitset<>(8, t_MarkedEncryptedImage.GetPixel(imgY, imgX + 1)), decodedBlockStr);
                     extractedBitStream += decodedBlockStr;
@@ -108,6 +105,31 @@ namespace rdh {
 
         /* Shuffle BitStream, before embedding */
         utils::DeshuffleFisherYates(seq, extractedBitStream);
+
+        /** 
+         * Now, when we have this bitstream: {\Re || C || \Lambda || H || F || S }. 
+         * Start a parsing operation.
+         */
+
+        /* Total size of C bitstream */
+        uint32_t rlcEncodedBitstreamSize{ 0 };
+
+        auto sliceBegin = extractedBitStream.begin();
+        auto sliceEnd = extractedBitStream.begin();
+        utils::Advance(sliceEnd, extractedBitStream.end(), utils::math::CeilLog2(constsRef.GetThreshold()));
+        rlcEncodedBitstreamSize += boost::dynamic_bitset<>(std::string(sliceBegin, sliceEnd)).to_ulong();
+
+        for (uint32_t currentRlcCodedBlock = 0; currentRlcCodedBlock < omegaOneBlocks; currentRlcCodedBlock++) {
+            rlcEncodedBitstreamSize += boost::dynamic_bitset<>(
+                std::string(
+                    utils::Advance(sliceBegin, extractedBitStream.end(), utils::math::CeilLog2(constsRef.GetThreshold())), 
+                    utils::Advance(sliceEnd, extractedBitStream.end(), utils::math::CeilLog2(constsRef.GetThreshold()))
+                )
+            ).to_ulong();
+        }
+
+        utils::Advance(sliceBegin, extractedBitStream.end(), utils::math::CeilLog2(constsRef.GetThreshold()) + rlcEncodedBitstreamSize + xi * (constsRef.GetLambda() * (4 * constsRef.GetLsbLayers() - 1) - constsRef.GetAlpha()) + xi * constsRef.GetLsbHashSize() + totalBlocks);
+        utils::Advance(sliceEnd, extractedBitStream.end(), rlcEncodedBitstreamSize + xi * (constsRef.GetLambda() * (4 * constsRef.GetLsbLayers() - 1) - constsRef.GetAlpha()) + xi * constsRef.GetLsbHashSize() + totalBlocks);
     }
 
     void Extractor::RecoverImageAndExract(
