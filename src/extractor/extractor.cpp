@@ -1,6 +1,7 @@
 #include "extractor/extractor.h"
 
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
+#include <boost/log/trivial.hpp>
 
 namespace rdh {
     void Extractor::RecoverImage(
@@ -96,7 +97,11 @@ namespace rdh {
                 }
             }
         }
-    
+
+#ifndef NDEBUG
+        utils::SaveDataToFileData("./dumpedExtracted-before_unshuff-txt.txt", extractedBitStream);
+#endif
+
         std::array<uint32_t, 5> hash;
 
         /* Use sha1 of a data-hiding key as a seed for PRNG */
@@ -105,6 +110,10 @@ namespace rdh {
 
         /* Shuffle BitStream, before embedding */
         utils::DeshuffleFisherYates(seq, extractedBitStream);
+
+#ifndef NDEBUG
+        utils::SaveDataToFileData("./dumpedExtracted-after_unshuff-txt.txt", extractedBitStream);
+#endif
 
         /** 
          * Now, when we have this bitstream: {\Re || C || \Lambda || H || F || S }. 
@@ -116,20 +125,26 @@ namespace rdh {
 
         auto sliceBegin = extractedBitStream.begin();
         auto sliceEnd = extractedBitStream.begin();
-        utils::Advance(sliceEnd, extractedBitStream.end(), utils::math::CeilLog2(constsRef.GetThreshold()));
+        utils::Advance(sliceEnd, extractedBitStream.end(), constsRef.GetRlcEncodedMaxSize());
         rlcEncodedBitstreamSize += boost::dynamic_bitset<>(std::string(sliceBegin, sliceEnd)).to_ulong();
 
-        for (uint32_t currentRlcCodedBlock = 0; currentRlcCodedBlock < omegaOneBlocks; currentRlcCodedBlock++) {
+        /* Sum all of the rlc-encoded block lengths */
+        for (uint32_t currentRlcCodedBlock = 0; currentRlcCodedBlock < omegaOneBlocks - 1; currentRlcCodedBlock++) {
             rlcEncodedBitstreamSize += boost::dynamic_bitset<>(
                 std::string(
-                    utils::Advance(sliceBegin, extractedBitStream.end(), utils::math::CeilLog2(constsRef.GetThreshold())), 
-                    utils::Advance(sliceEnd, extractedBitStream.end(), utils::math::CeilLog2(constsRef.GetThreshold()))
+                    utils::Advance(sliceBegin, extractedBitStream.end(), constsRef.GetRlcEncodedMaxSize()),
+                    utils::Advance(sliceEnd, extractedBitStream.end(), constsRef.GetRlcEncodedMaxSize())
                 )
             ).to_ulong();
         }
 
-        utils::Advance(sliceBegin, extractedBitStream.end(), utils::math::CeilLog2(constsRef.GetThreshold()) + rlcEncodedBitstreamSize + xi * (constsRef.GetLambda() * (4 * constsRef.GetLsbLayers() - 1) - constsRef.GetAlpha()) + xi * constsRef.GetLsbHashSize() + totalBlocks);
+        /* Now iterator points to user-data bitstream */
+        utils::Advance(sliceBegin, extractedBitStream.end(), constsRef.GetRlcEncodedMaxSize() + rlcEncodedBitstreamSize + xi * (constsRef.GetLambda() * (4 * constsRef.GetLsbLayers() - 1) - constsRef.GetAlpha()) + xi * constsRef.GetLsbHashSize() + totalBlocks);
         utils::Advance(sliceEnd, extractedBitStream.end(), rlcEncodedBitstreamSize + xi * (constsRef.GetLambda() * (4 * constsRef.GetLsbLayers() - 1) - constsRef.GetAlpha()) + xi * constsRef.GetLsbHashSize() + totalBlocks);
+
+        BOOST_LOG_TRIVIAL(info) << "Saving " << std::distance(sliceBegin, extractedBitStream.end()) << " bits of embedded user-data";
+
+        utils::SaveBitstreamToFile<uint8_t>(t_ExtractedDataPath, sliceBegin, extractedBitStream.end());
     }
 
     void Extractor::RecoverImageAndExract(

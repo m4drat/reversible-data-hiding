@@ -4,6 +4,7 @@
 #include <random>
 #include <iterator>
 #include <bitset>
+#include <cmath>
 
 #include <boost/compute/detail/sha1.hpp>
 
@@ -63,8 +64,7 @@ namespace rdh {
         void ShuffleFisherYates(const std::seed_seq& t_Seq, T& t_Collection)
         {
             std::mt19937 mt(t_Seq);
-
-            auto currentIndexCounter = t_Collection.size();
+            uint32_t currentIndexCounter = t_Collection.size();
 
             for (auto iter = t_Collection.rbegin(); iter != t_Collection.rend();
                 ++iter, --currentIndexCounter)
@@ -90,12 +90,10 @@ namespace rdh {
         void DeshuffleFisherYates(const std::seed_seq& t_Seq, T& t_Collection)
         {
             std::mt19937 mt(t_Seq);
-
-            auto currentIndexCounter = t_Collection.size();
             std::vector<uint32_t> randomIndexes;
+            randomIndexes.reserve(t_Collection.size());
 
-            for (auto iter = t_Collection.rbegin(); iter != t_Collection.rend();
-                ++iter, --currentIndexCounter)
+            for (uint32_t currentIndexCounter = t_Collection.size(); currentIndexCounter > 0; --currentIndexCounter)
             {
                 std::uniform_int_distribution<> dis(0, currentIndexCounter);
                 randomIndexes.emplace_back(dis(mt));
@@ -227,6 +225,53 @@ namespace rdh {
                 std::istream_iterator<T>());
 
             return std::move(bytes);
+        }
+
+        template<typename T>
+        void SaveDataToFileData(const std::string& t_Filename, const T& t_Data)
+        {
+            // open the file:
+            std::ofstream outFile(t_Filename, std::ios::out | std::ios::binary);
+
+            if (!outFile.is_open()) {
+                throw std::runtime_error("Error, while opening file: " + t_Filename);
+            }
+
+            outFile.write((char*)t_Data.data(), t_Data.size());
+        }
+
+        template<typename T>
+        void SaveBitstreamToFile(const std::string& t_Filename, const std::string::iterator& t_SliceBegin, const std::string::iterator& t_SliceEnd)
+        {
+            std::vector<T> dataToWrite;
+            dataToWrite.reserve(std::abs(std::distance(t_SliceBegin, t_SliceEnd)) / 8);
+
+            std::string::iterator sliceBegin = t_SliceBegin;
+            std::string::iterator sliceEnd = t_SliceBegin;
+
+            std::string currByte = std::string(
+                sliceBegin,
+                Advance(sliceEnd, t_SliceEnd, 8)
+            );
+            if (currByte.size() < 8) {
+                currByte += std::string(8 - currByte.size(), '0');
+            }
+            dataToWrite.emplace_back(BinaryStringToByte(currByte));
+
+            while (sliceBegin != t_SliceEnd) {
+                std::string currByte = std::string(
+                    Advance(sliceBegin, t_SliceEnd, 8),
+                    Advance(sliceEnd, t_SliceEnd, 8)
+                );
+
+                if (currByte.size() < 8) {
+                    currByte += std::string(8 - currByte.size(), '0');
+                }
+
+                dataToWrite.emplace_back(BinaryStringToByte(currByte));
+            }
+
+            SaveDataToFileData(t_Filename, dataToWrite);
         }
     }
 }

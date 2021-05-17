@@ -167,47 +167,27 @@ namespace rdh {
             }
         }
 
-        /** 
-         * If after encoding everything, current group size is not zero, process this group too.
-         * In proposed schema, the last group may not be full! Is it okay?
-         */
-        //if (currGroupSize != 0) {
-        //    CompressCurrentGroup(psi, lsbEncodedGroup, lsbEncodedBitStream, hashsesBitStream, t_DataEmbeddingKey);
-
-        //    /* Reset group. */
-        //    lsbEncodedGroup.setZero();
-
-        //    /* Because Eigen is weird, lets just double check, if everything is done correctly. */
-        //    assert(lsbEncodedGroup.rows() == constsRef.GetGroupRowsCount());
-        //    assert(lsbEncodedGroup.cols() == 1);
-        //    assert(lsbEncodedGroup.isZero(0));
-
-        //    /* Reset group size. */
-        //    currGroupSize = 0;
-        //}
-
 #if DEBUG_STATS == 1
         BOOST_LOG_TRIVIAL(info) << "Total blocks: " << totalBlocks;
         BOOST_LOG_TRIVIAL(info) << "Omega one blocks: " << omegaOneBlocks;
         BOOST_LOG_TRIVIAL(info) << "Ratio is (omegaOne/totalBlocks): " << (double)omegaOneBlocks / (double)totalBlocks;
+        BOOST_LOG_TRIVIAL(info) << "Rlc-encoded bitstream length: " << rlcEncodedBitStream.size();
 
         double tMax = (
-                24 * (double)omegaOneBlocks +
-                std::floorf((totalBlocks - omegaOneBlocks) / constsRef.GetLambda()) *
-                (constsRef.GetAlpha() - constsRef.GetLsbHashSize()) -
-                omegaOneBlocks * std::ceilf(std::log2f(constsRef.GetThreshold())) -
-                rlcEncodedBitStream.size() -
-                totalBlocks
+                24.0f * (double)omegaOneBlocks +
+                std::floorf((totalBlocks - omegaOneBlocks) / (double)constsRef.GetLambda()) *
+                ((double)constsRef.GetAlpha() - (double)constsRef.GetLsbHashSize()) -
+                (double)omegaOneBlocks * std::ceilf(std::log2f(constsRef.GetThreshold())) -
+                (double)rlcEncodedBitStream.size() -
+                (double)totalBlocks
             ) / (
-                (double)t_EncryptedImage.GetHeight() * t_EncryptedImage.GetWidth()
+                (double)t_EncryptedImage.GetHeight() * (double)t_EncryptedImage.GetWidth()
             );
 
         BOOST_LOG_TRIVIAL(info) << "Maximum embedding rate: " << tMax;
 #endif
 
         uint32_t xi = utils::math::Floor((float)(totalBlocks - omegaOneBlocks) / (float)constsRef.GetLambda());
-        assert(lsbEncodedBitStream.size() == xi * (constsRef.GetLambda() * (4 * constsRef.GetLsbLayers() - 1) - constsRef.GetAlpha()));
-        assert(hashsesBitStream.size() == constsRef.GetLsbHashSize() * xi);
 
         int32_t maxUserDataSize = 24 * omegaOneBlocks + xi * constsRef.GetLambda() * (4 * constsRef.GetLsbLayers() - 1)
             - (lengthsBitStream.size() + rlcEncodedBitStream.size() + lsbEncodedBitStream.size() + hashsesBitStream.size() + topLeftPixelsLsbBitStream.size());
@@ -220,30 +200,48 @@ namespace rdh {
 
         /* Concatenate everything into a single BitStream */
         std::string userDataBitStream = utils::BytesToBinaryString(t_Data);
-        
+
+        assert(lengthsBitStream.size() == omegaOneBlocks * constsRef.GetRlcEncodedMaxSize());
+        assert(lsbEncodedBitStream.size() == xi * (constsRef.GetLambda() * (4 * constsRef.GetLsbLayers() - 1) - constsRef.GetAlpha()));
+        assert(hashsesBitStream.size() == constsRef.GetLsbHashSize() * xi);
+        assert(topLeftPixelsLsbBitStream.size() == totalBlocks);
+
+        assert(userDataBitStream.size() % 8 == 0);
+
         std::string assembledBitStream = 
             lengthsBitStream + rlcEncodedBitStream + lsbEncodedBitStream + 
             hashsesBitStream + topLeftPixelsLsbBitStream + userDataBitStream + std::string(maxUserDataSize - userDataBitStream.size(), '0');
+        
+        assert(assembledBitStream.size() == 24 * omegaOneBlocks + xi * constsRef.GetLambda() * (4 * constsRef.GetLsbLayers() - 1));
+        
         std::array<uint32_t, 5> hash;
 
         /* Use sha1 of a data-hiding key as a seed for PRNG */
         utils::CalculateSHA1(t_DataEmbeddingKey, hash);
         std::seed_seq seq(hash.begin(), hash.end());
         
+#ifndef NDEBUG
+        utils::SaveDataToFileData("./assembledBitstream-before_shuff-txt.txt", assembledBitStream);
+#endif
+
         /* Shuffle BitStream, before embedding */
         utils::ShuffleFisherYates(seq, assembledBitStream);
+
+#ifndef NDEBUG
+        utils::SaveDataToFileData("./assembledBitstream-after_shuff-txt.txt", assembledBitStream);
+#endif
 
         auto sliceBegin = assembledBitStream.begin();
         auto sliceEnd = assembledBitStream.begin();
 
+        /* Used to keep track of total written bits. For debug purposes. */
+        uint32_t totalBitsWrittenRlc{ 0 };
+        uint32_t totalBitsWrittenLsb{ 0 };
+
         /* Last step. Pack all data into the image. */
         for (uint32_t imgY = 0; imgY < t_EncryptedImage.GetHeight(); imgY += 2) {
             for (uint32_t imgX = 0; imgX < t_EncryptedImage.GetWidth(); imgX += 2) {
-                /* We've packed everything, that we had */
-                if (sliceBegin == assembledBitStream.end()) {
-                    /* Yep, that's ugly, but it's the most elegant solution I could've found */
-                    goto finishProcessing;
-                }
+                assert(sliceBegin != assembledBitStream.end());
 
                 /* What type of block we are currently looking at? */
                 if (t_EncryptedImage.GetPixel(imgY, imgX) & 1) {
@@ -271,9 +269,16 @@ namespace rdh {
                         )
                     ));
 
+                    totalBitsWrittenRlc += 24;
+
                     utils::Advance(sliceBegin, assembledBitStream.end(), 8);
                 }
                 else {
+                    /* Check, if we've filled all of the allowed LSB-encoded blocks with data */
+                    if (totalBitsWrittenLsb >= xi * constsRef.GetLambda() * (4 * constsRef.GetLsbLayers() - 1)) {
+                        continue;
+                    }
+
                     assert(sliceBegin == sliceEnd);
                     
                     /* The block is encoded using lsb-based algorithm */
@@ -325,12 +330,17 @@ namespace rdh {
                         )
                     );
 
+                    totalBitsWrittenLsb += (4 * constsRef.GetLsbLayers() - 1);
+
                     utils::Advance(sliceBegin, assembledBitStream.end(), constsRef.GetLsbLayers());
                 }
             }
         }
 
-finishProcessing:
+        assert(totalBitsWrittenRlc == 24 * omegaOneBlocks);
+        assert(totalBitsWrittenLsb == xi * constsRef.GetLambda() * (4 * constsRef.GetLsbLayers() - 1));
+        assert(totalBitsWrittenRlc + totalBitsWrittenLsb == assembledBitStream.size());
+
         return t_EncryptedImage;
     }
 
