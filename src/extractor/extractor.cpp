@@ -10,7 +10,223 @@ namespace rdh {
         std::vector<uint8_t>& t_EncryptionKey
     ) 
     {
+        /* Get reference to a consts object. */
+        Consts& constsRef = Consts::Instance();
 
+        uint32_t keyCursor = 0;
+        /** 
+         * First direct decryption pass. 
+         * Decrypts top-left pixel in RLC-compressed blocks.
+         * Decrypts all pixels in LSB-compressed blocks.
+         */
+        for (uint32_t imgY = 0; imgY < t_MarkedEncryptedImage.GetHeight(); imgY += 2) {
+            for (uint32_t imgX = 0; imgX < t_MarkedEncryptedImage.GetWidth(); imgX += 2) {
+                /* What type of block we are currently looking at? */
+                if (t_MarkedEncryptedImage.GetPixel(imgY, imgX) & 1) {
+                    /* RLC-compressed block, so decrypt only the first pixel */
+                    Color8u decPixelA = t_MarkedEncryptedImage.GetPixel(imgY, imgX) ^ t_EncryptionKey[keyCursor % t_EncryptionKey.size()];
+
+                    /* Update pixel value, and set location map bit */
+                    t_MarkedEncryptedImage.SetPixel(imgY, imgX, decPixelA | 1);
+                }
+                else {
+                    /* LSB-compressed block, so decrypt all pixels in current block */
+                    Color8u decPixelA = t_MarkedEncryptedImage.GetPixel(imgY, imgX) ^ t_EncryptionKey[keyCursor % t_EncryptionKey.size()];
+                    Color8u decPixelB = t_MarkedEncryptedImage.GetPixel(imgY, imgX + 1) ^ t_EncryptionKey[keyCursor % t_EncryptionKey.size()];
+                    Color8u decPixelC = t_MarkedEncryptedImage.GetPixel(imgY + 1, imgX) ^ t_EncryptionKey[keyCursor % t_EncryptionKey.size()];
+                    Color8u decPixelD = t_MarkedEncryptedImage.GetPixel(imgY + 1, imgX + 1) ^ t_EncryptionKey[keyCursor % t_EncryptionKey.size()];
+
+                    t_MarkedEncryptedImage.SetPixel(imgY, imgX, decPixelA);
+                    t_MarkedEncryptedImage.SetPixel(imgY, imgX + 1, decPixelB);
+                    t_MarkedEncryptedImage.SetPixel(imgY + 1, imgX, decPixelC);
+                    t_MarkedEncryptedImage.SetPixel(imgY + 1, imgX + 1, decPixelD);
+                
+                    /* reset location map pixel */
+                    t_MarkedEncryptedImage.SetPixel(imgY, imgX, t_MarkedEncryptedImage.GetPixel(imgY, imgX) & ~1);
+                }
+
+                ++keyCursor;
+            }
+        }
+
+        /**
+         * Second direct decryption pass.
+         * Decrypts down-right pixel in RLC-compressed blocks by averaging it's neighbors.
+         */
+        for (uint32_t imgY = 0; imgY < t_MarkedEncryptedImage.GetHeight(); imgY += 2) {
+            for (uint32_t imgX = 0; imgX < t_MarkedEncryptedImage.GetWidth(); imgX += 2) {
+                /* What type of block we are currently looking at? */
+                if (t_MarkedEncryptedImage.GetPixel(imgY, imgX) & 1) {
+                    /* RLC-compressed block, so decrypt down-right pixel */
+                    uint16_t avgPixelValue{ 0 };
+                    uint8_t avgOfNPixels{ 1 };
+
+                    /* This pixel exists always */
+                    avgPixelValue += t_MarkedEncryptedImage.GetPixel(imgY, imgX);
+
+                    if (imgX + 2 < t_MarkedEncryptedImage.GetWidth()) {
+                        avgPixelValue += t_MarkedEncryptedImage.GetPixel(imgY, imgX + 2);
+                        avgOfNPixels++;
+                    }
+
+                    if (imgY + 2 < t_MarkedEncryptedImage.GetHeight()) {
+                        avgPixelValue += t_MarkedEncryptedImage.GetPixel(imgY + 2, imgX);
+                        avgOfNPixels++;
+                    }
+
+                    if (imgY + 2 < t_MarkedEncryptedImage.GetHeight() && imgX + 2 < t_MarkedEncryptedImage.GetWidth()) {
+                        avgPixelValue += t_MarkedEncryptedImage.GetPixel(imgY + 2, imgX + 2);
+                        avgOfNPixels++;
+                    }
+
+                    /* Set new average pixel value */
+                    t_MarkedEncryptedImage.SetPixel(imgY + 1, imgX + 1, avgPixelValue / avgOfNPixels);
+                }
+            }
+        }
+
+        /**
+         * Third direct decryption pass.
+         * Decrypts pixels from RLC-compressed blocks, that are located borders of the image.
+         */
+        for (uint32_t imgY = 0; imgY < t_MarkedEncryptedImage.GetHeight(); imgY += 2) {
+            /* First or the last row */
+            if (imgY == 0 || imgY == t_MarkedEncryptedImage.GetHeight() - 2) {
+                for (uint32_t imgX = 0; imgX < t_MarkedEncryptedImage.GetWidth(); imgX += 2) {
+                    /* What type of block we are currently looking at? */
+                    if (t_MarkedEncryptedImage.GetPixel(imgY, imgX) & 1) {
+                        uint16_t avgPixelValue = 0;
+                        uint8_t avgOfNPixels{ 2 };
+
+                        avgPixelValue += t_MarkedEncryptedImage.GetPixel(imgY, imgX);
+                        avgPixelValue += t_MarkedEncryptedImage.GetPixel(imgY + 1, imgX + 1);
+
+                        /* First row */
+                        if (imgY == 0) {
+                            if (imgX + 2 < t_MarkedEncryptedImage.GetWidth()) {
+                                avgPixelValue += t_MarkedEncryptedImage.GetPixel(imgY, imgX + 2);
+                                avgOfNPixels++;
+                            }
+
+                            /* Set new average pixel value */
+                            t_MarkedEncryptedImage.SetPixel(imgY, imgX + 1, avgPixelValue / avgOfNPixels);
+
+                            if (imgX != 0) {
+                                avgPixelValue = t_MarkedEncryptedImage.GetPixel(imgY, imgX);
+                                avgPixelValue += t_MarkedEncryptedImage.GetPixel(imgY + 1, imgX + 1);
+                                avgPixelValue += t_MarkedEncryptedImage.GetPixel(imgY + 2, imgX);
+                                avgPixelValue += t_MarkedEncryptedImage.GetPixel(imgY + 1, imgX - 1);
+                                t_MarkedEncryptedImage.SetPixel(imgY + 1, imgX, avgPixelValue / 4);
+                            }
+                        }
+                        else {
+                            /* Last row */
+                            if (imgX >= 2) {
+                                avgPixelValue += t_MarkedEncryptedImage.GetPixel(imgY + 1, imgX - 1);
+                                avgOfNPixels++;
+                            }
+
+                            t_MarkedEncryptedImage.SetPixel(imgY + 1, imgX, avgPixelValue / avgOfNPixels);
+
+                            if (imgX != t_MarkedEncryptedImage.GetWidth() - 2) {
+                                avgPixelValue = t_MarkedEncryptedImage.GetPixel(imgY, imgX);
+                                avgPixelValue += t_MarkedEncryptedImage.GetPixel(imgY + 1, imgX + 1);
+                                avgPixelValue += t_MarkedEncryptedImage.GetPixel(imgY, imgX + 2);
+                                avgPixelValue += t_MarkedEncryptedImage.GetPixel(imgY - 1, imgX + 1);
+                                t_MarkedEncryptedImage.SetPixel(imgY, imgX + 1, avgPixelValue / 4);
+                            }
+                        }
+                    }
+                }
+            }
+            else {
+                /* First or the last column */
+                for (uint32_t imgX : std::array<uint32_t, 2>{ 0, t_MarkedEncryptedImage.GetWidth() - 2 }) {
+                    /* What type of block we are currently looking at? */
+                    if (t_MarkedEncryptedImage.GetPixel(imgY, imgX) & 1) {
+                        uint16_t avgPixelValue = 0;
+                        uint8_t avgOfNPixels{ 0 };
+
+                        /* First column */
+                        if (imgX == 0) {
+                            avgPixelValue += t_MarkedEncryptedImage.GetPixel(imgY, imgX);
+                            avgPixelValue += t_MarkedEncryptedImage.GetPixel(imgY + 1, imgX + 1);
+                            avgOfNPixels += 2;
+
+                            if (imgY + 2 < t_MarkedEncryptedImage.GetHeight()) {
+                                avgPixelValue += t_MarkedEncryptedImage.GetPixel(imgY + 2, imgX);
+                                avgOfNPixels++;
+                            }
+
+                            /* Set new average pixel value */
+                            t_MarkedEncryptedImage.SetPixel(imgY + 1, imgX, avgPixelValue / avgOfNPixels);
+
+                            if (imgY != 0) {
+                                avgPixelValue = t_MarkedEncryptedImage.GetPixel(imgY, imgX);
+                                avgPixelValue += t_MarkedEncryptedImage.GetPixel(imgY + 1, imgX + 1);
+                                avgPixelValue += t_MarkedEncryptedImage.GetPixel(imgY, imgX + 2);
+                                avgPixelValue += t_MarkedEncryptedImage.GetPixel(imgY - 1, imgX + 1);
+                                t_MarkedEncryptedImage.SetPixel(imgY, imgX + 1, avgPixelValue / 4);
+                            }
+                        }
+                        else {
+                            /* Last column */
+                            avgPixelValue += t_MarkedEncryptedImage.GetPixel(imgY, imgX);
+                            avgPixelValue += t_MarkedEncryptedImage.GetPixel(imgY + 1, imgX + 1);
+                            avgOfNPixels += 2;
+
+                            if (imgY >= 2) {
+                                avgPixelValue += t_MarkedEncryptedImage.GetPixel(imgY - 1, imgX + 1);
+                                avgOfNPixels++;
+                            }
+
+                            t_MarkedEncryptedImage.SetPixel(imgY, imgX + 1, avgPixelValue / avgOfNPixels);
+
+                            if (imgY != t_MarkedEncryptedImage.GetHeight() - 2) {
+                                avgPixelValue = t_MarkedEncryptedImage.GetPixel(imgY, imgX);
+                                avgPixelValue += t_MarkedEncryptedImage.GetPixel(imgY + 1, imgX + 1);
+                                avgPixelValue += t_MarkedEncryptedImage.GetPixel(imgY + 2, imgX);
+                                avgPixelValue += t_MarkedEncryptedImage.GetPixel(imgY + 1, imgX - 1);
+                                t_MarkedEncryptedImage.SetPixel(imgY + 1, imgX, avgPixelValue / 4);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        /**
+         * Fourth direct decryption pass.
+         * Decrypts remaining pixels.
+         */
+        for (uint32_t imgY = 2; imgY < t_MarkedEncryptedImage.GetHeight() - 2; imgY += 2) {
+            for (uint32_t imgX = 2; imgX < t_MarkedEncryptedImage.GetWidth() - 2; imgX += 2) {
+                /* What type of block we are currently looking at? */
+                if (t_MarkedEncryptedImage.GetPixel(imgY, imgX) & 1) {
+                    uint16_t avgPixelValue = (
+                        t_MarkedEncryptedImage.GetPixel(imgY - 1, imgX + 1) +
+                        t_MarkedEncryptedImage.GetPixel(imgY + 1, imgX + 1) +
+                        t_MarkedEncryptedImage.GetPixel(imgY, imgX) +
+                        t_MarkedEncryptedImage.GetPixel(imgY, imgX + 2)
+                    ) / 4;
+
+                    t_MarkedEncryptedImage.SetPixel(imgY, imgX + 1, avgPixelValue);
+
+                    avgPixelValue = (
+                        t_MarkedEncryptedImage.GetPixel(imgY, imgX) +
+                        t_MarkedEncryptedImage.GetPixel(imgY + 2, imgX) +
+                        t_MarkedEncryptedImage.GetPixel(imgY + 1, imgX - 1) +
+                        t_MarkedEncryptedImage.GetPixel(imgY + 1, imgX + 1)
+                    ) / 4;
+                    t_MarkedEncryptedImage.SetPixel(imgY + 1, imgX, avgPixelValue);
+                }
+            }
+        }
+
+        /* Added so that the benchmarks module can use this function without writing any files */
+        if (t_RecoveredImagePath.size() != 0) {
+            t_MarkedEncryptedImage.Save(t_RecoveredImagePath);
+        }
     }
 
     void Extractor::ExtractData(
@@ -147,6 +363,8 @@ namespace rdh {
         std::vector<uint8_t>& t_EncryptionKey
     ) 
     {
+        /* Get reference to a consts object. */
+        Consts& constsRef = Consts::Instance();
 
     }
 }
