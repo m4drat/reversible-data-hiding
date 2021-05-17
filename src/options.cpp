@@ -82,7 +82,7 @@ namespace rdh {
             embedKey = rdh::utils::HexToBytes<uint8_t>(t_Vm["embed-key"].as<std::string>());
         }
 
-        Embedder::Embed(image, dataToEmbed, embedKey).Save(t_Vm["result-path"].as<std::string>());
+        Embedder::Embed(image, dataToEmbed, embedKey, std::nullopt, std::nullopt).Save(t_Vm["result-path"].as<std::string>());
 
         std::cout << "Image with embedded data saved to: " << t_Vm["result-path"].as<std::string>() << std::endl;
 

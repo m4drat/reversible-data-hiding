@@ -19,9 +19,12 @@ namespace rdh {
          * @param t_EncryptedEmptyImage Encrypted image where additional data will be embedded
          * @param t_Data Data to embed
          * @param t_DataEmbeddingKey key to use to embed data
+         * @param t_MaxEmbeddingRate std::optional to use with benchmarks
+         * @param t_MaxUserDataBits std::optional to use with benchmarks
          * @return Encrypted image with embedded data into it (Edited t_EncryptedImage).
         */
-        static BmpImage& Embed(BmpImage& t_EncryptedImage, const std::vector<uint8_t>& t_Data, const std::vector<uint8_t>& t_DataEmbeddingKey);
+
+        static BmpImage& Embed(BmpImage& t_EncryptedImage, const std::vector<uint8_t>& t_Data, const std::vector<uint8_t>& t_DataEmbeddingKey, std::optional<std::reference_wrapper<double>> t_MaxEmbeddingRate, std::optional<std::reference_wrapper<uint32_t>> t_MaxUserDataBits);
     private:
         /**
          * @brief Fills matrix using data key, and PRNG.

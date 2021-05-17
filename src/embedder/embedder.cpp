@@ -12,7 +12,7 @@
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
 
 namespace rdh {
-    BmpImage& Embedder::Embed(BmpImage& t_EncryptedImage, const std::vector<uint8_t>& t_Data, const std::vector<uint8_t>& t_DataEmbeddingKey)
+    BmpImage& Embedder::Embed(BmpImage& t_EncryptedImage, const std::vector<uint8_t>& t_Data, const std::vector<uint8_t>& t_DataEmbeddingKey, std::optional<std::reference_wrapper<double>> t_MaxEmbeddingRate, std::optional<std::reference_wrapper<uint32_t>> t_MaxUserDataBits)
     {
         Consts& constsRef = Consts::Instance();
 
@@ -172,6 +172,7 @@ namespace rdh {
         BOOST_LOG_TRIVIAL(info) << "Omega one blocks: " << omegaOneBlocks;
         BOOST_LOG_TRIVIAL(info) << "Ratio is (omegaOne/totalBlocks): " << (double)omegaOneBlocks / (double)totalBlocks;
         BOOST_LOG_TRIVIAL(info) << "Rlc-encoded bitstream length: " << rlcEncodedBitStream.size();
+#endif
 
         double tMax = (
                 24.0f * (double)omegaOneBlocks +
@@ -185,14 +186,27 @@ namespace rdh {
             );
 
         BOOST_LOG_TRIVIAL(info) << "Maximum embedding rate: " << tMax;
-#endif
 
         uint32_t xi = utils::math::Floor((float)(totalBlocks - omegaOneBlocks) / (float)constsRef.GetLambda());
-
         int32_t maxUserDataSize = 24 * omegaOneBlocks + xi * constsRef.GetLambda() * (4 * constsRef.GetLsbLayers() - 1)
             - (lengthsBitStream.size() + rlcEncodedBitStream.size() + lsbEncodedBitStream.size() + hashsesBitStream.size() + topLeftPixelsLsbBitStream.size());
 
         BOOST_LOG_TRIVIAL(info) << "Maximum bits of user-data to embed: " << maxUserDataSize;
+
+        if (t_MaxEmbeddingRate != std::nullopt) {
+            t_MaxEmbeddingRate->get() = tMax;
+        }
+
+        if (t_MaxUserDataBits != std::nullopt) {
+            t_MaxUserDataBits->get() = maxUserDataSize;
+        }
+
+        if (tMax < 0.0f) {
+            throw std::invalid_argument(
+                "Incorrect parameters are set for data embedder!\n"
+                "Consider using default parameters. Or find more appropriate values."
+            );
+        }
 
         if (t_Data.size() * 8 > maxUserDataSize) {
             throw std::invalid_argument("User data size exceeds the maximum possible size!");
@@ -220,16 +234,8 @@ namespace rdh {
         utils::CalculateSHA1(t_DataEmbeddingKey, hash);
         std::seed_seq seq(hash.begin(), hash.end());
         
-#ifndef NDEBUG
-        utils::SaveDataToFileData("./assembledBitstream-before_shuff-txt.txt", assembledBitStream);
-#endif
-
         /* Shuffle BitStream, before embedding */
         utils::ShuffleFisherYates(seq, assembledBitStream);
-
-#ifndef NDEBUG
-        utils::SaveDataToFileData("./assembledBitstream-after_shuff-txt.txt", assembledBitStream);
-#endif
 
         auto sliceBegin = assembledBitStream.begin();
         auto sliceEnd = assembledBitStream.begin();
@@ -241,8 +247,6 @@ namespace rdh {
         /* Last step. Pack all data into the image. */
         for (uint32_t imgY = 0; imgY < t_EncryptedImage.GetHeight(); imgY += 2) {
             for (uint32_t imgX = 0; imgX < t_EncryptedImage.GetWidth(); imgX += 2) {
-                assert(sliceBegin != assembledBitStream.end());
-
                 /* What type of block we are currently looking at? */
                 if (t_EncryptedImage.GetPixel(imgY, imgX) & 1) {
                     assert(sliceBegin == sliceEnd);
@@ -336,6 +340,8 @@ namespace rdh {
                 }
             }
         }
+
+        assert(sliceBegin == assembledBitStream.end());
 
         assert(totalBitsWrittenRlc == 24 * omegaOneBlocks);
         assert(totalBitsWrittenLsb == xi * constsRef.GetLambda() * (4 * constsRef.GetLsbLayers() - 1));

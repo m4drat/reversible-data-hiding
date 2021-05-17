@@ -98,10 +98,6 @@ namespace rdh {
             }
         }
 
-#ifndef NDEBUG
-        utils::SaveDataToFileData("./dumpedExtracted-before_unshuff-txt.txt", extractedBitStream);
-#endif
-
         std::array<uint32_t, 5> hash;
 
         /* Use sha1 of a data-hiding key as a seed for PRNG */
@@ -110,10 +106,6 @@ namespace rdh {
 
         /* Shuffle BitStream, before embedding */
         utils::DeshuffleFisherYates(seq, extractedBitStream);
-
-#ifndef NDEBUG
-        utils::SaveDataToFileData("./dumpedExtracted-after_unshuff-txt.txt", extractedBitStream);
-#endif
 
         /** 
          * Now, when we have this bitstream: {\Re || C || \Lambda || H || F || S }. 
@@ -140,11 +132,11 @@ namespace rdh {
 
         /* Now iterator points to user-data bitstream */
         utils::Advance(sliceBegin, extractedBitStream.end(), constsRef.GetRlcEncodedMaxSize() + rlcEncodedBitstreamSize + xi * (constsRef.GetLambda() * (4 * constsRef.GetLsbLayers() - 1) - constsRef.GetAlpha()) + xi * constsRef.GetLsbHashSize() + totalBlocks);
-        utils::Advance(sliceEnd, extractedBitStream.end(), rlcEncodedBitstreamSize + xi * (constsRef.GetLambda() * (4 * constsRef.GetLsbLayers() - 1) - constsRef.GetAlpha()) + xi * constsRef.GetLsbHashSize() + totalBlocks);
 
-        BOOST_LOG_TRIVIAL(info) << "Saving " << std::distance(sliceBegin, extractedBitStream.end()) << " bits of embedded user-data";
-
-        utils::SaveBitstreamToFile<uint8_t>(t_ExtractedDataPath, sliceBegin, extractedBitStream.end());
+        if (t_ExtractedDataPath.size() != 0) {
+            BOOST_LOG_TRIVIAL(info) << "Saving " << std::distance(sliceBegin, extractedBitStream.end()) << " bits of embedded user-data";
+            utils::SaveBitstreamToFile<uint8_t>(t_ExtractedDataPath, sliceBegin, extractedBitStream.end());
+        }
     }
 
     void Extractor::RecoverImageAndExract(

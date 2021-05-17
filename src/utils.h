@@ -264,6 +264,10 @@ namespace rdh {
                     Advance(sliceEnd, t_SliceEnd, 8)
                 );
 
+                if (sliceBegin == sliceEnd) {
+                    break;
+                }
+
                 if (currByte.size() < 8) {
                     currByte += std::string(8 - currByte.size(), '0');
                 }

@@ -1559,7 +1559,7 @@ namespace rdh {
     {
     public:
         Consts()
-            : m_Threshold{ 20 }, m_LsbLayers{ 3 }, m_Lambda{ 100 }, m_Alpha{ 5 }, m_LsbHashSize{ 4 }
+            : m_Threshold{ 20 }, m_LsbLayers{ 1 }, m_Lambda{ 400 }, m_Alpha{ 6 }, m_LsbHashSize{ 3 }
         {
             m_GroupRowsCnt = (uint32_t)m_Lambda * (4 * m_LsbLayers - 1);
             m_RlcEncodedMaxSize = utils::math::CeilLog2(m_Threshold);
