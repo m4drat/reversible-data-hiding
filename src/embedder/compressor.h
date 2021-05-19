@@ -74,7 +74,27 @@ namespace rdh {
 
         static std::vector<Color8u> Decompress(Color8u t_Pixel1, const std::string& t_RlcEncoded, Huffman<std::pair<uint16_t, Color16s>, pair_hash>& t_HuffmanCoder)
         {
-            return std::vector<Color8u>();
+            std::vector<Color8u> decompressed{ t_Pixel1 };
+
+            /* Zero-length Huffman keyword. All differences are zeroes. */
+            if (t_RlcEncoded.size() == 0) {
+                return { t_Pixel1, t_Pixel1, t_Pixel1, t_Pixel1 };
+            }
+
+            /* Decoded huffman-encoded sequence, and decompress rlc-compressed data. */
+            for (Color16s colorDelta : RLC::RlcDecode<uint16_t, Color16s>(t_HuffmanCoder.Decode(t_RlcEncoded), 0)) {
+                assert((colorDelta + (Color16s)t_Pixel1 <= 255) && (colorDelta + (Color16s)t_Pixel1 >= -255));
+                decompressed.push_back(colorDelta + t_Pixel1);
+            }
+
+            /**
+              * If vector size is not 4, it means, that the last ir symbol was (0, 0)
+              */
+            if (decompressed.size() != 4) {
+                decompressed.push_back(t_Pixel1);
+            }
+
+            return std::move(decompressed);
         }
     };
 }

@@ -3,7 +3,7 @@
 #include <random>
 
 #include "embedder/embedder.h"
-#include "embedder/encoder.h"
+#include "embedder/compressor.h"
 #include "embedder/huffman.h"
 #include "embedder/consts.h"
 #include "utils.h"
