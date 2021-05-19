@@ -14,6 +14,9 @@
 namespace rdh {
     BmpImage& Embedder::Embed(BmpImage& t_EncryptedImage, const std::vector<uint8_t>& t_Data, const std::vector<uint8_t>& t_DataEmbeddingKey, std::optional<std::reference_wrapper<double>> t_MaxEmbeddingRate, std::optional<std::reference_wrapper<uint32_t>> t_MaxUserDataBits)
     {
+        /* This is here only to allow matrix reinitialization while running benchmarks. */
+        bool reinitRandomMatrixForHashCalculation{ true };
+
         Consts& constsRef = Consts::Instance();
 
         /* Create Huffman-coder object, which will be used to encode RLC sequences */
@@ -145,7 +148,8 @@ namespace rdh {
 
                                 /* If we've already exceed group size, so create new one. Also don't forget to reset currGroupSize. */
                                 if (currGroupSize >= constsRef.GetGroupRowsCount()) {
-                                    CompressCurrentGroup(psi, lsbCompressedGroup, lsbEncodedBitStream, hashsesBitStream, t_DataEmbeddingKey);
+                                    CompressCurrentGroup(psi, lsbCompressedGroup, lsbEncodedBitStream, hashsesBitStream, t_DataEmbeddingKey, reinitRandomMatrixForHashCalculation);
+                                    reinitRandomMatrixForHashCalculation = false;
 
                                     assert(currGroupSize == constsRef.GetGroupRowsCount());
 
@@ -278,6 +282,8 @@ namespace rdh {
                     utils::Advance(sliceBegin, assembledBitStream.end(), 8);
                 }
                 else {
+                    /* The block is encoded using lsb-based algorithm */
+                    
                     /* Check, if we've filled all of the allowed LSB-encoded blocks with data */
                     if (totalBitsWrittenLsb >= xi * constsRef.GetLambda() * (4 * constsRef.GetLsbLayers() - 1)) {
                         continue;
@@ -285,7 +291,6 @@ namespace rdh {
 
                     assert(sliceBegin == sliceEnd);
                     
-                    /* The block is encoded using lsb-based algorithm */
                     t_EncryptedImage.SetPixel(
                         imgY, 
                         imgX, 
@@ -367,15 +372,14 @@ namespace rdh {
         t_Mat = Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic>::Zero(t_Mat.rows(), t_Mat.cols()).unaryExpr([&](uint8_t) { return dis(generator); });
     }
 
-    std::string Embedder::HashLsbBlock(const Group& t_CurGroup, const std::vector<uint8_t>& t_DataEmbeddingKey)
+    std::string Embedder::HashLsbBlock(const Group& t_CurGroup, const std::vector<uint8_t>& t_DataEmbeddingKey, bool t_ReinitRandomMatrix)
     {
         std::string hash{ "" };
         static Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic> randomMatrix(Consts::Instance().GetLsbHashSize(), Consts::Instance().GetGroupRowsCount());
-        static bool matrixInitialized{ false };
 
-        if (!matrixInitialized) {
+        if (t_ReinitRandomMatrix) {
+            randomMatrix = Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic>(Consts::Instance().GetLsbHashSize(), Consts::Instance().GetGroupRowsCount());
             PreparePseudoRandomMatrix(randomMatrix, t_DataEmbeddingKey);
-            matrixInitialized = true;
         }
 
         Eigen::Matrix<uint8_t, Eigen::Dynamic, 1> hashMatrix = (randomMatrix * t_CurGroup).unaryExpr([](const uint8_t x) { return x % 2; });
@@ -389,7 +393,7 @@ namespace rdh {
         return hash;
     }
 
-    void Embedder::CompressCurrentGroup(const Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic>& t_Psi, const Group& t_LsbEncodedGroup, std::string& t_LsbEncodedBitStream, std::string& t_HashsesBitStream, const std::vector<uint8_t>& t_DataEmbeddingKey)
+    void Embedder::CompressCurrentGroup(const Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic>& t_Psi, const Group& t_LsbEncodedGroup, std::string& t_LsbEncodedBitStream, std::string& t_HashsesBitStream, const std::vector<uint8_t>& t_DataEmbeddingKey, bool t_ReinitRandomMatrix)
     {
         /* Multiply matrices mod 2. */
         Eigen::Matrix<uint8_t, Eigen::Dynamic, 1> binaryColumnVec = (t_Psi * t_LsbEncodedGroup).unaryExpr([](const uint8_t x) { return x % 2; });
@@ -401,6 +405,6 @@ namespace rdh {
             t_LsbEncodedBitStream += (binaryColumnVec(rowIdx, 0) & 1) ? "1" : "0";
         }
 
-        t_HashsesBitStream += HashLsbBlock(t_LsbEncodedGroup, t_DataEmbeddingKey);
+        t_HashsesBitStream += HashLsbBlock(t_LsbEncodedGroup, t_DataEmbeddingKey, t_ReinitRandomMatrix);
     }
 }

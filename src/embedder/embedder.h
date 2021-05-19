@@ -37,9 +37,11 @@ namespace rdh {
          * @brief Generates hash for group G_i.
          * @param t_CurGroup group to calculate hash for.
          * @param t_DataEmbeddingKey data embedding key, which is used to generate PR matrix.
+         * @param t_ReinitRandomMatrix Flag that signals, that we need to reinitialize random matrix. 
+         * (added to make the benchmarks work correctly).
          * @return "BitString" that represents hash for the block.
         */
-        static std::string HashLsbBlock(const Group& t_CurGroup, const std::vector<uint8_t>& t_DataEmbeddingKey);
+        static std::string HashLsbBlock(const Group& t_CurGroup, const std::vector<uint8_t>& t_DataEmbeddingKey, bool t_ReinitRandomMatrix);
 
         /**
          * @brief Compresses group t_LsbEncodedGroup using matrix multiplication.
@@ -48,7 +50,9 @@ namespace rdh {
          * @param t_LsbEncodedBitStream where to append compressed result.
          * @param t_HashsesBitStream where to append group hash.
          * @param t_DataEmbeddingKey key to use for hash calculation.
+         * @param t_ReinitRandomMatrix Flag that signals, that we need to reinitialize random matrix.
+         * (added to make the benchmarks work correctly).
         */
-        static void CompressCurrentGroup(const Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic>& t_Psi, const Group& t_LsbEncodedGroup, std::string& t_LsbEncodedBitStream, std::string& t_HashsesBitStream, const std::vector<uint8_t>& t_DataEmbeddingKey);
+        static void CompressCurrentGroup(const Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic>& t_Psi, const Group& t_LsbEncodedGroup, std::string& t_LsbEncodedBitStream, std::string& t_HashsesBitStream, const std::vector<uint8_t>& t_DataEmbeddingKey, bool t_ReinitRandomMatrix);
     };
 }
