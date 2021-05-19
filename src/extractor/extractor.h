@@ -50,5 +50,26 @@ namespace rdh {
             std::vector<uint8_t>& t_EncryptionKey
         );
     private:
+        /**
+         * @brief Extracts all of the bitstreams from marked-encrypted image.
+         * @param[in] t_MarkedEncryptedImage Image to extract bitstreams from.
+         * @param[in] t_DataEmbeddingKey Key, that was used to embed additional data.
+         * @param[out] t_RlcEncodedLengths std::vector<uint16_t> of lengths for rlc-compressed blocks.
+         * @param[out] t_RlcEncodedBitStream Bitstream of rlc-compressed blocks.
+         * @param[out] t_LsbEncodedBitStream Bitstream of lsb-compressed blocks.
+         * @param[out] t_HashesBitStream Bitstream of hashes for lsb-compressed groups.
+         * @param[out] t_LsbsBitStream Bitstream of LSBs for each block.
+         * @param[out] t_UserDataBitStream Bitstream of user-embedded data.
+        */
+        static void ExtractBitStreams(
+            const BmpImage& t_MarkedEncryptedImage,
+            std::vector<uint8_t>& t_DataEmbeddingKey, 
+            std::optional<std::reference_wrapper<std::vector<uint16_t>>> t_RlcEncodedLengths, 
+            std::optional<std::reference_wrapper<std::string>> t_RlcEncodedBitStream,
+            std::optional<std::reference_wrapper<std::string>> t_LsbEncodedBitStream,
+            std::optional<std::reference_wrapper<std::string>> t_HashesBitStream,
+            std::optional<std::reference_wrapper<std::string>> t_LsbsBitStream,
+            std::optional<std::reference_wrapper<std::string>> t_UserDataBitStream
+        );
     };
 }

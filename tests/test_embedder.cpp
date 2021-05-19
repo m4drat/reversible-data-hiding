@@ -33,7 +33,7 @@ TEST(EmbedderTest, Image_4x4px_test) {
     Consts::Instance().UpdateAlpha(4);
     Consts::Instance().UpdateLsbLayers(1);
 
-    Embedder::Embed(image, data, dataEmbedkey);
+    Embedder::Embed(image, data, dataEmbedkey, std::nullopt, std::nullopt);
 
     for (uint32_t imgY = 0; imgY < image.GetHeight(); imgY += 1) {
         for (uint32_t imgX = 0; imgX < image.GetWidth(); imgX += 1) {

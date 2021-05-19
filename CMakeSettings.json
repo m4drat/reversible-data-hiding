@@ -9,8 +9,7 @@
             "installRoot": "${projectDir}\\out\\install\\${name}",
             "cmakeCommandArgs": "",
             "buildCommandArgs": "",
-            "ctestCommandArgs": "",
-            "variables": []
+            "ctestCommandArgs": ""
         },
         {
             "name": "x64-Release",
@@ -21,8 +20,7 @@
             "installRoot": "${projectDir}\\out\\install\\${name}",
             "cmakeCommandArgs": "",
             "buildCommandArgs": "",
-            "ctestCommandArgs": "",
-            "variables": []
+            "ctestCommandArgs": ""
         },
         {
             "name": "x64-Release-With-Deb",
@@ -33,8 +31,7 @@
             "installRoot": "${projectDir}\\out\\install\\${name}",
             "cmakeCommandArgs": "",
             "buildCommandArgs": "",
-            "ctestCommandArgs": "",
-            "variables": []
+            "ctestCommandArgs": ""
         }
     ]
 }

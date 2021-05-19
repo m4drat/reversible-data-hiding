@@ -52,6 +52,7 @@ if (${BUILD_TESTS} MATCHES ON)
 endif()
 
 if (${BUILD_BENCHMARKS} MATCHES ON)
+    set(BENCHMARK_ENABLE_GTEST_TESTS OFF)
     enable_testing()
     add_subdirectory(libraries/benchmark)
     add_subdirectory(benchmarks)

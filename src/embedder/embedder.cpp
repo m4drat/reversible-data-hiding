@@ -66,11 +66,11 @@ namespace rdh {
         );
 
         /* Vector of groups. In the article Group is referred as G_i. */
-        Group lsbEncodedGroup = Group::Zero(constsRef.GetGroupRowsCount(), 1);
+        Group lsbCompressedGroup = Group::Zero(constsRef.GetGroupRowsCount(), 1);
         
-        assert(lsbEncodedGroup.rows() == constsRef.GetGroupRowsCount());
-        assert(lsbEncodedGroup.cols() == 1);
-        assert(lsbEncodedGroup.isZero(0));
+        assert(lsbCompressedGroup.rows() == constsRef.GetGroupRowsCount());
+        assert(lsbCompressedGroup.cols() == 1);
+        assert(lsbCompressedGroup.isZero(0));
 
         /* Used to keep track of current group size. */
         uint32_t currGroupSize{ 0 };
@@ -92,7 +92,7 @@ namespace rdh {
                  * Get RLC-encoded representation of a block to determine if it can be 
                  * compressed using RLC-based algorithm, or we should use LSB-based one.
                  */
-                std::string rlcEncoded = RlcEncoder::Encode(
+                std::string rlcCompressed = RlcCompressor::Compress(
                     t_EncryptedImage.GetPixel(imgY, imgX),
                     t_EncryptedImage.GetPixel(imgY, imgX + 1),
                     t_EncryptedImage.GetPixel(imgY + 1, imgX),
@@ -109,7 +109,7 @@ namespace rdh {
                  * Also don't forget to append new value to the lengthsBitStream, and to update byte in the 
                  * locationMap.
                  */
-                if (rlcEncoded.size() < constsRef.GetThreshold()) {
+                if (rlcCompressed.size() < constsRef.GetThreshold()) {
                     /**
                      * Set lsb of top-left pixel. This bit is used to determine
                      * which approach (lsb/rlc) was used to encode the block.
@@ -117,11 +117,11 @@ namespace rdh {
                     t_EncryptedImage.SetPixel(imgY, imgX, t_EncryptedImage.GetPixel(imgY, imgX) | 1);
 
                     /* Append encoded block representation to the 'C' bitstream. */
-                    rlcEncodedBitStream += rlcEncoded;
+                    rlcEncodedBitStream += rlcCompressed;
 
                     /* Append encoded block length to the '\Re' bitstream */
                     std::string encodedBlockStr;
-                    boost::to_string(boost::dynamic_bitset<>(constsRef.GetRlcEncodedMaxSize(), rlcEncoded.size()), encodedBlockStr);
+                    boost::to_string(boost::dynamic_bitset<>(constsRef.GetRlcEncodedMaxSize(), rlcCompressed.size()), encodedBlockStr);
                     assert(encodedBlockStr.size() == constsRef.GetRlcEncodedMaxSize());
                     lengthsBitStream += encodedBlockStr;
 
@@ -141,21 +141,21 @@ namespace rdh {
                             uint8_t curPixel{ t_EncryptedImage.GetPixel(imgY + yAdd, imgX + xAdd) };
                             /* For the top-left pixel, we ignore it's first LSB */
                             for (uint32_t bitPos = (yAdd == 0 && xAdd == 0) ? 1 : 0; bitPos < constsRef.GetLsbLayers(); bitPos++) {
-                                lsbEncodedGroup(currGroupSize++, 0) = utils::math::GetNthBit(curPixel, bitPos);
+                                lsbCompressedGroup(currGroupSize++, 0) = utils::math::GetNthBit(curPixel, bitPos);
 
                                 /* If we've already exceed group size, so create new one. Also don't forget to reset currGroupSize. */
                                 if (currGroupSize >= constsRef.GetGroupRowsCount()) {
-                                    CompressCurrentGroup(psi, lsbEncodedGroup, lsbEncodedBitStream, hashsesBitStream, t_DataEmbeddingKey);
+                                    CompressCurrentGroup(psi, lsbCompressedGroup, lsbEncodedBitStream, hashsesBitStream, t_DataEmbeddingKey);
 
                                     assert(currGroupSize == constsRef.GetGroupRowsCount());
 
                                     /* Reset group. */
-                                    lsbEncodedGroup.setZero();
+                                    lsbCompressedGroup.setZero();
 
                                     /* Because Eigen is weird, lets just double check, if everything is done correctly. */
-                                    assert(lsbEncodedGroup.rows() == constsRef.GetGroupRowsCount());
-                                    assert(lsbEncodedGroup.cols() == 1);
-                                    assert(lsbEncodedGroup.isZero(0));
+                                    assert(lsbCompressedGroup.rows() == constsRef.GetGroupRowsCount());
+                                    assert(lsbCompressedGroup.cols() == 1);
+                                    assert(lsbCompressedGroup.isZero(0));
 
                                     /* Reset group size. */
                                     currGroupSize = 0;

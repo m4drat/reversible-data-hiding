@@ -8,7 +8,7 @@
 #include "embedder/huffman.h"
 
 namespace rdh {
-    class RlcEncoder {
+    class RlcCompressor {
     public:
         /**
          * @brief Method that encodes given pixel data using RLC encoding + Huffman.
@@ -19,7 +19,7 @@ namespace rdh {
          * @param t_HuffmanCoder Huffman coder object to use
          * @return std::string that represents encoded data in a form of a bitstream
         */
-        static std::string Encode(Color8u t_Pixel1, Color8u t_Pixel2, Color8u t_Pixel3, Color8u t_Pixel4, Huffman<std::pair<uint16_t, Color16s>, pair_hash>& t_HuffmanCoder)
+        static std::string Compress(Color8u t_Pixel1, Color8u t_Pixel2, Color8u t_Pixel3, Color8u t_Pixel4, Huffman<std::pair<uint16_t, Color16s>, pair_hash>& t_HuffmanCoder)
         {
             std::vector<std::pair<uint16_t, Color16s>> rlcEncoded;
             std::string encoded;
@@ -42,7 +42,7 @@ namespace rdh {
                  * we always should have 3 difference values. Thus we can find out, that we should append one more block
                  * to the end with this content: (vlc, vli) = (0, 0).
                 */
-                rlcEncoded = std::move(RLC::RlcEncode<uint16_t, Color16s>({ deltaM2, deltaM3, deltaM4 }));
+                rlcEncoded = std::move(RLC::RlcEncode<uint16_t, Color16s>({ deltaM2, deltaM3, deltaM4 }, 0));
 
                 // If the last block is (0, 0), throw it away, because
                 // we don't want to encode this element later using Huffman coding.
@@ -71,13 +71,10 @@ namespace rdh {
 
             return std::move(encoded);
         }
-    };
 
-    class LsbEncoder {
-    public:
-        static std::string Encode(Color8u t_Pixel1, Color8u t_Pixel2, Color8u t_Pixel3, Color8u t_Pixel4)
+        static std::vector<Color8u> Decompress(Color8u t_Pixel1, const std::string& t_RlcEncoded, Huffman<std::pair<uint16_t, Color16s>, pair_hash>& t_HuffmanCoder)
         {
-            return "";
+            return std::vector<Color8u>();
         }
     };
 }

@@ -1,5 +1,7 @@
 #include "extractor/extractor.h"
 
+#include "embedder/huffman.h"
+
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
 #include <boost/log/trivial.hpp>
 
@@ -111,6 +113,10 @@ namespace rdh {
                             /* Set new average pixel value */
                             t_MarkedEncryptedImage.SetPixel(imgY, imgX + 1, avgPixelValue / avgOfNPixels);
 
+                            /**
+                             * If we are not in the top-left block, calculate average pixel value 
+                             * for the down-left pixel.
+                             */
                             if (imgX != 0) {
                                 avgPixelValue = t_MarkedEncryptedImage.GetPixel(imgY, imgX);
                                 avgPixelValue += t_MarkedEncryptedImage.GetPixel(imgY + 1, imgX + 1);
@@ -126,8 +132,13 @@ namespace rdh {
                                 avgOfNPixels++;
                             }
 
+                            /* Set new average pixel value */
                             t_MarkedEncryptedImage.SetPixel(imgY + 1, imgX, avgPixelValue / avgOfNPixels);
 
+                            /**
+                             * If we are not in the down-right block, calculate average pixel value
+                             * for the down-right pixel.
+                             */
                             if (imgX != t_MarkedEncryptedImage.GetWidth() - 2) {
                                 avgPixelValue = t_MarkedEncryptedImage.GetPixel(imgY, imgX);
                                 avgPixelValue += t_MarkedEncryptedImage.GetPixel(imgY + 1, imgX + 1);
@@ -161,6 +172,10 @@ namespace rdh {
                             /* Set new average pixel value */
                             t_MarkedEncryptedImage.SetPixel(imgY + 1, imgX, avgPixelValue / avgOfNPixels);
 
+                            /**
+                             * If we are not in the top-left block, calculate average pixel value
+                             * for the top-right pixel.
+                             */
                             if (imgY != 0) {
                                 avgPixelValue = t_MarkedEncryptedImage.GetPixel(imgY, imgX);
                                 avgPixelValue += t_MarkedEncryptedImage.GetPixel(imgY + 1, imgX + 1);
@@ -180,8 +195,13 @@ namespace rdh {
                                 avgOfNPixels++;
                             }
 
+                            /* Set new average pixel value */
                             t_MarkedEncryptedImage.SetPixel(imgY, imgX + 1, avgPixelValue / avgOfNPixels);
 
+                            /**
+                             * If we are not in the down-right block, calculate average pixel value
+                             * for the down-left pixel.
+                             */
                             if (imgY != t_MarkedEncryptedImage.GetHeight() - 2) {
                                 avgPixelValue = t_MarkedEncryptedImage.GetPixel(imgY, imgX);
                                 avgPixelValue += t_MarkedEncryptedImage.GetPixel(imgY + 1, imgX + 1);
@@ -235,18 +255,100 @@ namespace rdh {
         std::vector<uint8_t>& t_DataEmbeddingKey
     )
     {
+        std::string userDataBitStream;
+        
+        ExtractBitStreams(t_MarkedEncryptedImage, t_DataEmbeddingKey, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, userDataBitStream);
+
+        if (t_ExtractedDataPath.size() != 0) {
+            BOOST_LOG_TRIVIAL(info) << "Saving " << std::distance(userDataBitStream.begin(), userDataBitStream.end()) << " bits of embedded user-data";
+            utils::SaveBitstreamToFile<uint8_t>(t_ExtractedDataPath, userDataBitStream.begin(), userDataBitStream.end());
+        }
+    }
+
+    void Extractor::RecoverImageAndExract(
+        BmpImage& t_MarkedEncryptedImage,
+        const std::string t_RecoveredImagePath,
+        const std::string t_ExtractedDataPath,
+        std::vector<uint8_t>& t_DataEmbeddingKey,
+        std::vector<uint8_t>& t_EncryptionKey
+    ) 
+    {
+        /* Get reference to a consts object. */
+        Consts& constsRef = Consts::Instance();
+
+        /* Create Huffman-coder object, which will be used to encode RLC sequences */
+        Huffman<std::pair<uint16_t, Color16s>, pair_hash> huffmanCoder(consts::c_DefaultNode);
+
+        /* Set default frequencies (found using statistical approach) */
+        huffmanCoder.SetFrequencies(consts::huffman::c_DefaultFrequencies);
+
+        std::vector<uint16_t> rlcEncodedBlocksLengths;
+        std::string rlcEncodedBitStream;
+        std::string lsbEncodedBitStream;
+        std::string hashesBitStream;
+        std::string lsbsBitStream;
+        std::string userDataBitStream;
+        ExtractBitStreams(t_MarkedEncryptedImage, t_DataEmbeddingKey, rlcEncodedBlocksLengths, rlcEncodedBitStream, lsbEncodedBitStream, hashesBitStream, lsbsBitStream, userDataBitStream);
+
+        auto rlcCodedLengthsIter = rlcEncodedBlocksLengths.begin();
+        auto rlcCodedLengthsSliceStart = rlcEncodedBlocksLengths.begin();
+        auto rlcCodedLengthsSliceEnd = rlcEncodedBlocksLengths.begin();
+        auto rlcCodedSliceStart = rlcEncodedBitStream.begin();
+        auto rlcCodedSliceEnd = rlcEncodedBitStream.begin();
+
+        assert(lsbsBitStream.size() == (t_MarkedEncryptedImage.GetHeight() * t_MarkedEncryptedImage.GetWidth()) / 4);
+
+        for (uint32_t imgY = 0; imgY < t_MarkedEncryptedImage.GetHeight(); imgY += 2) {
+            for (uint32_t imgX = 0; imgX < t_MarkedEncryptedImage.GetWidth(); imgX += 2) {
+                /* What type of block we are currently looking at? */
+                if (t_MarkedEncryptedImage.GetPixel(imgY, imgX) & 1) {
+                    if (rlcCodedLengthsIter >= rlcEncodedBlocksLengths.end()) {
+                        throw std::invalid_argument("Error, while decompressing RLC-encoded blocks! The lengths iterator points beyond the vector end.");
+                    }
+
+                    uint16_t currentLength = *(rlcCodedLengthsIter++);
+                    
+                }
+                else {
+
+                }
+            }
+        }
+
+        if (t_ExtractedDataPath.size() != 0) {
+            BOOST_LOG_TRIVIAL(info) << "Saving " << std::distance(userDataBitStream.begin(), userDataBitStream.end()) << " bits of embedded user-data";
+            utils::SaveBitstreamToFile<uint8_t>(t_ExtractedDataPath, userDataBitStream.begin(), userDataBitStream.end());
+        }
+
+        /* Added so that the benchmarks module can use this function without writing any files */
+        if (t_RecoveredImagePath.size() != 0) {
+            t_MarkedEncryptedImage.Save(t_RecoveredImagePath);
+        }
+    }
+
+    void Extractor::ExtractBitStreams(
+        const BmpImage& t_MarkedEncryptedImage,
+        std::vector<uint8_t>& t_DataEmbeddingKey,
+        std::optional<std::reference_wrapper<std::vector<uint16_t>>> t_RlcEncodedLengths,
+        std::optional<std::reference_wrapper<std::string>> t_RlcEncodedBitStream,
+        std::optional<std::reference_wrapper<std::string>> t_LsbEncodedBitStream,
+        std::optional<std::reference_wrapper<std::string>> t_HashesBitStream,
+        std::optional<std::reference_wrapper<std::string>> t_LsbsBitStream,
+        std::optional<std::reference_wrapper<std::string>> t_UserDataBitStream
+    )
+    {
         /* Get reference to a consts object. */
         Consts& constsRef = Consts::Instance();
 
         /**
-         * Total number of 2x2 pixels blocks. 
+         * Total number of 2x2 pixels blocks.
          * In the article it's referred as L.
          */
         uint32_t totalBlocks{
             static_cast<std::size_t>(t_MarkedEncryptedImage.GetHeight()) * static_cast<std::size_t>(t_MarkedEncryptedImage.GetWidth()) / 4
         };
 
-        /** 
+        /**
          * Number of blocks encoded using RLC-based algorithm.
          * In the article it's referred as R.
          */
@@ -323,12 +425,12 @@ namespace rdh {
         /* Shuffle BitStream, before embedding */
         utils::DeshuffleFisherYates(seq, extractedBitStream);
 
-        /** 
-         * Now, when we have this bitstream: {\Re || C || \Lambda || H || F || S }. 
+        /**
+         * Now, when we have this bitstream: {\Re || C || \Lambda || H || F || S }.
          * Start a parsing operation.
          */
 
-        /* Total size of C bitstream */
+         /* Total size of C bitstream */
         uint32_t rlcEncodedBitstreamSize{ 0 };
 
         auto sliceBegin = extractedBitStream.begin();
@@ -338,33 +440,41 @@ namespace rdh {
 
         /* Sum all of the rlc-encoded block lengths */
         for (uint32_t currentRlcCodedBlock = 0; currentRlcCodedBlock < omegaOneBlocks - 1; currentRlcCodedBlock++) {
-            rlcEncodedBitstreamSize += boost::dynamic_bitset<>(
+            uint16_t currRlcEncodedBlockSize = boost::dynamic_bitset<>(
                 std::string(
                     utils::Advance(sliceBegin, extractedBitStream.end(), constsRef.GetRlcEncodedMaxSize()),
                     utils::Advance(sliceEnd, extractedBitStream.end(), constsRef.GetRlcEncodedMaxSize())
                 )
             ).to_ulong();
+            rlcEncodedBitstreamSize += currRlcEncodedBlockSize;
+
+            if (t_RlcEncodedBitStream) {
+                (*t_RlcEncodedBitStream).get().push_back(currRlcEncodedBlockSize);
+            }
         }
 
-        /* Now iterator points to user-data bitstream */
-        utils::Advance(sliceBegin, extractedBitStream.end(), constsRef.GetRlcEncodedMaxSize() + rlcEncodedBitstreamSize + xi * (constsRef.GetLambda() * (4 * constsRef.GetLsbLayers() - 1) - constsRef.GetAlpha()) + xi * constsRef.GetLsbHashSize() + totalBlocks);
-
-        if (t_ExtractedDataPath.size() != 0) {
-            BOOST_LOG_TRIVIAL(info) << "Saving " << std::distance(sliceBegin, extractedBitStream.end()) << " bits of embedded user-data";
-            utils::SaveBitstreamToFile<uint8_t>(t_ExtractedDataPath, sliceBegin, extractedBitStream.end());
+        utils::Advance(sliceBegin, extractedBitStream.end(), constsRef.GetRlcEncodedMaxSize());
+        utils::Advance(sliceEnd, extractedBitStream.end(), rlcEncodedBitstreamSize + xi * (constsRef.GetLambda() * (4 * constsRef.GetLsbLayers() - 1) - constsRef.GetAlpha()));
+        if (t_LsbEncodedBitStream) {
+            (*t_LsbEncodedBitStream).get() = std::string(sliceBegin, sliceEnd);
         }
-    }
 
-    void Extractor::RecoverImageAndExract(
-        BmpImage& t_MarkedEncryptedImage,
-        const std::string t_RecoveredImagePath,
-        const std::string t_ExtractedDataPath,
-        std::vector<uint8_t>& t_DataEmbeddingKey,
-        std::vector<uint8_t>& t_EncryptionKey
-    ) 
-    {
-        /* Get reference to a consts object. */
-        Consts& constsRef = Consts::Instance();
+        utils::Advance(sliceBegin, extractedBitStream.end(), rlcEncodedBitstreamSize + xi * (constsRef.GetLambda() * (4 * constsRef.GetLsbLayers() - 1) - constsRef.GetAlpha()));
+        utils::Advance(sliceEnd, extractedBitStream.end(), xi * constsRef.GetLsbHashSize());
+        if (t_HashesBitStream) {
+            (*t_HashesBitStream).get() = std::string(sliceBegin, sliceEnd);
+        }
 
+        utils::Advance(sliceBegin, extractedBitStream.end(), xi* constsRef.GetLsbHashSize());
+        utils::Advance(sliceEnd, extractedBitStream.end(), totalBlocks);
+        if (t_LsbsBitStream) {
+            (*t_LsbsBitStream).get() = std::string(sliceBegin, sliceEnd);
+        }
+
+        utils::Advance(sliceBegin, extractedBitStream.end(), totalBlocks);
+        utils::Advance(sliceEnd, extractedBitStream.end(), std::distance(sliceEnd, extractedBitStream.end()));
+        if (t_UserDataBitStream) {
+            (*t_UserDataBitStream).get() = std::string(sliceBegin, sliceEnd);
+        }
     }
 }

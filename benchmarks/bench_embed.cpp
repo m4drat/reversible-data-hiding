@@ -1,26 +1,10 @@
 #include "benchmark/include/benchmark/benchmark.h"
 
+#include "params_generator.h"
 #include "utils.h"
 #include "embedder/embedder.h"
 
 using namespace rdh;
-
-static void CustomArguments(benchmark::internal::Benchmark* b)
-{
-    for (uint16_t threshold : { 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24 })
-    {
-        for (uint16_t alpha : { 4, 5, 6 })
-        {
-            for (uint16_t lambda : { 60, 80, 100, 150, 200, 300, 400 })
-            {
-                for (uint16_t lsbLayers : { 1, 2, 3 })
-                {
-                    b->Args({ threshold, alpha, lambda, lsbLayers });
-                }
-            }
-        }
-    }
-}
 
 static void EmbedLena_512x512_bench(benchmark::State& state)
 {
@@ -55,7 +39,7 @@ static void EmbedLena_512x512_bench(benchmark::State& state)
     state.counters["MaxEmbeddingRate"] = tMax;
     state.counters["maxUserDataBits"] = maxUserDataBits;
 }
-BENCHMARK(EmbedLena_512x512_bench)->Unit(benchmark::kMillisecond)->Apply(CustomArguments);;
+BENCHMARK(EmbedLena_512x512_bench)->Unit(benchmark::kMillisecond)->Apply(CustomArguments);
 
 static void EmbedAirplane_512x512_bench(benchmark::State& state)
 {
@@ -90,7 +74,7 @@ static void EmbedAirplane_512x512_bench(benchmark::State& state)
     state.counters["MaxEmbeddingRate"] = tMax;
     state.counters["maxUserDataBits"] = maxUserDataBits;
 }
-BENCHMARK(EmbedAirplane_512x512_bench)->Unit(benchmark::kMillisecond)->Apply(CustomArguments);;
+BENCHMARK(EmbedAirplane_512x512_bench)->Unit(benchmark::kMillisecond)->Apply(CustomArguments);
 
 static void EmbedCrowd_512x512_bench(benchmark::State& state)
 {
@@ -124,7 +108,7 @@ static void EmbedCrowd_512x512_bench(benchmark::State& state)
 
     state.counters["MaxEmbeddingRate"] = tMax;
 }
-BENCHMARK(EmbedCrowd_512x512_bench)->Unit(benchmark::kMillisecond)->Apply(CustomArguments);;
+BENCHMARK(EmbedCrowd_512x512_bench)->Unit(benchmark::kMillisecond)->Apply(CustomArguments);
 
 static void EmbedMan_512x512_bench(benchmark::State& state) 
 {
@@ -159,7 +143,7 @@ static void EmbedMan_512x512_bench(benchmark::State& state)
     state.counters["MaxEmbeddingRate"] = tMax;
     state.counters["maxUserDataBits"] = maxUserDataBits;
 }
-BENCHMARK(EmbedMan_512x512_bench)->Unit(benchmark::kMillisecond)->Apply(CustomArguments);;
+BENCHMARK(EmbedMan_512x512_bench)->Unit(benchmark::kMillisecond)->Apply(CustomArguments);
 
 static void EmbedBoat_512x512_bench(benchmark::State& state)
 {
@@ -194,7 +178,7 @@ static void EmbedBoat_512x512_bench(benchmark::State& state)
     state.counters["MaxEmbeddingRate"] = tMax;
     state.counters["maxUserDataBits"] = maxUserDataBits;
 }
-BENCHMARK(EmbedBoat_512x512_bench)->Unit(benchmark::kMillisecond)->Apply(CustomArguments);;
+BENCHMARK(EmbedBoat_512x512_bench)->Unit(benchmark::kMillisecond)->Apply(CustomArguments);
 
 //static void EmbedLiberty_1024x1024_bench(benchmark::State& state) {
 //    for (auto _ : state)
