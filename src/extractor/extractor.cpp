@@ -1,6 +1,7 @@
 #include "extractor/extractor.h"
 
 #include "embedder/huffman.h"
+#include "embedder/compressor.h"
 
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
 #include <boost/log/trivial.hpp>
@@ -257,7 +258,7 @@ namespace rdh {
     {
         std::string userDataBitStream;
         
-        ExtractBitStreams(t_MarkedEncryptedImage, t_DataEmbeddingKey, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, userDataBitStream);
+        ExtractBitStreams(t_MarkedEncryptedImage, t_DataEmbeddingKey, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, userDataBitStream, std::nullopt);
 
         if (t_ExtractedDataPath.size() != 0) {
             BOOST_LOG_TRIVIAL(info) << "Saving " << std::distance(userDataBitStream.begin(), userDataBitStream.end()) << " bits of embedded user-data";
@@ -282,36 +283,92 @@ namespace rdh {
         /* Set default frequencies (found using statistical approach) */
         huffmanCoder.SetFrequencies(consts::huffman::c_DefaultFrequencies);
 
-        std::vector<uint16_t> rlcEncodedBlocksLengths;
-        std::string rlcEncodedBitStream;
-        std::string lsbEncodedBitStream;
-        std::string hashesBitStream;
+        std::vector<uint16_t> rlcCompressedBlocksLengths;
+        std::string rlcCompressedBitStream;
+        std::vector<std::string> lsbCompressedGroups;
+        std::vector<std::string> groupsHashes;
         std::string lsbsBitStream;
         std::string userDataBitStream;
-        ExtractBitStreams(t_MarkedEncryptedImage, t_DataEmbeddingKey, rlcEncodedBlocksLengths, rlcEncodedBitStream, lsbEncodedBitStream, hashesBitStream, lsbsBitStream, userDataBitStream);
-
-        auto rlcCodedLengthsIter = rlcEncodedBlocksLengths.begin();
-        auto rlcCodedLengthsSliceStart = rlcEncodedBlocksLengths.begin();
-        auto rlcCodedLengthsSliceEnd = rlcEncodedBlocksLengths.begin();
-        auto rlcCodedSliceStart = rlcEncodedBitStream.begin();
-        auto rlcCodedSliceEnd = rlcEncodedBitStream.begin();
+        std::vector<bool> binaryLocationMap;
+        ExtractBitStreams(t_MarkedEncryptedImage, t_DataEmbeddingKey, rlcCompressedBlocksLengths, rlcCompressedBitStream, lsbCompressedGroups, groupsHashes, lsbsBitStream, userDataBitStream, binaryLocationMap);
 
         assert(lsbsBitStream.size() == (t_MarkedEncryptedImage.GetHeight() * t_MarkedEncryptedImage.GetWidth()) / 4);
+        assert(binaryLocationMap.size() == (t_MarkedEncryptedImage.GetHeight() * t_MarkedEncryptedImage.GetWidth()) / 4);
 
+        if (rlcCompressedBlocksLengths.size() == 0) {
+            throw std::invalid_argument("Error, while decompressing RLC-encoded blocks! The vector with RLC-compressed blocks lengths has zero size!");
+        }
+
+        /* Iterator that keeps track of the current lsb */
+        auto lsbsBitStreamIter = lsbsBitStream.begin();
+        /* Iterator that keeps track of current rlc-compressed block size */
+        auto rlcCodedLengthsIter = rlcCompressedBlocksLengths.begin();
+        /* Slice iterators for rlc-compressed bitstream */
+        auto rlcCompressedSliceStart = rlcCompressedBitStream.begin();
+        auto rlcCompressedSliceEnd = rlcCompressedBitStream.begin();
+        
+        /* current key index */
+        uint32_t keyCursor{ 0 };
+        /* size of the current rlc-compressed block */
+        uint32_t currenRlcCompressedSize{ 0 };
+        /* Used to keep track of current lsb-compressed group size. */
+        uint32_t currGroupSize{ 0 };
+        /* Used to keep track of the current block index. */
+        uint32_t currBlockIdx{ 0 };
+
+        /* Iterate over all 2x2 px blocks */
         for (uint32_t imgY = 0; imgY < t_MarkedEncryptedImage.GetHeight(); imgY += 2) {
             for (uint32_t imgX = 0; imgX < t_MarkedEncryptedImage.GetWidth(); imgX += 2) {
+                if (lsbsBitStreamIter >= lsbsBitStream.end()) {
+                    throw std::invalid_argument("Error, while decompressing RLC-encoded blocks! The lsbs iterator points beyond the bitstream end.");
+                }
+                
+                /* restore original LSB */
+                t_MarkedEncryptedImage.SetPixel(
+                    imgY, imgX,
+                    utils::ClearLastNBits(t_MarkedEncryptedImage.GetPixel(imgY, imgX), 1) | ((*(lsbsBitStreamIter++) == '1') ? 1 : 0)
+                );
+
                 /* What type of block we are currently looking at? */
-                if (t_MarkedEncryptedImage.GetPixel(imgY, imgX) & 1) {
-                    if (rlcCodedLengthsIter >= rlcEncodedBlocksLengths.end()) {
+                if (binaryLocationMap.at(currBlockIdx)) {
+                    std::string currRlcEncodedSeq;
+                    std::vector<Color8u> decompressedColors;
+
+                    if (rlcCodedLengthsIter >= rlcCompressedBlocksLengths.end()) {
                         throw std::invalid_argument("Error, while decompressing RLC-encoded blocks! The lengths iterator points beyond the vector end.");
                     }
 
-                    uint16_t currentLength = *(rlcCodedLengthsIter++);
+                    currenRlcCompressedSize = *(rlcCodedLengthsIter++);
+
+                    assert(rlcCompressedSliceStart == rlcCompressedSliceEnd);
                     
+                    /* Decompress current block */
+                    decompressedColors = RlcCompressor::Decompress(
+                        t_MarkedEncryptedImage.GetPixel(imgY, imgX),
+                        std::string(
+                            rlcCompressedSliceStart,
+                            utils::Advance(rlcCompressedSliceEnd, rlcCompressedBitStream.end(), currenRlcCompressedSize, true)
+                        ),
+                        huffmanCoder
+                    );
+                    utils::Advance(rlcCompressedSliceStart, rlcCompressedBitStream.end(), currenRlcCompressedSize, true);
+
+                    /* Decrypt each pixel in the current block to it's original value */
+                    t_MarkedEncryptedImage.SetPixel(imgY, imgX, decompressedColors.at(0) ^ t_EncryptionKey[keyCursor % t_EncryptionKey.size()]);
+                    t_MarkedEncryptedImage.SetPixel(imgY, imgX + 1, decompressedColors.at(1) ^ t_EncryptionKey[keyCursor % t_EncryptionKey.size()]);
+                    t_MarkedEncryptedImage.SetPixel(imgY + 1, imgX, decompressedColors.at(2) ^ t_EncryptionKey[keyCursor % t_EncryptionKey.size()]);
+                    t_MarkedEncryptedImage.SetPixel(imgY + 1, imgX + 1, decompressedColors.at(3) ^ t_EncryptionKey[keyCursor % t_EncryptionKey.size()]);
                 }
                 else {
-
+                    if (currGroupSize >= constsRef.GetGroupRowsCount()) {
+                        currGroupSize = 0;
+                    }
                 }
+
+                /* Move binary location "pointer" to the next entry. */
+                ++currBlockIdx;
+                /* Update key cursor value. */
+                ++keyCursor;
             }
         }
 
@@ -329,12 +386,13 @@ namespace rdh {
     void Extractor::ExtractBitStreams(
         const BmpImage& t_MarkedEncryptedImage,
         std::vector<uint8_t>& t_DataEmbeddingKey,
-        std::optional<std::reference_wrapper<std::vector<uint16_t>>> t_RlcEncodedLengths,
-        std::optional<std::reference_wrapper<std::string>> t_RlcEncodedBitStream,
-        std::optional<std::reference_wrapper<std::string>> t_LsbEncodedBitStream,
-        std::optional<std::reference_wrapper<std::string>> t_HashesBitStream,
+        std::optional<std::reference_wrapper<std::vector<uint16_t>>> t_RlcCompressedBlocksLengths,
+        std::optional<std::reference_wrapper<std::string>> t_RlcCompressedBitStream,
+        std::optional<std::reference_wrapper<std::vector<std::string>>> t_LsbCompressedGroups,
+        std::optional<std::reference_wrapper<std::vector<std::string>>> t_GroupHashesBitStream,
         std::optional<std::reference_wrapper<std::string>> t_LsbsBitStream,
-        std::optional<std::reference_wrapper<std::string>> t_UserDataBitStream
+        std::optional<std::reference_wrapper<std::string>> t_UserDataBitStream,
+        std::optional<std::reference_wrapper<std::vector<bool>>> t_BinaryLocationMap
     )
     {
         /* Get reference to a consts object. */
@@ -370,6 +428,11 @@ namespace rdh {
                 if (t_MarkedEncryptedImage.GetPixel(imgY, imgX) & 1) {
                     /* RLC-encoded block */
                     omegaOneBlocks++;
+                }
+
+                /* Update bit in binary-location map */
+                if (t_BinaryLocationMap) {
+                    (*t_BinaryLocationMap).get().push_back(t_MarkedEncryptedImage.GetPixel(imgY, imgX) & 1);
                 }
             }
         }
@@ -431,46 +494,70 @@ namespace rdh {
          */
 
          /* Total size of C bitstream */
-        uint32_t rlcEncodedBitstreamSize{ 0 };
+        uint32_t rlcCompressedBitStreamSize{ 0 };
 
         auto sliceBegin = extractedBitStream.begin();
         auto sliceEnd = extractedBitStream.begin();
-        utils::Advance(sliceEnd, extractedBitStream.end(), constsRef.GetRlcEncodedMaxSize());
-        rlcEncodedBitstreamSize += boost::dynamic_bitset<>(std::string(sliceBegin, sliceEnd)).to_ulong();
 
-        /* Sum all of the rlc-encoded block lengths */
-        for (uint32_t currentRlcCodedBlock = 0; currentRlcCodedBlock < omegaOneBlocks - 1; currentRlcCodedBlock++) {
+        /* Extract lengths information from rlcCompressedBitStream */
+        for (uint32_t currentRlcCodedBlock = 0; currentRlcCodedBlock < omegaOneBlocks; currentRlcCodedBlock++) {
             uint16_t currRlcEncodedBlockSize = boost::dynamic_bitset<>(
                 std::string(
-                    utils::Advance(sliceBegin, extractedBitStream.end(), constsRef.GetRlcEncodedMaxSize()),
+                    sliceBegin,
                     utils::Advance(sliceEnd, extractedBitStream.end(), constsRef.GetRlcEncodedMaxSize())
                 )
             ).to_ulong();
-            rlcEncodedBitstreamSize += currRlcEncodedBlockSize;
+            rlcCompressedBitStreamSize += currRlcEncodedBlockSize;
 
-            if (t_RlcEncodedBitStream) {
-                (*t_RlcEncodedBitStream).get().push_back(currRlcEncodedBlockSize);
+            utils::Advance(sliceBegin, extractedBitStream.end(), constsRef.GetRlcEncodedMaxSize());
+
+            if (t_RlcCompressedBlocksLengths) {
+                (*t_RlcCompressedBlocksLengths).get().push_back(currRlcEncodedBlockSize);
             }
         }
 
-        utils::Advance(sliceBegin, extractedBitStream.end(), constsRef.GetRlcEncodedMaxSize());
-        utils::Advance(sliceEnd, extractedBitStream.end(), rlcEncodedBitstreamSize + xi * (constsRef.GetLambda() * (4 * constsRef.GetLsbLayers() - 1) - constsRef.GetAlpha()));
-        if (t_LsbEncodedBitStream) {
-            (*t_LsbEncodedBitStream).get() = std::string(sliceBegin, sliceEnd);
+        /* Extract rlc-compressed bitstream */
+        utils::Advance(sliceEnd, extractedBitStream.end(), rlcCompressedBitStreamSize);
+        if (t_RlcCompressedBitStream) {
+            (*t_RlcCompressedBitStream).get() = std::string(sliceBegin, sliceEnd);
+            assert(rlcCompressedBitStreamSize == (*t_RlcCompressedBitStream).get().size());
         }
 
-        utils::Advance(sliceBegin, extractedBitStream.end(), rlcEncodedBitstreamSize + xi * (constsRef.GetLambda() * (4 * constsRef.GetLsbLayers() - 1) - constsRef.GetAlpha()));
-        utils::Advance(sliceEnd, extractedBitStream.end(), xi * constsRef.GetLsbHashSize());
-        if (t_HashesBitStream) {
-            (*t_HashesBitStream).get() = std::string(sliceBegin, sliceEnd);
-        }
+        /* Extract lsb-compressed groups */
+        utils::Advance(sliceBegin, extractedBitStream.end(), rlcCompressedBitStreamSize);
+        for (uint32_t currentGroup = 0; currentGroup < xi; ++currentGroup) {
+            utils::Advance(sliceEnd, extractedBitStream.end(), (constsRef.GetLambda() * (4 * constsRef.GetLsbLayers() - 1) - constsRef.GetAlpha()));
 
-        utils::Advance(sliceBegin, extractedBitStream.end(), xi* constsRef.GetLsbHashSize());
+            if (t_LsbCompressedGroups) {
+                (*t_LsbCompressedGroups).get().emplace_back(sliceBegin, sliceEnd);
+                assert((*t_LsbCompressedGroups).get().back().size() == (constsRef.GetLambda() * (4 * constsRef.GetLsbLayers() - 1) - constsRef.GetAlpha()));
+            }
+
+            utils::Advance(sliceBegin, extractedBitStream.end(), (constsRef.GetLambda() * (4 * constsRef.GetLsbLayers() - 1) - constsRef.GetAlpha()));
+        }
+        assert(xi == (*t_LsbCompressedGroups).get().size());
+
+        /* Extract bitstream with hashes */
+        for (uint32_t currentGroup = 0; currentGroup < xi; ++currentGroup) {
+            utils::Advance(sliceEnd, extractedBitStream.end(), constsRef.GetLsbHashSize());
+
+            if (t_GroupHashesBitStream) {
+                (*t_GroupHashesBitStream).get().emplace_back(sliceBegin, sliceEnd);
+                assert(constsRef.GetLsbHashSize() == (*t_GroupHashesBitStream).get().back().size());
+            }
+
+            utils::Advance(sliceBegin, extractedBitStream.end(), constsRef.GetLsbHashSize());
+        }
+        assert(xi == (*t_GroupHashesBitStream).get().size());
+        
+        /* Extract bitstream with lsbs */
         utils::Advance(sliceEnd, extractedBitStream.end(), totalBlocks);
         if (t_LsbsBitStream) {
             (*t_LsbsBitStream).get() = std::string(sliceBegin, sliceEnd);
+            assert(totalBlocks == (*t_LsbsBitStream).get().size());
         }
 
+        /* Extract bitstream with user-data */
         utils::Advance(sliceBegin, extractedBitStream.end(), totalBlocks);
         utils::Advance(sliceEnd, extractedBitStream.end(), std::distance(sliceEnd, extractedBitStream.end()));
         if (t_UserDataBitStream) {

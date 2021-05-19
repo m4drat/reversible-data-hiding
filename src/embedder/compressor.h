@@ -11,7 +11,7 @@ namespace rdh {
     class RlcCompressor {
     public:
         /**
-         * @brief Method that encodes given pixel data using RLC encoding + Huffman.
+         * @brief Method that compresses given pixel data using RLC encoding + Huffman.
          * @param t_Pixel1 Value of the upper-left pixel
          * @param t_Pixel2 Value of the upper-right pixel
          * @param t_Pixel3 Value of the lower-left pixel
@@ -84,7 +84,7 @@ namespace rdh {
             /* Decoded huffman-encoded sequence, and decompress rlc-compressed data. */
             for (Color16s colorDelta : RLC::RlcDecode<uint16_t, Color16s>(t_HuffmanCoder.Decode(t_RlcEncoded), 0)) {
                 assert((colorDelta + (Color16s)t_Pixel1 <= 255) && (colorDelta + (Color16s)t_Pixel1 >= -255));
-                decompressed.push_back(colorDelta + t_Pixel1);
+                decompressed.push_back(colorDelta + (Color16s)t_Pixel1);
             }
 
             /**

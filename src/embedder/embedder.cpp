@@ -146,7 +146,7 @@ namespace rdh {
                             for (uint32_t bitPos = (yAdd == 0 && xAdd == 0) ? 1 : 0; bitPos < constsRef.GetLsbLayers(); bitPos++) {
                                 lsbCompressedGroup(currGroupSize++, 0) = utils::math::GetNthBit(curPixel, bitPos);
 
-                                /* If we've already exceed group size, so create new one. Also don't forget to reset currGroupSize. */
+                                /* If we've exceed group size - create a new one. Also don't forget to reset currGroupSize. */
                                 if (currGroupSize >= constsRef.GetGroupRowsCount()) {
                                     CompressCurrentGroup(psi, lsbCompressedGroup, lsbEncodedBitStream, hashsesBitStream, t_DataEmbeddingKey, reinitRandomMatrixForHashCalculation);
                                     reinitRandomMatrixForHashCalculation = false;

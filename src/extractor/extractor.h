@@ -54,22 +54,24 @@ namespace rdh {
          * @brief Extracts all of the bitstreams from marked-encrypted image.
          * @param[in] t_MarkedEncryptedImage Image to extract bitstreams from.
          * @param[in] t_DataEmbeddingKey Key, that was used to embed additional data.
-         * @param[out] t_RlcEncodedLengths std::vector<uint16_t> of lengths for rlc-compressed blocks.
-         * @param[out] t_RlcEncodedBitStream Bitstream of rlc-compressed blocks.
-         * @param[out] t_LsbEncodedBitStream Bitstream of lsb-compressed blocks.
-         * @param[out] t_HashesBitStream Bitstream of hashes for lsb-compressed groups.
+         * @param[out] t_RlcCompressedBlocksLengths std::vector<uint16_t> of lengths for rlc-compressed blocks.
+         * @param[out] t_RlcCompressedBitStream Bitstream of rlc-compressed blocks.
+         * @param[out] t_LsbCompressedGroups vector of Bitstreams of lsb-compressed groups.
+         * @param[out] t_GroupHashesBitStream Bitstream vector of Bitstreams of lsb-compressed groups hashes.
          * @param[out] t_LsbsBitStream Bitstream of LSBs for each block.
          * @param[out] t_UserDataBitStream Bitstream of user-embedded data.
+         * @param[out] t_BinaryLocationMap Location map data (if value is 1 - block is compressed using rlc, otherwise - using lsb).
         */
         static void ExtractBitStreams(
             const BmpImage& t_MarkedEncryptedImage,
             std::vector<uint8_t>& t_DataEmbeddingKey, 
-            std::optional<std::reference_wrapper<std::vector<uint16_t>>> t_RlcEncodedLengths, 
-            std::optional<std::reference_wrapper<std::string>> t_RlcEncodedBitStream,
-            std::optional<std::reference_wrapper<std::string>> t_LsbEncodedBitStream,
-            std::optional<std::reference_wrapper<std::string>> t_HashesBitStream,
+            std::optional<std::reference_wrapper<std::vector<uint16_t>>> t_RlcCompressedBlocksLengths,
+            std::optional<std::reference_wrapper<std::string>> t_RlcCompressedBitStream,
+            std::optional<std::reference_wrapper<std::vector<std::string>>> t_LsbCompressedGroups,
+            std::optional<std::reference_wrapper<std::vector<std::string>>> t_GroupHashesBitStream,
             std::optional<std::reference_wrapper<std::string>> t_LsbsBitStream,
-            std::optional<std::reference_wrapper<std::string>> t_UserDataBitStream
+            std::optional<std::reference_wrapper<std::string>> t_UserDataBitStream,
+            std::optional<std::reference_wrapper<std::vector<bool>>> t_BinaryLocationMap
         );
     };
 }

@@ -176,12 +176,15 @@ namespace rdh {
         }
 
         template <class Iter, class Incr>
-        Iter& Advance(Iter& t_Curr, const Iter& t_End, Incr t_N)
+        Iter& Advance(Iter& t_Curr, const Iter& t_End, Incr t_N, bool t_ThrowOnPastTheEndAdvance = false)
         {
             std::size_t remaining(std::distance(t_Curr, t_End));
 
             if (remaining < t_N)
             {
+                if (t_ThrowOnPastTheEndAdvance) {
+                    throw std::invalid_argument("An attempt to advance iterator past the end was performed!");
+                }
                 t_N = remaining;
             }
 
