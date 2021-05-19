@@ -6,4 +6,4 @@ target_compile_features(${BINARY} PRIVATE cxx_std_20)
 
 target_link_libraries(${BINARY} PUBLIC ${CMAKE_PROJECT_NAME}_lib benchmark::benchmark)
 
-add_test(NAME ${BINARY} COMMAND ${BINARY})
+# add_test(NAME ${BINARY} COMMAND ${BINARY})
