@@ -2,6 +2,7 @@
 
 #include "embedder/huffman.h"
 #include "embedder/compressor.h"
+#include "embedder/embedder.h"
 
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
 #include <boost/log/trivial.hpp>
@@ -277,6 +278,14 @@ namespace rdh {
         /* Get reference to a consts object. */
         Consts& constsRef = Consts::Instance();
 
+        /* Total number of 2x2 pixels blocks. In the article it's referred as L. */
+        uint32_t totalBlocks{
+            static_cast<std::size_t>(t_MarkedEncryptedImage.GetHeight()) * static_cast<std::size_t>(t_MarkedEncryptedImage.GetWidth()) / 4
+        };
+
+        /* Number of blocks encoded using RLC-based algorithm. In the article it's referred as R. */
+        uint32_t omegaOneBlocks{ 0 };
+
         /* Create Huffman-coder object, which will be used to encode RLC sequences */
         Huffman<std::pair<uint16_t, Color16s>, pair_hash> huffmanCoder(consts::c_DefaultNode);
 
@@ -311,8 +320,6 @@ namespace rdh {
         uint32_t keyCursor{ 0 };
         /* size of the current rlc-compressed block */
         uint32_t currenRlcCompressedSize{ 0 };
-        /* Used to keep track of current lsb-compressed group size. */
-        uint32_t currGroupSize{ 0 };
         /* Used to keep track of the current block index. */
         uint32_t currBlockIdx{ 0 };
 
@@ -358,17 +365,46 @@ namespace rdh {
                     t_MarkedEncryptedImage.SetPixel(imgY, imgX + 1, decompressedColors.at(1) ^ t_EncryptionKey[keyCursor % t_EncryptionKey.size()]);
                     t_MarkedEncryptedImage.SetPixel(imgY + 1, imgX, decompressedColors.at(2) ^ t_EncryptionKey[keyCursor % t_EncryptionKey.size()]);
                     t_MarkedEncryptedImage.SetPixel(imgY + 1, imgX + 1, decompressedColors.at(3) ^ t_EncryptionKey[keyCursor % t_EncryptionKey.size()]);
-                }
-                else {
-                    if (currGroupSize >= constsRef.GetGroupRowsCount()) {
-                        currGroupSize = 0;
-                    }
+                    
+                    omegaOneBlocks++;
                 }
 
                 /* Move binary location "pointer" to the next entry. */
                 ++currBlockIdx;
                 /* Update key cursor value. */
                 ++keyCursor;
+            }
+        }
+
+        /* Next step. Recover lsbs of LSB-compressed blocks */
+        uint32_t xi = utils::math::Floor((float)(totalBlocks - omegaOneBlocks) / (float)constsRef.GetLambda());
+        Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic> psi(constsRef.GetAlpha(), constsRef.GetGroupRowsCount());
+
+        /* In the article it's referred as Z'. */
+        Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic> pseudoRandomMat(constsRef.GetMatrixRows(), constsRef.GetAlpha());
+        Embedder::PreparePseudoRandomMatrix(pseudoRandomMat, t_DataEmbeddingKey);
+        pseudoRandomMat.transposeInPlace();
+
+        /* Create binary matrix as described in the article */
+        psi << pseudoRandomMat, Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic>::Identity(constsRef.GetAlpha(), constsRef.GetAlpha());
+
+        /* Vector of group candidates for each i = 1, ..., xi */
+        std::vector<std::vector<Eigen::Matrix<uint8_t, 1, Eigen::Dynamic>>> vectorOfGroupCandidates;
+        vectorOfGroupCandidates.reserve(xi);
+
+        for (uint32_t currGroupIdx = 0; currGroupIdx < xi; ++currGroupIdx) {
+            vectorOfGroupCandidates.emplace_back(std::vector<Eigen::Matrix<uint8_t, 1, Eigen::Dynamic>>());
+            Eigen::Matrix<uint8_t, 1, Eigen::Dynamic> rowVector(1, constsRef.GetAlpha());
+            
+            for (uint32_t currRowVector = 0; currRowVector < std::powl(2, constsRef.GetAlpha()); ++currRowVector) {
+                Eigen::Matrix<uint8_t, 1, Eigen::Dynamic> firstPart(1, lsbCompressedGroups.at(currGroupIdx).size() + constsRef.GetAlpha());
+                firstPart << utils::ConvertBinaryStringToMatrix(lsbCompressedGroups.at(currGroupIdx)), Eigen::Matrix<uint8_t, 1, Eigen::Dynamic>(1, constsRef.GetAlpha());
+
+                std::string rowVectorStr;
+                boost::to_string(boost::dynamic_bitset<>(constsRef.GetAlpha(), currRowVector), rowVectorStr);
+                rowVector = utils::ConvertBinaryStringToMatrix(rowVectorStr);
+
+                vectorOfGroupCandidates.back().emplace_back(firstPart + rowVector * psi);
             }
         }
 

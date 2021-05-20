@@ -6,6 +6,7 @@
 #include "types.h"
 #include "image/bmp_image.h"
 #include "embedder/consts.h"
+#include "extractor/extractor.h"
 
 #include "Eigen/Dense"
 
@@ -54,5 +55,7 @@ namespace rdh {
          * (added to make the benchmarks work correctly).
         */
         static void CompressCurrentGroup(const Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic>& t_Psi, const Group& t_LsbEncodedGroup, std::string& t_LsbEncodedBitStream, std::string& t_HashsesBitStream, const std::vector<uint8_t>& t_DataEmbeddingKey, bool t_ReinitRandomMatrix);
+
+        friend class Extractor;
     };
 }

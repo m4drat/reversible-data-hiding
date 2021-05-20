@@ -8,6 +8,8 @@
 
 #include <boost/compute/detail/sha1.hpp>
 
+#include "Eigen/Dense"
+
 namespace rdh {
     namespace utils {
         namespace math {
@@ -173,6 +175,23 @@ namespace rdh {
             }
 
             return static_cast<uint8_t>(std::bitset<8>(t_BinStr).to_ulong());
+        }
+
+        /**
+         * @brief Converts given sequence of 1's and 0's into a binary vector.
+         * @tparam T type of collection (std::string, std::vector<char>)
+         * @param t_Collection collection to translate
+         * @return filled binary matrix
+        */
+        template <class T>
+        Eigen::Matrix<uint8_t, 1, Eigen::Dynamic> ConvertBinaryStringToMatrix(const T& t_Collection) {
+            Eigen::Matrix<uint8_t, 1, Eigen::Dynamic> matrix(1, t_Collection.size());
+
+            for (uint32_t idx = 0; idx < t_Collection.size(); ++idx) {
+                matrix(0, idx) = (t_Collection[idx] == '1') ? 1 : 0;
+            }
+
+            return std::move(matrix);
         }
 
         template <class Iter, class Incr>
