@@ -1,6 +1,8 @@
 #include "image/bmp_image.h"
 #include "utils.h"
 
+#include <fstream>
+
 #include "CImg/CImg.h"
 using namespace cimg_library;
 
@@ -17,6 +19,10 @@ namespace rdh {
 
     BmpImage::BmpImage(const std::string& t_ImagePath)
     {
+        if (!std::ifstream(t_ImagePath).good()) {
+            throw std::invalid_argument("Image: \"" + t_ImagePath + "\" doesn't exist!");
+        }
+
         CImg<Color8u> image(t_ImagePath.c_str());
 
         if (image.height() % 2 != 0 || image.width() % 2 != 0) {

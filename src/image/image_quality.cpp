@@ -46,10 +46,10 @@ namespace rdh {
                         t_Img1.GetPixel(imgY + 1, imgX + 1)
                     ),
                     Block(
-                        t_Img1.GetPixel(imgY, imgX),
-                        t_Img1.GetPixel(imgY, imgX + 1),
-                        t_Img1.GetPixel(imgY + 1, imgX),
-                        t_Img1.GetPixel(imgY + 1, imgX + 1)
+                        t_Img2.GetPixel(imgY, imgX),
+                        t_Img2.GetPixel(imgY, imgX + 1),
+                        t_Img2.GetPixel(imgY + 1, imgX),
+                        t_Img2.GetPixel(imgY + 1, imgX + 1)
                     )
                 );
             }

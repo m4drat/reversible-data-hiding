@@ -22,6 +22,7 @@ int main(int argc, char* argv[])
     desc.add_options()
         ("help,h", "Prints help message.")
         ("image-path", po::value<std::string>()->required(), "Path to an image to work with.")
+        ("second-image", po::value<std::string>(), "Path to second image (only used in calculate PSNR/SSIM).")
         ("result-path", po::value<std::string>(), "Path to save decrypted/encrypted image or image with embedded data.")
         ("result-path-data", po::value<std::string>(), "Path to save extracted data from image to.")
         ("mode", po::value<std::string>()->required(), "Specifies execution mode.\n"
@@ -37,7 +38,11 @@ int main(int argc, char* argv[])
             "Result will be saved in --result-path/--result-path-data.\n"
             "    Example-1 \t(image recovery mode): ./rdh.exe --mode extract --image-path ./marked-encrypted.bmp --result-path ./extracted.bmp --encryption-key AABBCC\n"
             "    Example-2 \t(image recovery and data extraction mode): ./rdh.exe --mode extract --image-path ./marked-encrypted.bmp --result-path ./extracted.bmp --result-path-data ./extracted.bin --encryption-key AABBCC --embed-key FFDDEE\n"
-            "    Example-3 \t(data extraction mode): ./rdh.exe --mode extract --image-path ./marked-encrypted.bmp --result-path-data ./extracted.bin --embed-key FFDDEE\n")
+            "    Example-3 \t(data extraction mode): ./rdh.exe --mode extract --image-path ./marked-encrypted.bmp --result-path-data ./extracted.bin --embed-key FFDDEE\n"
+            "  calculate-psnr: \tCalculates PSNR for images specified in --image-path and --second-image. "
+            "Result will be printed to the console.\n"
+            "  calculate-ssim: \tCalculates SSIM for images specified in --image-path and --second-image. "
+            "Result will be printed to the console.\n")
         ("encryption-key", po::value<std::string>(), "Image encryption/decryption key.\n"
             "  Example: --encryption-key AA00BB11CC22DD33EE\n")
         ("enc-key-file", po::value<std::string>(), "Image encryption/decryption key file (key should be in binary form). (can be used instead of encryption-key)\n"
@@ -147,6 +152,24 @@ int main(int argc, char* argv[])
         }
         else if (mode == "extract") {
             return rdh::Options::HandleExtractAndRecover(imagePath, vm, desc);
+        }
+        else if (mode == "calculate-psnr") {
+            if (vm.count("second-image") == 0) {
+                std::cout << "You must provide result path (--second-image) to the first image." << std::endl;
+                std::cout << "Run with --help to read the docs" << std::endl;
+                return 1;
+            }
+
+            return rdh::Options::HandleCalculatePsnr(imagePath, vm["second-image"].as<std::string>(), vm, desc);
+        }
+        else if (mode == "calculate-ssim") {
+            if (vm.count("second-image") == 0) {
+                std::cout << "You must provide result path (--second-image) to the first image." << std::endl;
+                std::cout << "Run with --help to read the docs" << std::endl;
+                return 1;
+            }
+
+            return rdh::Options::HandleCalculateSsim(imagePath, vm["second-image"].as<std::string>(), vm, desc);
         }
         else {
             std::cout << "Incorrect operation mode selected!" << std::endl;

@@ -4,11 +4,12 @@
 #include "encryptor/encryptor.h"
 #include "embedder/embedder.h"
 #include "extractor/extractor.h"
+#include "image/image_quality.h"
 #include "image/bmp_image.h"
 
 namespace rdh {
 
-    int Options::HandleShow(const std::string& t_ImagePath, po::variables_map& t_Vm, po::options_description& t_Desc)
+    uint32_t Options::HandleShow(const std::string& t_ImagePath, po::variables_map& t_Vm, po::options_description& t_Desc)
     {
         rdh::BmpImage image(t_ImagePath);
         image.Show();
@@ -16,7 +17,7 @@ namespace rdh {
         return 0;
     }
 
-    int Options::HandleEncrypt(const std::string& t_ImagePath, po::variables_map& t_Vm, po::options_description& t_Desc)
+    uint32_t Options::HandleEncrypt(const std::string& t_ImagePath, po::variables_map& t_Vm, po::options_description& t_Desc)
     {
         if (t_Vm.count("encryption-key") == 0 && t_Vm.count("enc-key-file") == 0) {
             std::cout << "You must provide encryption key via argument (--encryption-key), or use encryption key file (--enc-key-file)!" << std::endl;
@@ -51,7 +52,7 @@ namespace rdh {
         return 0;
     }
 
-    int Options::HandleEmbed(const std::string& t_ImagePath, po::variables_map& t_Vm, po::options_description& t_Desc)
+    uint32_t Options::HandleEmbed(const std::string& t_ImagePath, po::variables_map& t_Vm, po::options_description& t_Desc)
     {
         if (t_Vm.count("embed-key") == 0 && t_Vm.count("embed-key-file") == 0) {
             std::cout << "You must provide data embedding key via argument (--embed-key), or use embed key file (--embed-key-file)!" << std::endl;
@@ -89,7 +90,7 @@ namespace rdh {
         return 0;
     }
 
-    int Options::HandleDecrypt(const std::string& t_ImagePath, po::variables_map& t_Vm, po::options_description& t_Desc)
+    uint32_t Options::HandleDecrypt(const std::string& t_ImagePath, po::variables_map& t_Vm, po::options_description& t_Desc)
     {
         if (t_Vm.count("encryption-key") == 0 && t_Vm.count("enc-key-file") == 0) {
             std::cout << "You must provide decryption key via argument (--encryption-key), or use decryption key file (--enc-key-file)!" << std::endl;
@@ -120,7 +121,7 @@ namespace rdh {
         return 0;
     }
 
-    int Options::HandleExtractAndRecover(const std::string& t_ImagePath, po::variables_map& t_Vm, po::options_description& t_Desc)
+    uint32_t Options::HandleExtractAndRecover(const std::string& t_ImagePath, po::variables_map& t_Vm, po::options_description& t_Desc)
     {
         Mode mode = Mode::NONE;
         rdh::BmpImage image(t_ImagePath);
@@ -210,6 +211,28 @@ namespace rdh {
             std::cout << "Run with --help to read the docs" << std::endl;
             return 1;
         }
+
+        return 0;
+    }
+
+    uint32_t Options::HandleCalculatePsnr(const std::string& t_ImagePath1, const std::string& t_ImagePath2, po::variables_map& t_Vm, po::options_description& t_Desc)
+    {
+        rdh::BmpImage image1(t_ImagePath1);
+        rdh::BmpImage image2(t_ImagePath2);
+
+        std::cout << "PSNR for image \"" << t_ImagePath1 << "\" and \"" << t_ImagePath2 << "\"." << std::endl;
+        std::cout << "PSNR = " << rdh::ImageQuality::CalculatePSNR(image1, image2) << std::endl;
+
+        return 0;
+    }
+
+    uint32_t Options::HandleCalculateSsim(const std::string& t_ImagePath1, const std::string& t_ImagePath2, po::variables_map& t_Vm, po::options_description& t_Desc)
+    {        
+        rdh::BmpImage image1(t_ImagePath1);
+        rdh::BmpImage image2(t_ImagePath2);
+
+        std::cout << "SSIM for image \"" << t_ImagePath1 << "\" and \"" << t_ImagePath2 << "\"." << std::endl;
+        std::cout << "SSIM = " << rdh::ImageQuality::CalculateSSIM(image1, image2) << std::endl;
 
         return 0;
     }
