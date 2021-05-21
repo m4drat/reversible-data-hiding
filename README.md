@@ -24,6 +24,10 @@ cmake --build build --config Release
 
 6. Example data extraction and original image recovery: `rdh.exe --mode extract --image-path ./marked-encrypted.bmp --result-path ./extracted.bmp --result-path-data ./extracted.bin --encryption-key AABBCC --embed-key FFDDEE`
 
+7. Example SSIM calculation: `rdh.exe --mode ssim --image-path ./recovered_image_man.bmp --second-image ./man_original.bmp`
+
+8. Example PSNR calculation: `rdh.exe --mode psnr --image-path ./recovered_image_man.bmp --second-image ./man_original.bmp`
+
 ### Performance
 
 ### PSNR & SSIM

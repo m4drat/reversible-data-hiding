@@ -1,5 +1,6 @@
 #include "image/image_quality.h"
 
+#include <iostream>
 #include <cmath>
 #include <limits>
 
@@ -14,18 +15,20 @@ namespace rdh {
 
         for (uint32_t imgY = 0; imgY < t_Img1.GetHeight(); imgY += 1) {
             for (uint32_t imgX = 0; imgX < t_Img1.GetWidth(); imgX += 1) {
-                meanSquaredError += std::powl(t_Img1.GetPixel(imgY, imgX) - t_Img2.GetPixel(imgY, imgX), 2);
+                meanSquaredError += std::powf(
+                    (float)t_Img1.GetPixel(imgY, imgX) - 
+                    (float)t_Img2.GetPixel(imgY, imgX), 2);
             }
         }
 
         meanSquaredError /= ((double)t_Img1.GetHeight() * (double)t_Img1.GetWidth());
 
         /* If MSE is almost 0, return +infinity */
-        if (meanSquaredError <= s_Epsilon1) {
+        if (meanSquaredError <= 1E-10) {
             return +std::numeric_limits<double>::infinity();
         }
 
-        return 10 * std::log10f(std::powf(255, 2) / meanSquaredError);
+        return 10.0f * std::log10f(std::powf(255, 2) / meanSquaredError);
     }
 
     double ImageQuality::CalculateSSIM(const BmpImage& t_Img1, const BmpImage& t_Img2)
@@ -57,14 +60,19 @@ namespace rdh {
 
         ssim /= ((double)t_Img1.GetHeight() * (double)t_Img1.GetWidth() / 4.0f);
 
+        assert(ssim >= 0 && ssim <= 1);
+
         return ssim;
     }
 
     double ImageQuality::Phi(const Block& block1, const Block& block2)
     {
-        double numerator = (2 * block1.CalculateMean() * block2.CalculateMean() + s_Epsilon1) * (2 * block1.Covariance(block2) + s_Epsilon2);
-        double denominator = (std::powf(block1.CalculateMean(), 2) + std::powf(block2.CalculateMean(), 2) + s_Epsilon1) *
-            (std::powf(block1.CalculateStandardDeviation(), 2) + std::powf(block2.CalculateStandardDeviation(), 2) + s_Epsilon2);
+        double numerator = 
+            (2 * block1.CalculateMean() * block2.CalculateMean() + s_Const1) * 
+            (2 * block1.Covariance(block2) + s_Const2);
+        double denominator = 
+            (std::powf(block1.CalculateMean(), 2) + std::powf(block2.CalculateMean(), 2) + s_Const1) *
+            (std::powf(block1.CalculateStandardDeviation(), 2) + std::powf(block2.CalculateStandardDeviation(), 2) + s_Const2);
 
         return numerator / denominator;
     }

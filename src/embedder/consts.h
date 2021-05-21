@@ -1559,12 +1559,11 @@ namespace rdh {
     {
     public:
         Consts()
-            : m_Threshold{ 20 }, m_LsbLayers{ 1 }, m_Lambda{ 400 }, m_Alpha{ 6 }, m_LsbHashSize{ 3 }
+            : m_Threshold{ 14 }, m_LsbLayers{ 1 }, m_Lambda{ 400 }, m_Alpha{ 6 }, m_LsbHashSize{ 3 }
         {
-            m_GroupRowsCnt = (uint32_t)m_Lambda * (4 * m_LsbLayers - 1);
+            m_GroupSizeBeforeCompression = (uint32_t)m_Lambda * (s_PixelsInOneBlock * m_LsbLayers - 1);
             m_RlcEncodedMaxSize = utils::math::CeilLog2(m_Threshold);
-            m_MatrixRows = (uint32_t)m_Lambda * ((uint32_t)s_PixelsInOneBlock * (uint32_t)m_LsbLayers - 1) - m_Alpha;
-            m_MatrixColumns = (uint32_t)m_Lambda * ((uint32_t)s_PixelsInOneBlock * (uint32_t)m_LsbLayers - 1);
+            m_GroupSizeAfterCompression = (uint32_t)m_Lambda * ((uint32_t)s_PixelsInOneBlock * (uint32_t)m_LsbLayers - 1) - m_Alpha;
             m_RlcEncodedMaxSize = utils::math::CeilLog2(m_Threshold);
         }
 
@@ -1583,9 +1582,8 @@ namespace rdh {
             m_LsbLayers = t_LsbLayers;
 
             /* Update required variables */
-            m_GroupRowsCnt = (uint32_t)m_Lambda * (4 * m_LsbLayers - 1);
-            m_MatrixRows = (uint32_t)m_Lambda * ((uint32_t)s_PixelsInOneBlock * (uint32_t)m_LsbLayers - 1) - m_Alpha;
-            m_MatrixColumns = (uint32_t)m_Lambda * ((uint32_t)s_PixelsInOneBlock * (uint32_t)m_LsbLayers - 1);
+            m_GroupSizeBeforeCompression = (uint32_t)m_Lambda * (4 * m_LsbLayers - 1);
+            m_GroupSizeAfterCompression = (uint32_t)m_Lambda * ((uint32_t)s_PixelsInOneBlock * (uint32_t)m_LsbLayers - 1) - m_Alpha;
         }
 
         void UpdateLambda(uint16_t t_Lambda)
@@ -1594,9 +1592,8 @@ namespace rdh {
             m_Lambda = t_Lambda;
 
             /* Update required variables */
-            m_GroupRowsCnt = (uint32_t)m_Lambda * (4 * m_LsbLayers - 1);
-            m_MatrixRows = (uint32_t)m_Lambda * ((uint32_t)s_PixelsInOneBlock * (uint32_t)m_LsbLayers - 1) - m_Alpha;
-            m_MatrixColumns = (uint32_t)m_Lambda * ((uint32_t)s_PixelsInOneBlock * (uint32_t)m_LsbLayers - 1);
+            m_GroupSizeBeforeCompression = (uint32_t)m_Lambda * (4 * m_LsbLayers - 1);
+            m_GroupSizeAfterCompression = (uint32_t)m_Lambda * ((uint32_t)s_PixelsInOneBlock * (uint32_t)m_LsbLayers - 1) - m_Alpha;
         }
 
         void UpdateAlpha(uint16_t t_Alpha)
@@ -1605,7 +1602,7 @@ namespace rdh {
             m_Alpha = t_Alpha;
 
             /* Update required variables */
-            m_MatrixRows = (uint32_t)m_Lambda * ((uint32_t)s_PixelsInOneBlock * (uint32_t)m_LsbLayers - 1) - m_Alpha;
+            m_GroupSizeAfterCompression = (uint32_t)m_Lambda * ((uint32_t)s_PixelsInOneBlock * (uint32_t)m_LsbLayers - 1) - m_Alpha;
         }
 
         void UpdateLsbHashSize(uint16_t t_LsbHashSize)
@@ -1626,10 +1623,9 @@ namespace rdh {
         uint16_t GetLambda() const { return m_Lambda; }
         uint16_t GetAlpha() const { return m_Alpha; }
         uint16_t GetLsbHashSize() const { return m_LsbHashSize; }
-        uint32_t GetGroupRowsCount() const { return m_GroupRowsCnt; }
+        uint32_t GetGroupSizeBeforeCompression() const { return m_GroupSizeBeforeCompression; }
         uint32_t GetRlcEncodedMaxSize() const { return m_RlcEncodedMaxSize; }
-        uint32_t GetMatrixRows() const { return m_MatrixRows; }
-        uint32_t GetMatrixColumns() const { return m_MatrixColumns; }
+        uint32_t GetGroupSizeAfterCompression() const { return m_GroupSizeAfterCompression; }
         uint16_t GetPixelsInOneBlock() const { return s_PixelsInOneBlock; }
         uint16_t GetAvgRlcEncodedLength() const { return s_AvgRlcEncodedLength; }
         float GetRlcEncodedBlocksRatioAvg() const { return s_RlcEncodedBlocksRatioAvg; }
@@ -1666,9 +1662,9 @@ namespace rdh {
         uint16_t m_LsbHashSize;
 
         /**
-         * @brief Number of rows in each group vector.
+         * @brief Number of rows in each group vector. In the article it's referred as Q.
          */
-        uint32_t m_GroupRowsCnt;
+        uint32_t m_GroupSizeBeforeCompression;
 
         /**
          * @brief The article says that the length of each encoded block must be less than this number.
@@ -1678,12 +1674,7 @@ namespace rdh {
         /**
          * @brief In the article it's referred as P. Number of rows.
          */
-        uint32_t m_MatrixRows;
-
-        /**
-         * @brief In the article it's referred as Q. Number of columns.
-         */
-        uint32_t m_MatrixColumns;
+        uint32_t m_GroupSizeAfterCompression;
 
         /**
          * @brief Number of pixels in one block.

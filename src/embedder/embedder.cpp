@@ -65,13 +65,13 @@ namespace rdh {
         /* Bitstream, that represents compressed blocks from \omega_2 */
         std::string lsbEncodedBitStream{ "" };
         lsbEncodedBitStream.reserve(
-            static_cast<std::size_t>((constsRef.GetGroupRowsCount() - constsRef.GetAlpha()) * utils::math::Floor((float)totalBlocks * (float)constsRef.GetLsbEncodedBlocksRatioAvg() / (float)constsRef.GetLambda()))
+            static_cast<std::size_t>((constsRef.GetGroupSizeBeforeCompression() - constsRef.GetAlpha()) * utils::math::Floor((float)totalBlocks * (float)constsRef.GetLsbEncodedBlocksRatioAvg() / (float)constsRef.GetLambda()))
         );
 
         /* Vector of groups. In the article Group is referred as G_i. */
-        Group lsbCompressedGroup = Group::Zero(constsRef.GetGroupRowsCount(), 1);
+        Group lsbCompressedGroup = Group::Zero(constsRef.GetGroupSizeBeforeCompression(), 1);
         
-        assert(lsbCompressedGroup.rows() == constsRef.GetGroupRowsCount());
+        assert(lsbCompressedGroup.rows() == constsRef.GetGroupSizeBeforeCompression());
         assert(lsbCompressedGroup.cols() == 1);
         assert(lsbCompressedGroup.isZero(0));
 
@@ -79,14 +79,14 @@ namespace rdh {
         uint32_t currGroupSize{ 0 };
 
         /* In the article it's referred as \psi. */
-        Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic> psi(constsRef.GetMatrixRows(), constsRef.GetMatrixColumns());
+        Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic> psi(constsRef.GetGroupSizeAfterCompression(), constsRef.GetGroupSizeBeforeCompression());
 
         /* In the article it's referred as Z. Size of this matrix is P \times \alpha. */
-        Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic> pseudoRandomMat(constsRef.GetMatrixRows(), constsRef.GetAlpha());
+        Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic> pseudoRandomMat(constsRef.GetGroupSizeAfterCompression(), constsRef.GetAlpha());
         PreparePseudoRandomMatrix(pseudoRandomMat, t_DataEmbeddingKey);
 
         /* Create binary matrix as described in the article */
-        psi << Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic>::Identity(constsRef.GetMatrixRows(), constsRef.GetMatrixRows()), pseudoRandomMat;
+        psi << Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic>::Identity(constsRef.GetGroupSizeAfterCompression(), constsRef.GetGroupSizeAfterCompression()), pseudoRandomMat;
 
         /* Iterate over 2x2 blocks to compress them. */
         for (uint32_t imgY = 0; imgY < t_EncryptedImage.GetHeight(); imgY += 2) {
@@ -147,17 +147,17 @@ namespace rdh {
                                 lsbCompressedGroup(currGroupSize++, 0) = utils::math::GetNthBit(curPixel, bitPos);
 
                                 /* If we've exceed group size - create a new one. Also don't forget to reset currGroupSize. */
-                                if (currGroupSize >= constsRef.GetGroupRowsCount()) {
+                                if (currGroupSize >= constsRef.GetGroupSizeBeforeCompression()) {
                                     CompressCurrentGroup(psi, lsbCompressedGroup, lsbEncodedBitStream, hashsesBitStream, t_DataEmbeddingKey, reinitRandomMatrixForHashCalculation);
                                     reinitRandomMatrixForHashCalculation = false;
 
-                                    assert(currGroupSize == constsRef.GetGroupRowsCount());
+                                    assert(currGroupSize == constsRef.GetGroupSizeBeforeCompression());
 
                                     /* Reset group. */
                                     lsbCompressedGroup.setZero();
 
                                     /* Because Eigen is weird, lets just double check, if everything is done correctly. */
-                                    assert(lsbCompressedGroup.rows() == constsRef.GetGroupRowsCount());
+                                    assert(lsbCompressedGroup.rows() == constsRef.GetGroupSizeBeforeCompression());
                                     assert(lsbCompressedGroup.cols() == 1);
                                     assert(lsbCompressedGroup.isZero(0));
 
@@ -375,10 +375,10 @@ namespace rdh {
     std::string Embedder::HashLsbBlock(const Group& t_CurGroup, const std::vector<uint8_t>& t_DataEmbeddingKey, bool t_ReinitRandomMatrix)
     {
         std::string hash{ "" };
-        static Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic> randomMatrix(Consts::Instance().GetLsbHashSize(), Consts::Instance().GetGroupRowsCount());
+        static Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic> randomMatrix(Consts::Instance().GetLsbHashSize(), Consts::Instance().GetGroupSizeBeforeCompression());
 
         if (t_ReinitRandomMatrix) {
-            randomMatrix = Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic>(Consts::Instance().GetLsbHashSize(), Consts::Instance().GetGroupRowsCount());
+            randomMatrix = Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic>(Consts::Instance().GetLsbHashSize(), Consts::Instance().GetGroupSizeBeforeCompression());
             PreparePseudoRandomMatrix(randomMatrix, t_DataEmbeddingKey);
         }
 

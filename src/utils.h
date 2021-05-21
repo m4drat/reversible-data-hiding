@@ -36,9 +36,21 @@ namespace rdh {
                 return t_Num == 1 ? 0 : FloorLog2(t_Num - 1) + 1;
             }
 
-            constexpr uint8_t GetNthBit(uint32_t t_Num, uint8_t t_NthBit)
+            constexpr uint8_t GetNthBit(uint32_t t_Num, uint8_t t_BitPos)
             {
-                return (t_Num >> t_NthBit) & 1;
+                return (t_Num >> t_BitPos) & 1;
+            }
+
+            constexpr uint8_t SetNthBitToX(uint32_t t_Num, uint8_t t_BitPos, uint8_t t_NewValue)
+            {
+                /* Clear a bit */
+                if (t_NewValue == 0) {
+                    return t_Num & ~(1UL << t_BitPos);
+                }
+                else {
+                /* Set a bit */
+                    return t_Num | (1UL << t_BitPos);
+                }
             }
         }
 

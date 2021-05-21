@@ -104,6 +104,7 @@ namespace rdh {
 
         if (m_UpdateTree) {
             RebuildTree();
+            BuildCodesTable(m_HuffmanTree.top(), "");
         }
 
         int32_t idx = -1;

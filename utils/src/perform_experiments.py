@@ -10,6 +10,8 @@ from skimage.metrics import structural_similarity
 def calculate_psnr(img1, img2):
     mse = np.square(np.subtract(img1, img2)).mean()
 
+    print(mse)
+
     if mse == 0:
         return 100
 
@@ -19,8 +21,8 @@ def main():
     # img1 = cv2.imread('../../images/lena_gray-embed.bmp')
     # img2 = cv2.imread('../../images/lena_gray-embed.bmp')
 
-    img1 = cv2.imread('../../../../../man-1.png')
-    img2 = cv2.imread('../../../../../man-2.png')
+    img1 = cv2.imread('C:\\Users\\madrat\\Desktop\\hse\\coursework\\reversible_data_hiding\\extracted_image_man.bmp')
+    img2 = cv2.imread('C:\\Users\\madrat\\Desktop\\hse\\coursework\\reversible_data_hiding\\images\\original\\man.bmp')
 
     print(f'PSNR: {calculate_psnr(img1, img2)} db')
     print(f'SSIM: {structural_similarity(img1, img2, multichannel=True)} db')

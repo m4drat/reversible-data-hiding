@@ -3,6 +3,7 @@
 #include "embedder/huffman.h"
 #include "embedder/compressor.h"
 #include "embedder/embedder.h"
+#include "image/image_quality.h"
 
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
 #include <boost/log/trivial.hpp>
@@ -84,7 +85,7 @@ namespace rdh {
                     }
 
                     /* Set new average pixel value */
-                    t_MarkedEncryptedImage.SetPixel(imgY + 1, imgX + 1, avgPixelValue / avgOfNPixels);
+                    t_MarkedEncryptedImage.SetPixel(imgY + 1, imgX + 1, avgPixelValue / (uint16_t)avgOfNPixels);
                 }
             }
         }
@@ -135,7 +136,7 @@ namespace rdh {
                             }
 
                             /* Set new average pixel value */
-                            t_MarkedEncryptedImage.SetPixel(imgY + 1, imgX, avgPixelValue / avgOfNPixels);
+                            t_MarkedEncryptedImage.SetPixel(imgY + 1, imgX, avgPixelValue / (uint16_t)avgOfNPixels);
 
                             /**
                              * If we are not in the down-right block, calculate average pixel value
@@ -172,7 +173,7 @@ namespace rdh {
                             }
 
                             /* Set new average pixel value */
-                            t_MarkedEncryptedImage.SetPixel(imgY + 1, imgX, avgPixelValue / avgOfNPixels);
+                            t_MarkedEncryptedImage.SetPixel(imgY + 1, imgX, avgPixelValue / (uint16_t)avgOfNPixels);
 
                             /**
                              * If we are not in the top-left block, calculate average pixel value
@@ -198,7 +199,7 @@ namespace rdh {
                             }
 
                             /* Set new average pixel value */
-                            t_MarkedEncryptedImage.SetPixel(imgY, imgX + 1, avgPixelValue / avgOfNPixels);
+                            t_MarkedEncryptedImage.SetPixel(imgY, imgX + 1, avgPixelValue / (uint16_t)avgOfNPixels);
 
                             /**
                              * If we are not in the down-right block, calculate average pixel value
@@ -292,15 +293,23 @@ namespace rdh {
         /* Set default frequencies (found using statistical approach) */
         huffmanCoder.SetFrequencies(consts::huffman::c_DefaultFrequencies);
 
+        /* RLC-compressed blocks lengths */
         std::vector<uint16_t> rlcCompressedBlocksLengths;
+        /* RLC-compressed bitstream */
         std::string rlcCompressedBitStream;
+        /* vector of LSB-compressed groups */
         std::vector<std::string> lsbCompressedGroups;
+        /* vector of hashes for each LSB-compressed group */
         std::vector<std::string> groupsHashes;
+        /* Bitstream with LSBs */
         std::string lsbsBitStream;
+        /* User-data bitstream */
         std::string userDataBitStream;
+        /* Binary location map (because we will restore original LSB of the first pixel in each block). */
         std::vector<bool> binaryLocationMap;
         ExtractBitStreams(t_MarkedEncryptedImage, t_DataEmbeddingKey, rlcCompressedBlocksLengths, rlcCompressedBitStream, lsbCompressedGroups, groupsHashes, lsbsBitStream, userDataBitStream, binaryLocationMap);
 
+        /* Some sanity checks */
         assert(lsbsBitStream.size() == (t_MarkedEncryptedImage.GetHeight() * t_MarkedEncryptedImage.GetWidth()) / 4);
         assert(binaryLocationMap.size() == (t_MarkedEncryptedImage.GetHeight() * t_MarkedEncryptedImage.GetWidth()) / 4);
 
@@ -322,6 +331,18 @@ namespace rdh {
         uint32_t currenRlcCompressedSize{ 0 };
         /* Used to keep track of the current block index. */
         uint32_t currBlockIdx{ 0 };
+
+        /**
+         * Save all omega_2 blocks as groups.
+         * std::vector<Color8u> - 2x2 pixels block.
+         * std::vector<std::vector<Color8u>> - one group of a blocks.
+         * std::vector<std::vector<std::vector<Color8u>>> - all groups.
+         */ 
+        std::vector<std::vector<std::vector<Color8u>>> omegaTwoEncryptedBlocks{ std::vector<std::vector<Color8u>>() };
+        omegaTwoEncryptedBlocks.reserve(lsbCompressedGroups.size());
+
+        /* Used to keep track of totally collected groups */
+        uint32_t currentGroupNum{ 0 };
 
         /* Iterate over all 2x2 px blocks */
         for (uint32_t imgY = 0; imgY < t_MarkedEncryptedImage.GetHeight(); imgY += 2) {
@@ -368,6 +389,38 @@ namespace rdh {
                     
                     omegaOneBlocks++;
                 }
+                else {
+                    /* Save current omega_2 block for later usage */
+                    /* Check that we haven't exceeded max allowed number of groups */
+                    if (currentGroupNum < lsbCompressedGroups.size()) {
+                        /* If the last group size is less than lambda add current block to the last group */
+                        if (omegaTwoEncryptedBlocks.back().size() < constsRef.GetLambda()) {
+                            omegaTwoEncryptedBlocks.back().emplace_back(
+                                std::vector<uint8_t>{
+                                    t_MarkedEncryptedImage.GetPixel(imgY, imgX),
+                                    t_MarkedEncryptedImage.GetPixel(imgY, imgX + 1),
+                                    t_MarkedEncryptedImage.GetPixel(imgY + 1, imgX),
+                                    t_MarkedEncryptedImage.GetPixel(imgY + 1, imgX + 1)
+                                }
+                            );
+                        }
+                        else {
+                            assert(omegaTwoEncryptedBlocks.back().size() == constsRef.GetLambda());
+
+                            currentGroupNum++;
+                            if (currentGroupNum != lsbCompressedGroups.size()) {
+                                omegaTwoEncryptedBlocks.emplace_back(std::vector<std::vector<uint8_t>>{
+                                    std::vector<uint8_t>{
+                                        t_MarkedEncryptedImage.GetPixel(imgY, imgX),
+                                        t_MarkedEncryptedImage.GetPixel(imgY, imgX + 1),
+                                        t_MarkedEncryptedImage.GetPixel(imgY + 1, imgX),
+                                        t_MarkedEncryptedImage.GetPixel(imgY + 1, imgX + 1)
+                                    }
+                                });
+                            }
+                        }
+                    }
+                }
 
                 /* Move binary location "pointer" to the next entry. */
                 ++currBlockIdx;
@@ -376,35 +429,142 @@ namespace rdh {
             }
         }
 
-        /* Next step. Recover lsbs of LSB-compressed blocks */
-        uint32_t xi = utils::math::Floor((float)(totalBlocks - omegaOneBlocks) / (float)constsRef.GetLambda());
-        Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic> psi(constsRef.GetAlpha(), constsRef.GetGroupRowsCount());
+        assert(omegaTwoEncryptedBlocks.size() == lsbCompressedGroups.size());
+
+        /**
+         * Next step. Recover lsbs of LSB-compressed blocks 
+         */
+        /* Firstly, create psi matrix */
+        Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic> psi(constsRef.GetAlpha(), constsRef.GetGroupSizeBeforeCompression());
 
         /* In the article it's referred as Z'. */
-        Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic> pseudoRandomMat(constsRef.GetMatrixRows(), constsRef.GetAlpha());
+        Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic> pseudoRandomMat(constsRef.GetGroupSizeAfterCompression(), constsRef.GetAlpha());
+        /* Get the original pseudo-random matrix, that is used to compress each group. */
         Embedder::PreparePseudoRandomMatrix(pseudoRandomMat, t_DataEmbeddingKey);
+        /* Transpose this pseudo-random matrix */
         pseudoRandomMat.transposeInPlace();
 
         /* Create binary matrix as described in the article */
         psi << pseudoRandomMat, Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic>::Identity(constsRef.GetAlpha(), constsRef.GetAlpha());
 
-        /* Vector of group candidates for each i = 1, ..., xi */
-        std::vector<std::vector<Eigen::Matrix<uint8_t, 1, Eigen::Dynamic>>> vectorOfGroupCandidates;
-        vectorOfGroupCandidates.reserve(xi);
+        /* Boolean flag to reinit random matrix only once */
+        bool reinitRandomMatrix{ true };
 
-        for (uint32_t currGroupIdx = 0; currGroupIdx < xi; ++currGroupIdx) {
-            vectorOfGroupCandidates.emplace_back(std::vector<Eigen::Matrix<uint8_t, 1, Eigen::Dynamic>>());
-            Eigen::Matrix<uint8_t, 1, Eigen::Dynamic> rowVector(1, constsRef.GetAlpha());
-            
+        /* Last processed omega_2 block */
+        std::pair<uint32_t, uint32_t> lastOmegaTwoBlockCoords{ 0, 0 };
+
+        assert(lsbCompressedGroups.size() == groupsHashes.size());
+
+        std::vector<Eigen::Matrix<uint8_t, 1, Eigen::Dynamic>> restoredGroups;
+        restoredGroups.reserve(lsbCompressedGroups.size());
+
+        /* For each extracted LSB-compressed group recover it's LSBs */
+        for (uint32_t currGroupIdx = 0; currGroupIdx < lsbCompressedGroups.size(); ++currGroupIdx) {
+            /* Group candidates */
+            std::vector<Eigen::Matrix<uint8_t, 1, Eigen::Dynamic>> groupCandidates;
+            groupCandidates.reserve(std::powl(2, constsRef.GetAlpha()));
+
+            /* Generate all possible candidates and try each one. */
             for (uint32_t currRowVector = 0; currRowVector < std::powl(2, constsRef.GetAlpha()); ++currRowVector) {
                 Eigen::Matrix<uint8_t, 1, Eigen::Dynamic> firstPart(1, lsbCompressedGroups.at(currGroupIdx).size() + constsRef.GetAlpha());
-                firstPart << utils::ConvertBinaryStringToMatrix(lsbCompressedGroups.at(currGroupIdx)), Eigen::Matrix<uint8_t, 1, Eigen::Dynamic>(1, constsRef.GetAlpha());
+                firstPart << utils::ConvertBinaryStringToMatrix(lsbCompressedGroups.at(currGroupIdx)), Eigen::Matrix<uint8_t, 1, Eigen::Dynamic>::Zero(1, constsRef.GetAlpha());
 
                 std::string rowVectorStr;
                 boost::to_string(boost::dynamic_bitset<>(constsRef.GetAlpha(), currRowVector), rowVectorStr);
-                rowVector = utils::ConvertBinaryStringToMatrix(rowVectorStr);
+                Eigen::Matrix<uint8_t, 1, Eigen::Dynamic> rowVector = utils::ConvertBinaryStringToMatrix(rowVectorStr);
 
-                vectorOfGroupCandidates.back().emplace_back(firstPart + rowVector * psi);
+                /* Generated current group candidate */
+                Eigen::Matrix<uint8_t, 1, Eigen::Dynamic> rowVectorTimesPsi = (rowVector * psi).unaryExpr([](const uint8_t x) { return x % 2; });
+                Eigen::Matrix<uint8_t, 1, Eigen::Dynamic> currGroupCandidate = (firstPart + rowVectorTimesPsi).unaryExpr([](const uint8_t x) { return x % 2; });
+
+                /**
+                 * Arrange back current group candidate and recalculate RLC-compressed length for each block.
+                 * If any length < s_Threshold, discard current group candidate.
+                 */
+                uint32_t currGroupCandidateBitPos{ 0 };
+                for (std::vector<uint8_t>& encryptedBlock : omegaTwoEncryptedBlocks.at(currGroupIdx)) {
+                    for (uint32_t pxIdx = 0; pxIdx < encryptedBlock.size(); ++pxIdx) {
+                        //for (int32_t currLsbPos = constsRef.GetLsbLayers() - 1; currLsbPos >= (pxIdx == 0) ? 1 : 0; currLsbPos--) {
+                        for (uint32_t currLsbPos = (pxIdx == 0) ? 1 : 0; currLsbPos < constsRef.GetLsbLayers(); currLsbPos++) {
+                            assert(currGroupCandidateBitPos < currGroupCandidate.cols());
+
+                            uint8_t currBit = currGroupCandidate(0, currGroupCandidateBitPos++);
+                            encryptedBlock.at(pxIdx) = utils::math::SetNthBitToX(encryptedBlock.at(pxIdx), currLsbPos, currBit);
+                        }
+                    }
+
+                    /* Check current block candidate compressed size */
+                    if (RlcCompressor::Compress(encryptedBlock.at(0), encryptedBlock.at(1), encryptedBlock.at(2), encryptedBlock.at(3), huffmanCoder).size() < constsRef.GetThreshold()) {
+                        goto discardGroup;
+                    }
+                }
+
+                assert(currGroupCandidateBitPos == currGroupCandidate.cols());
+
+                /* If the loop above has completed successfully, add group candidate to the vector of candidates */
+                groupCandidates.push_back(currGroupCandidate);
+discardGroup:;
+            }
+            /**
+             * For each remaining group candidate calculate its hash, and pick the one
+             * whose hash is equal to the original group hash.
+             */
+            currBlockIdx = 0;
+            for (auto& groupCandidate : groupCandidates) {
+                std::string candidateHash = Embedder::HashLsbBlock(groupCandidate.transpose(), t_DataEmbeddingKey, reinitRandomMatrix);
+                if (reinitRandomMatrix) { reinitRandomMatrix = false; }
+
+                /* We've found correct group candidate */
+                if (candidateHash == groupsHashes.at(currGroupIdx)) {
+                    restoredGroups.emplace_back(std::move(groupCandidate));
+
+                    /* Ignore other possible candidates */
+                    break;
+                }
+            }
+        }
+
+        assert(restoredGroups.size() == lsbCompressedGroups.size());
+
+        /* Pack recovered groups into the image */
+        uint32_t currGroupBitIter{ 0 };
+        uint32_t currGroupIdx = 0;
+        for (uint32_t imgY = 0; imgY < t_MarkedEncryptedImage.GetHeight(); imgY += 2) {
+            for (uint32_t imgX = 0; imgX < t_MarkedEncryptedImage.GetWidth(); imgX += 2) {
+                if (!binaryLocationMap.at(currBlockIdx)) {
+                    /* Current block is lsb-encoded */
+
+                    /* For each pixel in a group of 4 pixels restore original LSBs */
+                    for (uint32_t yAdd = 0; yAdd < 2; ++yAdd) {
+                        for (uint32_t xAdd = 0; xAdd < 2; ++xAdd) {
+                            uint8_t curPixel{ t_MarkedEncryptedImage.GetPixel(imgY + yAdd, imgX + xAdd) };
+                            /* For the top-left pixel, we ignore it's first LSB */
+                            for (uint32_t bitPos = (yAdd == 0 && xAdd == 0) ? 1 : 0; bitPos < constsRef.GetLsbLayers(); bitPos++) {
+                                /* we've restored all of the available groups */
+                                if (currGroupIdx >= restoredGroups.size()) {
+                                    continue;
+                                }
+
+                                t_MarkedEncryptedImage.SetPixel(imgY + yAdd, imgX + xAdd, 
+                                    utils::math::SetNthBitToX(curPixel, bitPos, restoredGroups.at(currGroupIdx)(0, currGroupBitIter++))
+                                );
+                                if (currGroupBitIter >= restoredGroups.at(currGroupIdx).cols()) {
+                                    currGroupIdx++;
+                                    currGroupBitIter = 0;
+                                }
+                            }
+                        }
+                    }
+
+                    /* Decrypt each pixel in the current block to it's original value. */
+                    t_MarkedEncryptedImage.SetPixel(imgY, imgX, t_MarkedEncryptedImage.GetPixel(imgY, imgX) ^ t_EncryptionKey[keyCursor % t_EncryptionKey.size()]);
+                    t_MarkedEncryptedImage.SetPixel(imgY, imgX + 1, t_MarkedEncryptedImage.GetPixel(imgY, imgX + 1) ^ t_EncryptionKey[keyCursor % t_EncryptionKey.size()]);
+                    t_MarkedEncryptedImage.SetPixel(imgY + 1, imgX, t_MarkedEncryptedImage.GetPixel(imgY + 1, imgX) ^ t_EncryptionKey[keyCursor % t_EncryptionKey.size()]);
+                    t_MarkedEncryptedImage.SetPixel(imgY + 1, imgX + 1, t_MarkedEncryptedImage.GetPixel(imgY + 1, imgX + 1) ^ t_EncryptionKey[keyCursor % t_EncryptionKey.size()]);
+                }
+
+                currBlockIdx++;
+                ++keyCursor;
             }
         }
 
@@ -585,7 +745,7 @@ namespace rdh {
             utils::Advance(sliceBegin, extractedBitStream.end(), constsRef.GetLsbHashSize());
         }
         assert(xi == (*t_GroupHashesBitStream).get().size());
-        
+
         /* Extract bitstream with lsbs */
         utils::Advance(sliceEnd, extractedBitStream.end(), totalBlocks);
         if (t_LsbsBitStream) {
