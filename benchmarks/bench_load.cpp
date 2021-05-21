@@ -6,42 +6,34 @@
 
 using namespace rdh;
 
-static void Load512x512_bench(benchmark::State& state) {
+static void Loader_Load_512x512_bench(benchmark::State& state) {
     for (auto _ : state)
     {
         benchmark::DoNotOptimize(rdh::BmpImage("..\\..\\..\\..\\images\\original\\airplane.bmp"));
     }
 }
-BENCHMARK(Load512x512_bench)->Unit(benchmark::kMillisecond);
+BENCHMARK(Loader_Load_512x512_bench)->Unit(benchmark::kMillisecond);
 
-static void Load514x514_bench(benchmark::State& state) {
-    for (auto _ : state)
-    {
-        benchmark::DoNotOptimize(rdh::BmpImage("..\\..\\..\\..\\images\\original\\boat514x514.bmp"));
-    }
-}
-BENCHMARK(Load514x514_bench)->Unit(benchmark::kMillisecond);
-
-static void Load1024x1024_bench(benchmark::State& state) {
+static void Loader_Load_1024x1024_bench(benchmark::State& state) {
     for (auto _ : state)
     {
         benchmark::DoNotOptimize(rdh::BmpImage("..\\..\\..\\..\\images\\original\\liberty1024x1024.bmp"));
     }
 }
-BENCHMARK(Load1024x1024_bench)->Unit(benchmark::kMillisecond);
+BENCHMARK(Loader_Load_1024x1024_bench)->Unit(benchmark::kMillisecond);
 
-static void Load2048x2048_bench(benchmark::State& state) {
+static void Loader_Load_2048x2048_bench(benchmark::State& state) {
     for (auto _ : state)
     {
         benchmark::DoNotOptimize(rdh::BmpImage("..\\..\\..\\..\\images\\original\\man2048x2048.bmp"));
     }
 }
-BENCHMARK(Load2048x2048_bench)->Unit(benchmark::kMillisecond);
+BENCHMARK(Loader_Load_2048x2048_bench)->Unit(benchmark::kMillisecond);
 
-static void Load4096x4096_bench(benchmark::State& state) {
+static void Loader_Load_4096x4096_bench(benchmark::State& state) {
     for (auto _ : state)
     {
         benchmark::DoNotOptimize(rdh::BmpImage("..\\..\\..\\..\\images\\original\\man4096x4096.bmp"));
     }
 }
-BENCHMARK(Load4096x4096_bench)->Unit(benchmark::kMillisecond);
+BENCHMARK(Loader_Load_4096x4096_bench)->Unit(benchmark::kMillisecond);

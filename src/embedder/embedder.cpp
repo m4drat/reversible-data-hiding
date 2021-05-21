@@ -143,7 +143,8 @@ namespace rdh {
                         for (uint32_t xAdd = 0; xAdd < 2; ++xAdd) {
                             uint8_t curPixel{ t_EncryptedImage.GetPixel(imgY + yAdd, imgX + xAdd) };
                             /* For the top-left pixel, we ignore it's first LSB */
-                            for (uint32_t bitPos = (yAdd == 0 && xAdd == 0) ? 1 : 0; bitPos < constsRef.GetLsbLayers(); bitPos++) {
+                            uint32_t bitPos = ((yAdd == 0 && xAdd == 0) ? 1 : 0);
+                            for (; bitPos < constsRef.GetLsbLayers(); bitPos++) {
                                 lsbCompressedGroup(currGroupSize++, 0) = utils::math::GetNthBit(curPixel, bitPos);
 
                                 /* If we've exceed group size - create a new one. Also don't forget to reset currGroupSize. */
@@ -207,7 +208,7 @@ namespace rdh {
 
         if (tMax < 0.0f) {
             throw std::invalid_argument(
-                "Incorrect parameters are set for data embedder!\n"
+                "Incorrect parameters are set for data embedder! "
                 "Consider using default parameters. Or find more appropriate values."
             );
         }

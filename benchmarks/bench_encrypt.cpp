@@ -6,7 +6,7 @@
 
 using namespace rdh;
 
-static void EncryptAirplane_512x512_bench(benchmark::State& state) {
+static void Encryptor_Encrypt_Airplane_512x512_bench(benchmark::State& state) {
     for (auto _ : state)
     {
         state.PauseTiming();
@@ -16,9 +16,9 @@ static void EncryptAirplane_512x512_bench(benchmark::State& state) {
         Encryptor::Encrypt(image, encryptionKey); // .Save("..\\..\\..\\..\\images\\benchmark-test.bmp")
     }
 }
-BENCHMARK(EncryptAirplane_512x512_bench)->Unit(benchmark::kMillisecond);
+BENCHMARK(Encryptor_Encrypt_Airplane_512x512_bench)->Unit(benchmark::kMillisecond);
 
-static void EncryptCrowd_512x512_bench(benchmark::State& state) {
+static void Encryptor_Encrypt_Crowd_512x512_bench(benchmark::State& state) {
     for (auto _ : state)
     {
         state.PauseTiming();
@@ -28,9 +28,9 @@ static void EncryptCrowd_512x512_bench(benchmark::State& state) {
         Encryptor::Encrypt(image, encryptionKey); // .Save("..\\..\\..\\..\\images\\benchmark-test.bmp")
     }
 }
-BENCHMARK(EncryptCrowd_512x512_bench)->Unit(benchmark::kMillisecond);
+BENCHMARK(Encryptor_Encrypt_Crowd_512x512_bench)->Unit(benchmark::kMillisecond);
 
-static void EncryptMan_512x512_bench(benchmark::State& state) {
+static void Encryptor_Encrypt_Man_512x512_bench(benchmark::State& state) {
     for (auto _ : state)
     {
         state.PauseTiming();
@@ -40,9 +40,9 @@ static void EncryptMan_512x512_bench(benchmark::State& state) {
         Encryptor::Encrypt(image, encryptionKey); // .Save("..\\..\\..\\..\\images\\benchmark-test.bmp")
     }
 }
-BENCHMARK(EncryptMan_512x512_bench)->Unit(benchmark::kMillisecond);
+BENCHMARK(Encryptor_Encrypt_Man_512x512_bench)->Unit(benchmark::kMillisecond);
 
-static void EncryptBoat_512x512_bench(benchmark::State& state) {
+static void Encryptor_Encrypt_Boat_512x512_bench(benchmark::State& state) {
     for (auto _ : state)
     {
         state.PauseTiming();
@@ -52,9 +52,9 @@ static void EncryptBoat_512x512_bench(benchmark::State& state) {
         Encryptor::Encrypt(image, encryptionKey); // .Save("..\\..\\..\\..\\images\\benchmark-test.bmp")
     }
 }
-BENCHMARK(EncryptBoat_512x512_bench)->Unit(benchmark::kMillisecond);
+BENCHMARK(Encryptor_Encrypt_Boat_512x512_bench)->Unit(benchmark::kMillisecond);
 
-static void EncryptLiberty_1024x1024_bench(benchmark::State& state) {
+static void Encryptor_Encrypt_Liberty_1024x1024_bench(benchmark::State& state) {
     for (auto _ : state)
     {
         state.PauseTiming();
@@ -64,9 +64,9 @@ static void EncryptLiberty_1024x1024_bench(benchmark::State& state) {
         Encryptor::Encrypt(image, encryptionKey); // .Save("..\\..\\..\\..\\images\\benchmark-test.bmp")
     }
 }
-BENCHMARK(EncryptLiberty_1024x1024_bench)->Unit(benchmark::kMillisecond);
+BENCHMARK(Encryptor_Encrypt_Liberty_1024x1024_bench)->Unit(benchmark::kMillisecond);
 
-static void EncryptMan_2048x2048_bench(benchmark::State& state) {
+static void Encryptor_Encrypt_Man_2048x2048_bench(benchmark::State& state) {
     for (auto _ : state)
     {
         state.PauseTiming();
@@ -76,9 +76,9 @@ static void EncryptMan_2048x2048_bench(benchmark::State& state) {
         Encryptor::Encrypt(image, encryptionKey); // .Save("..\\..\\..\\..\\images\\benchmark-test.bmp")
     }
 }
-BENCHMARK(EncryptMan_2048x2048_bench)->Unit(benchmark::kMillisecond);
+BENCHMARK(Encryptor_Encrypt_Man_2048x2048_bench)->Unit(benchmark::kMillisecond);
 
-static void EncryptMan_4096x4096_bench(benchmark::State& state) {
+static void Encryptor_Encrypt_Man_4096x4096_bench(benchmark::State& state) {
     for (auto _ : state)
     {
         state.PauseTiming();
@@ -88,5 +88,5 @@ static void EncryptMan_4096x4096_bench(benchmark::State& state) {
         Encryptor::Encrypt(image, encryptionKey); // .Save("..\\..\\..\\..\\images\\benchmark-test.bmp")
     }
 }
-BENCHMARK(EncryptMan_4096x4096_bench)->Unit(benchmark::kMillisecond);
+BENCHMARK(Encryptor_Encrypt_Man_4096x4096_bench)->Unit(benchmark::kMillisecond);
 

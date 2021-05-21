@@ -1,23 +1,31 @@
 #include "benchmark/include/benchmark/benchmark.h"
 
+#include <iostream>
+
 #include "params_generator.h"
+#include "reference_images.h"
+
 #include "utils.h"
 #include "embedder/embedder.h"
+#include "image/image_quality.h"
 
 using namespace rdh;
 
-static void EmbedLena_512x512_bench(benchmark::State& state)
+static void Embedder_Embed_Lena_512x512_bench(benchmark::State& state)
 {
     double tMax = 0.0f;
     uint32_t maxUserDataBits = 0;
+    double psnr = 0;
+    double ssim = 0;
 
     for (auto _ : state)
     {
         state.PauseTiming();
+
         std::vector<uint8_t> dataEmbedKey = utils::LoadFileData<uint8_t>("..\\..\\..\\..\\example_embed_key.bin");
         std::vector<uint8_t> dataToEmbed = utils::LoadFileData<uint8_t>("..\\..\\..\\..\\example_data_to_embed.bin");
         rdh::BmpImage image("..\\..\\..\\..\\images\\encrypted\\lena_gray-enc.bmp");
-        
+
         rdh::Consts::Instance().UpdateThreshold(state.range(0));
         rdh::Consts::Instance().UpdateAlpha(state.range(1));
         rdh::Consts::Instance().UpdateLambda(state.range(2));
@@ -27,7 +35,7 @@ static void EmbedLena_512x512_bench(benchmark::State& state)
 
         try
         {
-            Embedder::Embed(image, dataToEmbed, dataEmbedKey, tMax, maxUserDataBits); // .Save("..\\..\\..\\..\\images\\benchmark-test.bmp")
+            Embedder::Embed(image, dataToEmbed, dataEmbedKey, tMax, maxUserDataBits);
         }
         catch (const std::exception& e)
         {
@@ -39,16 +47,19 @@ static void EmbedLena_512x512_bench(benchmark::State& state)
     state.counters["MaxEmbeddingRate"] = tMax;
     state.counters["maxUserDataBits"] = maxUserDataBits;
 }
-BENCHMARK(EmbedLena_512x512_bench)->Unit(benchmark::kMillisecond)->Apply(CustomArguments);
+BENCHMARK(Embedder_Embed_Lena_512x512_bench)->Unit(benchmark::kMillisecond)->Apply(CustomArguments);
 
-static void EmbedAirplane_512x512_bench(benchmark::State& state)
+static void Embedder_Embed_Airplane_512x512_bench(benchmark::State& state)
 {
     double tMax = 0.0f;
     uint32_t maxUserDataBits = 0;
+    double psnr = 0;
+    double ssim = 0;
 
     for (auto _ : state)
     {
         state.PauseTiming();
+
         std::vector<uint8_t> dataEmbedKey = utils::LoadFileData<uint8_t>("..\\..\\..\\..\\example_embed_key.bin");
         std::vector<uint8_t> dataToEmbed = utils::LoadFileData<uint8_t>("..\\..\\..\\..\\example_data_to_embed.bin");
         rdh::BmpImage image("..\\..\\..\\..\\images\\encrypted\\airplane-enc.bmp");
@@ -62,7 +73,7 @@ static void EmbedAirplane_512x512_bench(benchmark::State& state)
 
         try
         {
-            Embedder::Embed(image, dataToEmbed, dataEmbedKey, tMax, maxUserDataBits); // .Save("..\\..\\..\\..\\images\\benchmark-test.bmp")
+            Embedder::Embed(image, dataToEmbed, dataEmbedKey, tMax, maxUserDataBits);
         }
         catch (const std::exception& e)
         {
@@ -74,16 +85,19 @@ static void EmbedAirplane_512x512_bench(benchmark::State& state)
     state.counters["MaxEmbeddingRate"] = tMax;
     state.counters["maxUserDataBits"] = maxUserDataBits;
 }
-BENCHMARK(EmbedAirplane_512x512_bench)->Unit(benchmark::kMillisecond)->Apply(CustomArguments);
+BENCHMARK(Embedder_Embed_Airplane_512x512_bench)->Unit(benchmark::kMillisecond)->Apply(CustomArguments);
 
-static void EmbedCrowd_512x512_bench(benchmark::State& state)
+static void Embedder_Embed_Crowd_512x512_bench(benchmark::State& state)
 {
     double tMax = 0.0f;
     uint32_t maxUserDataBits = 0;
+    double psnr = 0;
+    double ssim = 0;
 
     for (auto _ : state)
     {
         state.PauseTiming();
+
         std::vector<uint8_t> dataEmbedKey = utils::LoadFileData<uint8_t>("..\\..\\..\\..\\example_embed_key.bin");
         std::vector<uint8_t> dataToEmbed = utils::LoadFileData<uint8_t>("..\\..\\..\\..\\example_data_to_embed.bin");
         rdh::BmpImage image("..\\..\\..\\..\\images\\encrypted\\crowd-enc.bmp");
@@ -97,7 +111,7 @@ static void EmbedCrowd_512x512_bench(benchmark::State& state)
 
         try
         {
-            Embedder::Embed(image, dataToEmbed, dataEmbedKey, tMax, maxUserDataBits); // .Save("..\\..\\..\\..\\images\\benchmark-test.bmp")
+            Embedder::Embed(image, dataToEmbed, dataEmbedKey, tMax, maxUserDataBits);
         }
         catch (const std::exception& e)
         {
@@ -107,17 +121,21 @@ static void EmbedCrowd_512x512_bench(benchmark::State& state)
     }
 
     state.counters["MaxEmbeddingRate"] = tMax;
+    state.counters["maxUserDataBits"] = maxUserDataBits;
 }
-BENCHMARK(EmbedCrowd_512x512_bench)->Unit(benchmark::kMillisecond)->Apply(CustomArguments);
+BENCHMARK(Embedder_Embed_Crowd_512x512_bench)->Unit(benchmark::kMillisecond)->Apply(CustomArguments);
 
-static void EmbedMan_512x512_bench(benchmark::State& state) 
+static void Embedder_Embed_Man_512x512_bench(benchmark::State& state)
 {
     double tMax = 0.0f;
     uint32_t maxUserDataBits = 0;
+    double psnr = 0;
+    double ssim = 0;
 
     for (auto _ : state)
     {
         state.PauseTiming();
+
         std::vector<uint8_t> dataEmbedKey = utils::LoadFileData<uint8_t>("..\\..\\..\\..\\example_embed_key.bin");
         std::vector<uint8_t> dataToEmbed = utils::LoadFileData<uint8_t>("..\\..\\..\\..\\example_data_to_embed.bin");
         rdh::BmpImage image("..\\..\\..\\..\\images\\encrypted\\man-enc.bmp");
@@ -131,7 +149,7 @@ static void EmbedMan_512x512_bench(benchmark::State& state)
 
         try
         {
-            Embedder::Embed(image, dataToEmbed, dataEmbedKey, tMax, maxUserDataBits); // .Save("..\\..\\..\\..\\images\\benchmark-test.bmp")
+            Embedder::Embed(image, dataToEmbed, dataEmbedKey, tMax, maxUserDataBits);
         }
         catch (const std::exception& e)
         {
@@ -143,16 +161,19 @@ static void EmbedMan_512x512_bench(benchmark::State& state)
     state.counters["MaxEmbeddingRate"] = tMax;
     state.counters["maxUserDataBits"] = maxUserDataBits;
 }
-BENCHMARK(EmbedMan_512x512_bench)->Unit(benchmark::kMillisecond)->Apply(CustomArguments);
+BENCHMARK(Embedder_Embed_Man_512x512_bench)->Unit(benchmark::kMillisecond)->Apply(CustomArguments);
 
-static void EmbedBoat_512x512_bench(benchmark::State& state)
+static void Embedder_Embed_Boat_512x512_bench(benchmark::State& state)
 {
     double tMax = 0.0f;
     uint32_t maxUserDataBits = 0;
+    double psnr = 0;
+    double ssim = 0;
 
     for (auto _ : state)
     {
         state.PauseTiming();
+
         std::vector<uint8_t> dataEmbedKey = utils::LoadFileData<uint8_t>("..\\..\\..\\..\\example_embed_key.bin");
         std::vector<uint8_t> dataToEmbed = utils::LoadFileData<uint8_t>("..\\..\\..\\..\\example_data_to_embed.bin");
         rdh::BmpImage image("..\\..\\..\\..\\images\\encrypted\\boat-enc.bmp");
@@ -166,7 +187,7 @@ static void EmbedBoat_512x512_bench(benchmark::State& state)
 
         try
         {
-            Embedder::Embed(image, dataToEmbed, dataEmbedKey, tMax, maxUserDataBits); // .Save("..\\..\\..\\..\\images\\benchmark-test.bmp")
+            Embedder::Embed(image, dataToEmbed, dataEmbedKey, tMax, maxUserDataBits);
         }
         catch (const std::exception& e)
         {
@@ -178,46 +199,4 @@ static void EmbedBoat_512x512_bench(benchmark::State& state)
     state.counters["MaxEmbeddingRate"] = tMax;
     state.counters["maxUserDataBits"] = maxUserDataBits;
 }
-BENCHMARK(EmbedBoat_512x512_bench)->Unit(benchmark::kMillisecond)->Apply(CustomArguments);
-
-//static void EmbedLiberty_1024x1024_bench(benchmark::State& state) {
-//    for (auto _ : state)
-//    {
-//        state.PauseTiming();
-//        std::vector<uint8_t> dataEmbedKey = utils::LoadFileData<uint8_t>("..\\..\\..\\..\\example_embed_key.bin");
-//        std::vector<uint8_t> dataToEmbed = utils::LoadFileData<uint8_t>("..\\..\\..\\..\\example_data_to_embed.bin");
-//        rdh::BmpImage image("..\\..\\..\\..\\images\\encrypted\\liberty1024x1024-enc.bmp");
-//        rdh::Consts::Instance().UpdateThreshold(state.range(0));
-//        state.ResumeTiming();
-//        Embedder::Embed(image, dataToEmbed, dataEmbedKey); // .Save("..\\..\\..\\..\\images\\benchmark-test.bmp")
-//    }
-//}
-//BENCHMARK(EmbedLiberty_1024x1024_bench)->Unit(benchmark::kMillisecond)->DenseRange(10, 24, 1);
-//
-//static void EmbedMan_2048x2048_bench(benchmark::State& state) {
-//    for (auto _ : state)
-//    {
-//        state.PauseTiming();
-//        std::vector<uint8_t> dataEmbedKey = utils::LoadFileData<uint8_t>("..\\..\\..\\..\\example_embed_key.bin");
-//        std::vector<uint8_t> dataToEmbed = utils::LoadFileData<uint8_t>("..\\..\\..\\..\\example_data_to_embed.bin");
-//        rdh::BmpImage image("..\\..\\..\\..\\images\\encrypted\\man2048x2048-enc.bmp");
-//        rdh::Consts::Instance().UpdateThreshold(state.range(0));
-//        state.ResumeTiming();
-//        Embedder::Embed(image, dataToEmbed, dataEmbedKey); // .Save("..\\..\\..\\..\\images\\benchmark-test.bmp")
-//    }
-//}
-//BENCHMARK(EmbedMan_2048x2048_bench)->Unit(benchmark::kMillisecond)->DenseRange(10, 24, 1);
-//
-//static void EmbedMan_4096x4096_bench(benchmark::State& state) {
-//    for (auto _ : state)
-//    {
-//        state.PauseTiming();
-//        std::vector<uint8_t> dataEmbedKey = utils::LoadFileData<uint8_t>("..\\..\\..\\..\\example_embed_key.bin");
-//        std::vector<uint8_t> dataToEmbed = utils::LoadFileData<uint8_t>("..\\..\\..\\..\\example_data_to_embed.bin");
-//        rdh::BmpImage image("..\\..\\..\\..\\images\\encrypted\\man4096x4096-enc.bmp");
-//        rdh::Consts::Instance().UpdateThreshold(state.range(0));
-//        state.ResumeTiming();
-//        Embedder::Embed(image, dataToEmbed, dataEmbedKey); // .Save("..\\..\\..\\..\\images\\benchmark-test.bmp")
-//    }
-//}
-//BENCHMARK(EmbedMan_4096x4096_bench)->Unit(benchmark::kMillisecond)->DenseRange(10, 24, 1);
+BENCHMARK(Embedder_Embed_Boat_512x512_bench)->Unit(benchmark::kMillisecond)->Apply(CustomArguments);

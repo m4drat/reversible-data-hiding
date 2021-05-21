@@ -44,6 +44,8 @@ target_compile_definitions(${PROJECT_NAME}_run
 	PUBLIC ${RDH_DEFINES}
 )
 
+list(APPEND CMAKE_ARGS "-DBENCHMARK_ENABLE_GTEST_TESTS=OFF")
+
 if (${BUILD_TESTS} MATCHES ON)
     enable_testing()
     include_directories(${gmock_SOURCE_DIR}/include)
@@ -52,7 +54,6 @@ if (${BUILD_TESTS} MATCHES ON)
 endif()
 
 if (${BUILD_BENCHMARKS} MATCHES ON)
-    set(BENCHMARK_ENABLE_GTEST_TESTS OFF)
     enable_testing()
     add_subdirectory(libraries/benchmark)
     add_subdirectory(benchmarks)

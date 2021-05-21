@@ -660,7 +660,7 @@ discardGroup:;
                         for (uint32_t xAdd = 0; xAdd < 2; ++xAdd) {
                             uint8_t curPixel{ t_MarkedEncryptedImage.GetPixel(imgY + yAdd, imgX + xAdd) };
                             /* For the top-left pixel, we ignore it's first LSB */
-                            for (int32_t bitPos = constsRef.GetLsbLayers() - 1; bitPos >= (yAdd == 0 && xAdd == 0) ? 1 : 0; bitPos--) {
+                            for (int32_t bitPos = constsRef.GetLsbLayers() - 1; bitPos >= ((yAdd == 0 && xAdd == 0) ? 1 : 0); bitPos--) {
                                 if (numberOfBitsFromLsbEncodeGroups >= totalBitsFromLsbEncodedGroups) {
                                     break;
                                 }
@@ -731,7 +731,9 @@ discardGroup:;
 
             utils::Advance(sliceBegin, extractedBitStream.end(), (constsRef.GetLambda() * (4 * constsRef.GetLsbLayers() - 1) - constsRef.GetAlpha()));
         }
-        assert(xi == (*t_LsbCompressedGroups).get().size());
+        if (t_LsbCompressedGroups) {
+            assert(xi == (*t_LsbCompressedGroups).get().size());
+        }
 
         /* Extract bitstream with hashes */
         for (uint32_t currentGroup = 0; currentGroup < xi; ++currentGroup) {
@@ -744,7 +746,9 @@ discardGroup:;
 
             utils::Advance(sliceBegin, extractedBitStream.end(), constsRef.GetLsbHashSize());
         }
-        assert(xi == (*t_GroupHashesBitStream).get().size());
+        if (t_GroupHashesBitStream) {
+            assert(xi == (*t_GroupHashesBitStream).get().size());
+        }
 
         /* Extract bitstream with lsbs */
         utils::Advance(sliceEnd, extractedBitStream.end(), totalBlocks);
