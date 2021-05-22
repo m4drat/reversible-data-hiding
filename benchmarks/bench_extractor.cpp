@@ -78,7 +78,7 @@ static void Extractor_RecoverImage_Boat_512x512_bench(benchmark::State& state)
     state.counters["PSNR"] = rdh::ImageQuality::CalculatePSNR(References::GetInstance().GetBoat(), image);
     state.counters["SSIM"] = rdh::ImageQuality::CalculateSSIM(References::GetInstance().GetBoat(), image);
 }
-BENCHMARK(Extractor_RecoverImage_Boat_512x512_bench)->Unit(benchmark::kMillisecond)->Apply(CustomArguments);
+BENCHMARK(Extractor_RecoverImage_Boat_512x512_bench)->Iterations(3)->Unit(benchmark::kMillisecond)->Apply(CustomArguments);
 
 static void Extractor_RecoverImageExtractData_Boat_512x512_bench(benchmark::State& state)
 {
@@ -116,4 +116,4 @@ static void Extractor_RecoverImageExtractData_Boat_512x512_bench(benchmark::Stat
     state.counters["PSNR"] = rdh::ImageQuality::CalculatePSNR(References::GetInstance().GetBoat(), image);
     state.counters["SSIM"] = rdh::ImageQuality::CalculateSSIM(References::GetInstance().GetBoat(), image);
 }
-BENCHMARK(Extractor_RecoverImageExtractData_Boat_512x512_bench)->Unit(benchmark::kMillisecond)->Apply(CustomArguments);
+BENCHMARK(Extractor_RecoverImageExtractData_Boat_512x512_bench)->Iterations(3)->Unit(benchmark::kMillisecond)->Apply(CustomArguments);
