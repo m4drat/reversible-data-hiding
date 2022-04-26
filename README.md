@@ -40,16 +40,17 @@ cmake --build build --config Release
 - gtest - google testing library
 - google benchmark - benchmarking library
 
+### Cite
 
 ```bibtex
 @article{article,
-author = {Qin, Chuan and He, Zhihong and Luo, Xiangyang and Dong, Jing},
-year = {2018},
-month = {07},
-pages = {},
-title = {Reversible Data Hiding in Encrypted Image with Separable Capability and High Embedding Capacity},
-volume = {465},
-journal = {Information Sciences},
-doi = {10.1016/j.ins.2018.07.021}
+    author = {Qin, Chuan and He, Zhihong and Luo, Xiangyang and Dong, Jing},
+    year = {2018},
+    month = {07},
+    pages = {},
+    title = {Reversible Data Hiding in Encrypted Image with Separable Capability and High Embedding Capacity},
+    volume = {465},
+    journal = {Information Sciences},
+    doi = {10.1016/j.ins.2018.07.021}
 }
 ```
