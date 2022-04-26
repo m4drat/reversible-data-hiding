@@ -1,6 +1,6 @@
 # Reversible Data Hiding (c++ implementation)
 
-Implementation for technique described in this paper
+Implementation for technique described in this paper: [reversible data hiding](https://www.sciencedirect.com/science/article/abs/pii/S0020025518305358#preview-section-cited-by)
 
 ### How to build
 
